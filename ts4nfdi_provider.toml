@@ -1,0 +1,14 @@
+[defaults]
+api_url = "https://api.terminology.tib.eu/api/search"
+search_param = "q"
+terminologies_param = "terminologies"
+entity_types_param = "entity_types"
+limit_param = "rows"
+limit = 30
+timeout = 10
+id_fields = ["iri", "uri", "id"]
+label_fields = ["label", "prefLabel", "short_form", "name", "title"]
+help_fields = ["description", "definition", "ontology_name", "scopeNote", "summary"]
+
+[providers.fairagro_ts4nfdi_agrovoc]
+extra_params = { ontology = "edam", fieldList = "description,label,iri,ontology_name,type,short_form", childrenOf = "http://edamontology.org/format_1915" }
