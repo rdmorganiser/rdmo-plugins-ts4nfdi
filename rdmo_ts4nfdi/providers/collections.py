@@ -38,8 +38,49 @@ class TS4NFDICollectionsProvider(TS4NFDIBaseProvider):
                 options.append(option)
 
         options = self.deduplicate_options(options, provider_config)
-        options = self.exclude_selected_options(project, options, provider_config)
+        options = self.exclude_selected_collection_options(
+            project,
+            options,
+            provider_config,
+            search,
+        )
         return options[: provider_config.get("limit", 20)]
+
+    def exclude_selected_collection_options(self, project, options, provider_config, search):
+        if provider_config.get("preserve_exact_selected_search", True) is False:
+            return self.exclude_selected_options(project, options, provider_config)
+
+        preserved_options = [
+            option
+            for option in options
+            if self.option_text_matches_search(option, search)
+        ]
+        filtered_options = self.exclude_selected_options(project, options, provider_config)
+        filtered_ids = {option.get("id") for option in filtered_options}
+
+        for option in preserved_options:
+            if option.get("id") not in filtered_ids:
+                logger.debug(
+                    "Preserving selected TS4NFDI collection option for provider '%s' "
+                    "because it exactly matches the current search text: id=%s text=%r",
+                    self.key,
+                    option.get("id"),
+                    option.get("text"),
+                )
+                filtered_options.append(option)
+                filtered_ids.add(option.get("id"))
+
+        return filtered_options
+
+    def option_text_matches_search(self, option, search):
+        if not search:
+            return False
+
+        option_text = option.get("text")
+        if not option_text:
+            return False
+
+        return option_text.strip().casefold() == str(search).strip().casefold()
 
     def build_query_params(self, provider_config, search):
         query_params = {}
@@ -92,7 +133,7 @@ class TS4NFDICollectionsProvider(TS4NFDIBaseProvider):
         if not isinstance(result, dict):
             return None
 
-        identifier = self.get_first_value(
+        uuid = self.get_first_value(
             result,
             provider_config.get("id_fields", ("id",)),
         )
@@ -100,13 +141,15 @@ class TS4NFDICollectionsProvider(TS4NFDIBaseProvider):
             result,
             provider_config.get("label_fields", ("label",)),
         )
+        identifier = self.get_collection_identifier(result, provider_config, uuid)
 
-        if not identifier or not label:
+        if not uuid or not identifier or not label:
             return None
 
         option = {
             "id": identifier,
             "text": label,
+            "uuid": uuid,
         }
 
         help_text = self.build_help_html(result, provider_config)
@@ -115,85 +158,80 @@ class TS4NFDICollectionsProvider(TS4NFDIBaseProvider):
 
         return option
 
-    def build_help_html(self, result, provider_config):
+    def get_collection_identifier(self, result, provider_config, uuid):
         identifier = self.get_first_value(
             result,
-            provider_config.get("id_fields", ("id",)),
+            provider_config.get(
+                "uri_fields",
+                ("iri", "uri", "permalink", "permaLink", "permalinkUrl"),
+            ),
         )
-        label = self.get_first_value(
+
+        if identifier:
+            return identifier
+
+        return self.build_permalink(uuid, provider_config)
+
+    def build_help_html(self, result, provider_config):
+        uuid = self.get_first_value(
             result,
-            provider_config.get("label_fields", ("label",)),
+            provider_config.get("id_fields", ("id",)),
         )
         description = self.get_first_value(result, ("description",))
         creator = self.get_first_value(result, ("creator",))
         is_public = result.get("isPublic")
-        permalink = self.build_permalink(identifier, provider_config)
+        permalink = self.get_collection_identifier(result, provider_config, uuid)
 
-        parts = [
-            '<span class="ts4nfdi-collection-card">',
-            '<span class="ts4nfdi-collection-card__header">',
-            '<span class="ts4nfdi-collection-card__title">'
-            f'{escape(label or "")}'
-            "</span>",
-        ]
+        parts = []
+        badges = []
 
         if creator:
-            parts.append(
-                '<span class="ts4nfdi-collection-card__creator">'
-                f'Created by: {escape(creator)}'
+            badges.append(
+                '<span class="ts4nfdi-option-badge ts4nfdi-option-badge--ontology">'
+                f'{escape(creator)}'
                 "</span>"
             )
 
         if is_public is not None:
             visibility = "public" if is_public else "restricted"
-            visibility_class = "public" if is_public else "restricted"
-            parts.append(
-                '<span class="'
-                "ts4nfdi-collection-card__status "
-                f"ts4nfdi-collection-card__status--{visibility_class}"
-                f'">{visibility}</span>'
-            )
-
-        parts.append("</span>")
-
-        metadata = [
-            ("uuid:", identifier),
-            ("PermaLink:", permalink),
-        ]
-
-        metadata_html = [
-            self.render_metadata_row(label, value)
-            for label, value in metadata
-            if value
-        ]
-        if metadata_html:
-            parts.append(
-                '<span class="ts4nfdi-collection-card__metadata">'
-                f'{"".join(metadata_html)}'
+            badges.append(
+                '<span class="ts4nfdi-option-badge ts4nfdi-option-badge--term">'
+                f'{visibility}'
                 "</span>"
             )
 
-        if description:
-            parts.append(
-                '<span class="ts4nfdi-collection-card__description">'
-                f'{escape(description)}'
+        terminology_summary = self.build_terminology_summary(result, provider_config)
+        if terminology_summary:
+            badges.append(
+                '<span class="ts4nfdi-option-badge ts4nfdi-option-badge--term">'
+                f'{escape(terminology_summary)}'
                 "</span>"
             )
 
-        terminology_badges = self.render_terminology_badges(result, provider_config)
-        if terminology_badges:
+        if badges:
             parts.append(
-                '<span class="ts4nfdi-collection-card__terminologies">'
-                '<span class="ts4nfdi-collection-card__terminologies-label">'
-                "Terminologies:"
-                "</span>"
-                f'{terminology_badges}'
+                '<span class="ts4nfdi-option-breadcrumb">'
+                f'{"".join(badges)}'
                 "</span>"
             )
 
-        parts.append("</span>")
+        details = []
+        if uuid:
+            details.append(f"uuid: {uuid}")
+        if permalink:
+            details.append(f"permalink: {permalink}")
 
-        return "".join(parts)
+        description_parts = [description] if description else []
+        description_parts.extend(details)
+
+        if description_parts:
+            parts.append(
+                '<span class="ts4nfdi-option-description">'
+                f'{escape(" | ".join(description_parts))}'
+                "</span>"
+            )
+
+        return "".join(parts) or None
 
     def build_permalink(self, identifier, provider_config):
         if not identifier:
@@ -205,25 +243,13 @@ class TS4NFDICollectionsProvider(TS4NFDIBaseProvider):
         )
         return f"{permalink_base.rstrip('/')}/{identifier}"
 
-    def render_metadata_row(self, label, value):
-        return (
-            '<span class="ts4nfdi-collection-card__metadata-row">'
-            '<span class="ts4nfdi-collection-card__metadata-label">'
-            f'{escape(label)}'
-            "</span>"
-            '<span class="ts4nfdi-collection-card__metadata-value">'
-            f'{escape(value)}'
-            "</span>"
-            "</span>"
-        )
-
-    def render_terminology_badges(self, result, provider_config):
+    def build_terminology_summary(self, result, provider_config):
         terminologies = result.get("terminologies")
         if not isinstance(terminologies, list):
-            return ""
+            return None
 
-        badge_limit = provider_config.get("terminology_badge_limit", 12)
-        badges = []
+        terminology_labels = []
+        badge_limit = provider_config.get("terminology_badge_limit", 5)
 
         for terminology in terminologies[:badge_limit]:
             if not isinstance(terminology, dict):
@@ -238,19 +264,13 @@ class TS4NFDICollectionsProvider(TS4NFDIBaseProvider):
             if source:
                 badge_text = f"{badge_text} ({source})"
 
-            badges.append(
-                '<span class="ts4nfdi-collection-card__terminology-badge">'
-                f'{escape(badge_text)}'
-                "</span>"
-            )
+            terminology_labels.append(badge_text)
+
+        if not terminology_labels:
+            return None
 
         remaining_count = len(terminologies) - badge_limit
         if remaining_count > 0:
-            badges.append(
-                '<span class="ts4nfdi-collection-card__terminology-badge '
-                'ts4nfdi-collection-card__terminology-badge--more">'
-                f'+{remaining_count} more'
-                "</span>"
-            )
+            terminology_labels.append(f"+{remaining_count} more")
 
-        return "".join(badges)
+        return "Terminologies: " + ", ".join(terminology_labels)

@@ -28,9 +28,12 @@ endpoint = "collections/"
 id_fields = ["id"]
 label_fields = ["label"]
 help_fields = ["description"]
+uri_fields = ["iri", "uri", "permalink", "permaLink", "permalinkUrl"]
 permalink_base = "https://w3id.org/ts4nfdi/collection/"
 terminology_badge_limit = 12
-# exclude_selected_attribute_uris = ["https://example.org/terms/domain/terminology/collection"]
+preserve_exact_selected_search = false
+selected_match_fields = ["id", "uuid"]
+exclude_selected_attribute_uris = ["https://rdmorganiser.github.io/terms/domain/project/dataset/metadata/standards"]
 
 [frontend]
 breadcrumbs_enabled = false

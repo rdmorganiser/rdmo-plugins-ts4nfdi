@@ -590,7 +590,7 @@
         const canScan = function () {
             const interviewPage = main.querySelector(".interview-page");
             const activeElement = document.activeElement;
-            const editingSelect = activeElement && activeElement.closest(".react-select__control");
+            const editingSelect = BREADCRUMBS_ENABLED && activeElement && activeElement.closest(".react-select__control");
 
             return Boolean(interviewPage) && pending.childElementCount === 0 && !editingSelect;
         };
@@ -610,32 +610,34 @@
             scheduleScan();
         }, 600);
 
-        main.addEventListener("focusin", function (event) {
-            const widget = event.target.closest(".interview-widget");
-            const selectInput = widget && widget.querySelector(".interview-input.select-input");
+        if (BREADCRUMBS_ENABLED) {
+            main.addEventListener("focusin", function (event) {
+                const widget = event.target.closest(".interview-widget");
+                const selectInput = widget && widget.querySelector(".interview-input.select-input");
 
-            if (!widget || !selectInput) {
-                return;
-            }
-
-            loadPageQuestions().then(function (questions) {
-                markQuestionWidgets(main, questions);
-
-                const context = getQuestionContext(main, questions, widget);
-                if (!context) {
-                    activeState = null;
-                    clearActiveBreadcrumb(main);
+                if (!widget || !selectInput) {
                     return;
                 }
 
-                activeState = {
-                    questionUri: context.question.uri,
-                    widgetIndex: context.widgetIndex
-                };
+                loadPageQuestions().then(function (questions) {
+                    markQuestionWidgets(main, questions);
 
-                updateActiveBreadcrumb(main, questions, activeState);
+                    const context = getQuestionContext(main, questions, widget);
+                    if (!context) {
+                        activeState = null;
+                        clearActiveBreadcrumb(main);
+                        return;
+                    }
+
+                    activeState = {
+                        questionUri: context.question.uri,
+                        widgetIndex: context.widgetIndex
+                    };
+
+                    updateActiveBreadcrumb(main, questions, activeState);
+                });
             });
-        });
+        }
 
         document.addEventListener("click", function (event) {
             if (!main.contains(event.target)) {
