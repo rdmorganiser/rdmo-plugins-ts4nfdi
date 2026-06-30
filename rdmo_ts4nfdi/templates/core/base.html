@@ -7,6 +7,6 @@
     {{ ts4nfdi_config|json_script:"ts4nfdi-frontend-config" }}
     <link rel="stylesheet" href="{% static 'core/css/terminology-service-suite-js.css' %}" />
     <link rel="stylesheet" href="{% static 'core/css/terminology_widget.css' %}" />
-    <script src="core/css/index.iife.js"></script>
+    <script src="{% static 'core/js/index.iife.js' %}"></script>
     <script src="{% static 'core/js/terminology_widget.js' %}"></script>
 {% endblock js %}
