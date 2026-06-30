@@ -9,8 +9,8 @@ help_fields = ["descriptions", "description", "definition", "scopeNote", "summar
 ontology_fields = ["ontology", "ontology_iri", "source_name", "sourceName", "backend_type", "short_form"]
 dedupe_fields = ["id"]
 show_request_errors = true
-# request_error_text = "TS4NFDI service is currently unavailable."
-# request_error_help = "Could not load options from the terminology service. Please try again later."
+request_error_text = "TS4NFDI service is currently unavailable."
+request_error_help = "Could not load options from the terminology service. Please try again later."
 
 [providers.ts4nfdi_ontologies]
 endpoint = "search"
