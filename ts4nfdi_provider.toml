@@ -1,14 +1,47 @@
 [defaults]
-api_url = "https://api.terminology.tib.eu/api/search"
-search_param = "q"
-terminologies_param = "terminologies"
-entity_types_param = "entity_types"
-limit_param = "rows"
+base_url = "https://terminology.services.base4nfdi.de/api-gateway"
+search_param = "query"
 limit = 30
 timeout = 10
 id_fields = ["iri", "uri", "id"]
 label_fields = ["label", "prefLabel", "short_form", "name", "title"]
-help_fields = ["description", "definition", "ontology_name", "scopeNote", "summary"]
+help_fields = ["descriptions", "description", "definition", "scopeNote", "summary"]
+ontology_fields = ["ontology", "ontology_iri", "source_name", "sourceName", "backend_type", "short_form"]
+dedupe_fields = ["id"]
+show_request_errors = true
+# request_error_text = "TS4NFDI service is currently unavailable."
+# request_error_help = "Could not load options from the terminology service. Please try again later."
 
-[providers.fairagro_ts4nfdi_agrovoc]
-extra_params = { ontology = "edam", fieldList = "description,label,iri,ontology_name,type,short_form", childrenOf = "http://edamontology.org/format_1915" }
+[providers.ts4nfdi_ontologies]
+endpoint = "search"
+database = "ebi"
+ontologies = ["edam"]
+iri_prefixes = ["http://edamontology.org/format_"]
+display = ["iri", "label", "descriptions", "ontology", "ontology_iri", "short_form", "source_name", "type"]
+# Remove options from autocomplete results when the option id is already stored
+# in project values for one of these attribute URIs.
+exclude_selected_attribute_uris = ["https://rdmorganiser.github.io/terms/domain/project/dataset/format"]
+selected_match_fields = ["id"]
+
+[providers.ts4nfdi_collections]
+endpoint = "collections/"
+id_fields = ["id"]
+label_fields = ["label"]
+help_fields = ["description"]
+# exclude_selected_attribute_uris = ["https://example.org/terms/domain/terminology/collection"]
+
+[frontend]
+breadcrumbs_enabled = false
+
+# Breadcrumbs are rendered only when breadcrumbs_enabled is true and the
+# question/attribute/optionset URIs match the active interview question.
+# [[frontend.breadcrumb_matchers]]
+# question_uri = "https://rdmo.example.org/terms/questions/dataset/format"
+# attribute_uri = "https://rdmorganiser.github.io/terms/domain/project/dataset/format"
+# optionset_uri = "https://rdmo.example.org/terms/options/file_format_ts4nfdi"
+# api = "https://api.terminology.tib.eu/api/"
+# ontology_id = "edam"
+# entity_type = "class"
+# parameter = "ontology=edam&fieldList=description,label,iri,ontology_name,type,short_form&childrenOf=http://edamontology.org/format_1915"
+# use_legacy = true
+# class_name = "ts4nfdi-breadcrumb-style"

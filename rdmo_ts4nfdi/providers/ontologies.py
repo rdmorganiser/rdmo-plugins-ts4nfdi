@@ -1,6 +1,9 @@
+import logging
 from html import escape
 
 from .base import TS4NFDIBaseProvider
+
+logger = logging.getLogger(__name__)
 
 
 class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
@@ -13,17 +16,28 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
             return []
 
         provider_config = self.get_provider_config()
-        payload = self.make_request(search)
+        payload = self.make_request(search, provider_config=provider_config)
+        if payload is None:
+            return self.get_request_error_options(provider_config)
 
         results = self.filter_results(self.extract_results(payload), provider_config)
         options = []
 
-        for result in results[: provider_config.get("limit", 20)]:
+        logger.debug(
+            "TS4NFDI ontology provider '%s' search=%r filtered result_count=%s",
+            self.key,
+            search,
+            len(results),
+        )
+
+        for result in results:
             option = self.map_result_to_option(result, provider_config)
             if option:
                 options.append(option)
 
-        return options
+        options = self.deduplicate_options(options, provider_config)
+        options = self.exclude_selected_options(project, options, provider_config)
+        return options[: provider_config.get("limit", 20)]
 
     def build_query_params(self, provider_config, search):
         query_params = {

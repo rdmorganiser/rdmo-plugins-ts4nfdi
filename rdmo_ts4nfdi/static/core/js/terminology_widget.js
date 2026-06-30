@@ -5,20 +5,93 @@
     const DEFAULT_API = "https://api.terminology.tib.eu/api/";
     const DEFAULT_OUTPUT_FORMAT = "label";
     const DEFAULT_DELIMITER = "; ";
-    const QUESTION_MATCHERS = [];
-    const BREADCRUMB_MATCHERS = [
-        {
-            questionUri: "https://rdmo.fairagro.net/terms/questions/dmp4nfdi/v1-0-0/DMP/Dataset/Distribution/rdadmp_format",
-            attributeUri: "https://rdmorganiser.github.io/terms/domain/project/dataset/format",
-            optionsetUri: "https://rdmo.fairagro.net/terms/options/file_format_ts4nfdi",
-            api: DEFAULT_API,
-            ontologyId: "edam",
-            entityType: "class",
-            parameter: "ontology=edam&fieldList=description,label,iri,ontology_name,type,short_form&childrenOf=http://edamontology.org/format_1915",
-            useLegacy: true,
-            className: "ts4nfdi-breadcrumb-style"
+    const FRONTEND_CONFIG = getFrontendConfig();
+    const BREADCRUMBS_ENABLED = parseBooleanConfig(
+        getConfigValue(FRONTEND_CONFIG, "breadcrumbsEnabled", "breadcrumbs_enabled"),
+        false
+    );
+    const QUESTION_MATCHERS = normalizeMatchers(
+        getConfigValue(FRONTEND_CONFIG, "questionMatchers", "question_matchers") || []
+    );
+    const BREADCRUMB_MATCHERS = normalizeMatchers(
+        getConfigValue(FRONTEND_CONFIG, "breadcrumbMatchers", "breadcrumb_matchers") || []
+    );
+
+    function getFrontendConfig() {
+        const configElement = document.getElementById("ts4nfdi-frontend-config");
+
+        if (!configElement) {
+            return {};
         }
-    ];
+
+        try {
+            return JSON.parse(configElement.textContent) || {};
+        } catch (error) {
+            console.warn("Could not parse TS4NFDI frontend config:", error);
+            return {};
+        }
+    }
+
+    function getConfigValue(config, camelKey, snakeKey) {
+        if (Object.prototype.hasOwnProperty.call(config, camelKey)) {
+            return config[camelKey];
+        }
+
+        return config[snakeKey];
+    }
+
+    function getMatcherValue(matcher, camelKey, snakeKey, fallback) {
+        const value = getConfigValue(matcher, camelKey, snakeKey);
+        return value == null ? fallback : value;
+    }
+
+    function parseBooleanConfig(value, fallback) {
+        if (typeof value === "boolean") {
+            return value;
+        }
+
+        return parseBoolean(value, fallback);
+    }
+
+    function normalizeMatcher(matcher) {
+        if (!matcher || typeof matcher !== "object") {
+            return null;
+        }
+
+        return {
+            questionUri: getMatcherValue(matcher, "questionUri", "question_uri"),
+            attributeUri: getMatcherValue(matcher, "attributeUri", "attribute_uri"),
+            optionsetUri: getMatcherValue(matcher, "optionsetUri", "optionset_uri"),
+            api: getMatcherValue(matcher, "api", "api", DEFAULT_API),
+            ontologyId: getMatcherValue(matcher, "ontologyId", "ontology_id"),
+            entityType: getMatcherValue(matcher, "entityType", "entity_type"),
+            parameter: getMatcherValue(matcher, "parameter", "parameter", ""),
+            useLegacy: parseBooleanConfig(getMatcherValue(matcher, "useLegacy", "use_legacy"), true),
+            className: getMatcherValue(matcher, "className", "class_name", "ts4nfdi-breadcrumb-style"),
+            outputFormat: getMatcherValue(matcher, "outputFormat", "output_format"),
+            delimiter: getMatcherValue(matcher, "delimiter", "delimiter"),
+            placeholder: getMatcherValue(matcher, "placeholder", "placeholder"),
+            allowCustomTerms: getMatcherValue(matcher, "allowCustomTerms", "allow_custom_terms"),
+            singleSelection: getMatcherValue(matcher, "singleSelection", "single_selection"),
+            ts4nfdiGateway: getMatcherValue(matcher, "ts4nfdiGateway", "ts4nfdi_gateway"),
+            showApiSource: getMatcherValue(matcher, "showApiSource", "show_api_source"),
+            singleSuggestionRow: getMatcherValue(matcher, "singleSuggestionRow", "single_suggestion_row"),
+            hasShortSelectedLabel: getMatcherValue(matcher, "hasShortSelectedLabel", "has_short_selected_label"),
+            initialSearchQuery: getMatcherValue(matcher, "initialSearchQuery", "initial_search_query")
+        };
+    }
+
+    function normalizeMatchers(matchers) {
+        if (!Array.isArray(matchers)) {
+            return [];
+        }
+
+        return matchers
+            .map(normalizeMatcher)
+            .filter(function (matcher) {
+                return matcher && matcher.questionUri && matcher.attributeUri && matcher.optionsetUri;
+            });
+    }
 
     function parseBoolean(value, fallback) {
         if (value == null || value === "") {
@@ -180,11 +253,19 @@
                 return;
             }
 
+            if (value == null) {
+                return;
+            }
+
             hook.dataset[key] = value;
         });
     }
 
     function getBreadcrumbMatcher(question) {
+        if (!BREADCRUMBS_ENABLED) {
+            return null;
+        }
+
         return BREADCRUMB_MATCHERS.find(function (candidate) {
             return questionMatchesConfig(question, candidate);
         });
