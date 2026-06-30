@@ -92,8 +92,14 @@ class TS4NFDICollectionsProvider(TS4NFDIBaseProvider):
         if not isinstance(result, dict):
             return None
 
-        identifier = self.get_first_value(result, provider_config.get("id_fields", ("id",)))
-        label = self.get_first_value(result, provider_config.get("label_fields", ("label",)))
+        identifier = self.get_first_value(
+            result,
+            provider_config.get("id_fields", ("id",)),
+        )
+        label = self.get_first_value(
+            result,
+            provider_config.get("label_fields", ("label",)),
+        )
 
         if not identifier or not label:
             return None
@@ -103,38 +109,148 @@ class TS4NFDICollectionsProvider(TS4NFDIBaseProvider):
             "text": label,
         }
 
-        help_text = self.build_help_html(result)
+        help_text = self.build_help_html(result, provider_config)
         if help_text:
             option["help"] = help_text
 
         return option
 
-    def build_help_html(self, result):
-        parts = []
-
+    def build_help_html(self, result, provider_config):
+        identifier = self.get_first_value(
+            result,
+            provider_config.get("id_fields", ("id",)),
+        )
+        label = self.get_first_value(
+            result,
+            provider_config.get("label_fields", ("label",)),
+        )
         description = self.get_first_value(result, ("description",))
         creator = self.get_first_value(result, ("creator",))
         is_public = result.get("isPublic")
+        permalink = self.build_permalink(identifier, provider_config)
 
-        badges = []
+        parts = [
+            '<span class="ts4nfdi-collection-card">',
+            '<span class="ts4nfdi-collection-card__header">',
+            '<span class="ts4nfdi-collection-card__title">'
+            f'{escape(label or "")}'
+            "</span>",
+        ]
+
         if creator:
-            badges.append(
-                f'<span class="ts4nfdi-option-badge ts4nfdi-option-badge--ontology">{escape(creator)}</span>'
+            parts.append(
+                '<span class="ts4nfdi-collection-card__creator">'
+                f'Created by: {escape(creator)}'
+                "</span>"
             )
+
         if is_public is not None:
             visibility = "public" if is_public else "restricted"
-            badges.append(
-                f'<span class="ts4nfdi-option-badge ts4nfdi-option-badge--term">{visibility}</span>'
+            visibility_class = "public" if is_public else "restricted"
+            parts.append(
+                '<span class="'
+                "ts4nfdi-collection-card__status "
+                f"ts4nfdi-collection-card__status--{visibility_class}"
+                f'">{visibility}</span>'
             )
 
-        if badges:
+        parts.append("</span>")
+
+        metadata = [
+            ("uuid:", identifier),
+            ("PermaLink:", permalink),
+        ]
+
+        metadata_html = [
+            self.render_metadata_row(label, value)
+            for label, value in metadata
+            if value
+        ]
+        if metadata_html:
             parts.append(
-                f'<span class="ts4nfdi-option-breadcrumb">{"".join(badges)}</span>'
+                '<span class="ts4nfdi-collection-card__metadata">'
+                f'{"".join(metadata_html)}'
+                "</span>"
             )
 
         if description:
             parts.append(
-                f'<span class="ts4nfdi-option-description">{escape(description)}</span>'
+                '<span class="ts4nfdi-collection-card__description">'
+                f'{escape(description)}'
+                "</span>"
             )
 
-        return "".join(parts) or None
+        terminology_badges = self.render_terminology_badges(result, provider_config)
+        if terminology_badges:
+            parts.append(
+                '<span class="ts4nfdi-collection-card__terminologies">'
+                '<span class="ts4nfdi-collection-card__terminologies-label">'
+                "Terminologies:"
+                "</span>"
+                f'{terminology_badges}'
+                "</span>"
+            )
+
+        parts.append("</span>")
+
+        return "".join(parts)
+
+    def build_permalink(self, identifier, provider_config):
+        if not identifier:
+            return None
+
+        permalink_base = provider_config.get(
+            "permalink_base",
+            "https://w3id.org/ts4nfdi/collection/",
+        )
+        return f"{permalink_base.rstrip('/')}/{identifier}"
+
+    def render_metadata_row(self, label, value):
+        return (
+            '<span class="ts4nfdi-collection-card__metadata-row">'
+            '<span class="ts4nfdi-collection-card__metadata-label">'
+            f'{escape(label)}'
+            "</span>"
+            '<span class="ts4nfdi-collection-card__metadata-value">'
+            f'{escape(value)}'
+            "</span>"
+            "</span>"
+        )
+
+    def render_terminology_badges(self, result, provider_config):
+        terminologies = result.get("terminologies")
+        if not isinstance(terminologies, list):
+            return ""
+
+        badge_limit = provider_config.get("terminology_badge_limit", 12)
+        badges = []
+
+        for terminology in terminologies[:badge_limit]:
+            if not isinstance(terminology, dict):
+                continue
+
+            label = self.get_first_value(terminology, ("label", "uri"))
+            source = self.get_first_value(terminology, ("source",))
+            if not label:
+                continue
+
+            badge_text = label
+            if source:
+                badge_text = f"{badge_text} ({source})"
+
+            badges.append(
+                '<span class="ts4nfdi-collection-card__terminology-badge">'
+                f'{escape(badge_text)}'
+                "</span>"
+            )
+
+        remaining_count = len(terminologies) - badge_limit
+        if remaining_count > 0:
+            badges.append(
+                '<span class="ts4nfdi-collection-card__terminology-badge '
+                'ts4nfdi-collection-card__terminology-badge--more">'
+                f'+{remaining_count} more'
+                "</span>"
+            )
+
+        return "".join(badges)

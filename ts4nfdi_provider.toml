@@ -28,6 +28,8 @@ endpoint = "collections/"
 id_fields = ["id"]
 label_fields = ["label"]
 help_fields = ["description"]
+permalink_base = "https://w3id.org/ts4nfdi/collection/"
+terminology_badge_limit = 12
 # exclude_selected_attribute_uris = ["https://example.org/terms/domain/terminology/collection"]
 
 [frontend]

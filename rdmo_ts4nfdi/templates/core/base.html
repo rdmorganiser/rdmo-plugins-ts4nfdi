@@ -1,21 +1,12 @@
 {% extends "core/base.html" %}
-{% load compress static ts4nfdi_tags ulb_tags %}
-
-{% block css %}
-{{ block.super }}
-
-{% compress css %}
-    {{ block.super }}
-{% endcompress %}
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ts4nfdi/terminology-service-suite-js@6.12.0/dist/terminology-service-suite-js.css" />
-<link rel="stylesheet" href="{% static 'core/css/terminology_widget.css' %}" />
-{% endblock css %}
+{% load static ts4nfdi_tags %}
 
 {% block js %}
     {{ block.super }}
     {% ts4nfdi_frontend_config as ts4nfdi_config %}
     {{ ts4nfdi_config|json_script:"ts4nfdi-frontend-config" }}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ts4nfdi/terminology-service-suite-js@6.12.0/dist/terminology-service-suite-js.css" />
+    <link rel="stylesheet" href="{% static 'core/css/terminology_widget.css' %}" />
     <script src="https://cdn.jsdelivr.net/npm/@ts4nfdi/terminology-service-suite-js@6.12.0/dist/index.iife.js"></script>
     <script src="{% static 'core/js/terminology_widget.js' %}"></script>
 {% endblock js %}
