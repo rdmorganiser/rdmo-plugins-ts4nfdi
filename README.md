@@ -48,6 +48,15 @@ use_legacy = true
 class_name = "ts4nfdi-breadcrumb-style"
 ```
 
+Vendor files
+-----
+
+The TS4NFDI css and js were downloaded and vendored from:
+```shell
+wget https://cdn.jsdelivr.net/npm/@ts4nfdi/terminology-service-suite-js@6.12.0/dist/terminology-service-suite-js.css 
+wget https://cdn.jsdelivr.net/npm/@ts4nfdi/terminology-service-suite-js@6.12.4/dist/index.iife.js  
+```
+
 Acknowledgements
 -----
 This plugin has been developed through the [DMP4NFDI](https://dmp.services.base4nfdi.de/) project,
