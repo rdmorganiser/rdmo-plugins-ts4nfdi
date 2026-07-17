@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdmo xmlns:dc="http://purl.org/dc/elements/1.1/" created="2026-07-17T15:48:18.226502+02:00" required="2.1.0" version="2.5.1">
+	<catalog dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog">
+		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
+		<uri_path>rdmo-plugins-ts4nfdi-example-catalog</uri_path>
+		<dc:comment/>
+		<order>0</order>
+		<title lang="en">rdmo-plugins-ts4nfdi-example-catalog</title>
+		<help lang="en"/>
+		<title lang="de">rdmo-plugins-ts4nfdi-example-catalog</title>
+		<help lang="de"/>
+		<sections>
+			<section dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/section" order="1"/>
+		</sections>
+	</catalog>
+	<section dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/section">
+		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
+		<uri_path>rdmo-plugins-ts4nfdi-example-catalog/section</uri_path>
+		<dc:comment/>
+		<title lang="en">section</title>
+		<short_title lang="en"/>
+		<title lang="de">section</title>
+		<short_title lang="de"/>
+		<pages>
+			<page dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/page" order="1"/>
+		</pages>
+	</section>
+	<page dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/page">
+		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
+		<uri_path>rdmo-plugins-ts4nfdi-example-catalog/page</uri_path>
+		<dc:comment/>
+		<attribute/>
+		<is_collection>False</is_collection>
+		<title lang="en">Page</title>
+		<short_title lang="en"/>
+		<help lang="en"/>
+		<verbose_name lang="en"/>
+		<title lang="de">Page</title>
+		<short_title lang="de"/>
+		<help lang="de"/>
+		<verbose_name lang="de"/>
+		<questionsets/>
+		<questions>
+			<question dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/ontologies" order="0"/>
+			<question dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/collections" order="1"/>
+			<question dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/collection-terminologies" order="2"/>
+		</questions>
+		<conditions/>
+	</page>
+	<question dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/ontologies">
+		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
+		<uri_path>rdmo-plugins-ts4nfdi-example-catalog/ontologies</uri_path>
+		<dc:comment>https://rdmo.fairagro.net/terms/questions/dmp4nfdi/v1-0-0/DMP/Dataset/Metadata/rdadmp_metadata_standard_id/rdadmp_identifier
+https://rdmorganiser.github.io/terms/domain/project/dataset/metadata/standards
+https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
+		<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/ontologies"/>
+		<is_collection>False</is_collection>
+		<is_optional>False</is_optional>
+		<help lang="en"/>
+		<text lang="en">Ontologies</text>
+		<default_text lang="en"/>
+		<verbose_name lang="en"/>
+		<help lang="de"/>
+		<text lang="de">Ontologies</text>
+		<default_text lang="de"/>
+		<verbose_name lang="de"/>
+		<default_option/>
+		<default_external_id/>
+		<widget_type>select_creatable</widget_type>
+		<value_type>option</value_type>
+		<maximum/>
+		<minimum/>
+		<step/>
+		<unit/>
+		<width/>
+		<optionsets>
+			<optionset dc:uri="https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/ontologies"/>
+		</optionsets>
+		<conditions/>
+	</question>
+	<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/ontologies">
+		<uri_prefix>https://ts4nfdi.github.io</uri_prefix>
+		<key>ontologies</key>
+		<path>rdmo-plugins-ts4nfdi/ontologies</path>
+		<dc:comment/>
+		<parent dc:uri="https://ts4nfdi.github.io/terms/domain/rdmo-plugins-ts4nfdi"/>
+	</attribute>
+	<attribute dc:uri="https://ts4nfdi.github.io/terms/domain/rdmo-plugins-ts4nfdi">
+		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
+		<key>rdmo-plugins-ts4nfdi</key>
+		<path>rdmo-plugins-ts4nfdi</path>
+		<dc:comment/>
+		<parent/>
+	</attribute>
+	<optionset dc:uri="https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/ontologies">
+		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
+		<uri_path>rdmo-plugins-ts4nfdi/ontologies</uri_path>
+		<dc:comment>https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/ontologies</dc:comment>
+		<provider_key>ts4nfdi_ontologies</provider_key>
+		<options/>
+		<conditions/>
+	</optionset>
+	<question dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/collections">
+		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
+		<uri_path>rdmo-plugins-ts4nfdi-example-catalog/collections</uri_path>
+		<dc:comment>https://rdmo.fairagro.net/terms/questions/dmp4nfdi/v1-0-0/DMP/Dataset/Metadata/rdadmp_metadata_standard_id/rdadmp_identifier
+https://rdmorganiser.github.io/terms/domain/project/dataset/metadata/standards
+https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
+		<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/collections"/>
+		<is_collection>True</is_collection>
+		<is_optional>False</is_optional>
+		<help lang="en"/>
+		<text lang="en">Collections</text>
+		<default_text lang="en"/>
+		<verbose_name lang="en"/>
+		<help lang="de"/>
+		<text lang="de">Collections</text>
+		<default_text lang="de"/>
+		<verbose_name lang="de"/>
+		<default_option/>
+		<default_external_id/>
+		<widget_type>select</widget_type>
+		<value_type>option</value_type>
+		<maximum/>
+		<minimum/>
+		<step/>
+		<unit/>
+		<width/>
+		<optionsets>
+			<optionset dc:uri="https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/collections"/>
+		</optionsets>
+		<conditions/>
+	</question>
+	<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/collections">
+		<uri_prefix>https://ts4nfdi.github.io</uri_prefix>
+		<key>collections</key>
+		<path>rdmo-plugins-ts4nfdi/collections</path>
+		<dc:comment/>
+		<parent dc:uri="https://ts4nfdi.github.io/terms/domain/rdmo-plugins-ts4nfdi"/>
+	</attribute>
+	<optionset dc:uri="https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/collections">
+		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
+		<uri_path>rdmo-plugins-ts4nfdi/collections</uri_path>
+		<dc:comment>https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/collections</dc:comment>
+		<provider_key>ts4nfdi_collections</provider_key>
+		<options/>
+		<conditions/>
+	</optionset>
+	<question dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/collection-terminologies">
+		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
+		<uri_path>rdmo-plugins-ts4nfdi-example-catalog/collection-terminologies</uri_path>
+		<dc:comment>https://rdmo.fairagro.net/terms/questions/dmp4nfdi/v1-0-0/DMP/Dataset/Metadata/rdadmp_metadata_standard_id/rdadmp_identifier
+https://rdmorganiser.github.io/terms/domain/project/dataset/metadata/standards
+https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
+		<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/collection-terminologies"/>
+		<is_collection>True</is_collection>
+		<is_optional>False</is_optional>
+		<help lang="en"/>
+		<text lang="en">Collection Terminologies</text>
+		<default_text lang="en"/>
+		<verbose_name lang="en"/>
+		<help lang="de"/>
+		<text lang="de">Collection Terminologies</text>
+		<default_text lang="de"/>
+		<verbose_name lang="de"/>
+		<default_option/>
+		<default_external_id/>
+		<widget_type>select</widget_type>
+		<value_type>option</value_type>
+		<maximum/>
+		<minimum/>
+		<step/>
+		<unit/>
+		<width/>
+		<optionsets>
+			<optionset dc:uri="https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/collection-terminologies"/>
+		</optionsets>
+		<conditions/>
+	</question>
+	<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/collection-terminologies">
+		<uri_prefix>https://ts4nfdi.github.io</uri_prefix>
+		<key>collection-terminologies</key>
+		<path>rdmo-plugins-ts4nfdi/collection-terminologies</path>
+		<dc:comment/>
+		<parent dc:uri="https://ts4nfdi.github.io/terms/domain/rdmo-plugins-ts4nfdi"/>
+	</attribute>
+	<optionset dc:uri="https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/collection-terminologies">
+		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
+		<uri_path>rdmo-plugins-ts4nfdi/collection-terminologies</uri_path>
+		<dc:comment>https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/collection-terminologies</dc:comment>
+		<provider_key>ts4nfdi_fairagro_collection_terminologies</provider_key>
+		<options/>
+		<conditions/>
+	</optionset>
+</rdmo>
