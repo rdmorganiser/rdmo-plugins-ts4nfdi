@@ -28,6 +28,8 @@ The gateway base URL is configured through `TS4NFDI_PROVIDER`. See `ts4nfdi_prov
 
 Providers can also remove already selected project values from autocomplete results by setting `exclude_selected_attribute_uris` for the relevant attribute URI(s) in `ts4nfdi_provider.toml`.
 
+For `TS4NFDICollectionsProvider`, this behavior is disabled by default because repeated RDMO question sets can store the same collection option in different `set_prefix` and `set_index` contexts. To opt in, set `exclude_selected_collection_options = true` in the `ts4nfdi_collections` provider config.
+
 If a provider request fails, the plugin can return a disabled diagnostic option by setting `show_request_errors = true` (default). The text can be customized with `request_error_text` and `request_error_help`.
 
 Frontend features are configured in the same `TS4NFDI_PROVIDER` dictionary under `[frontend]`. The plugin renders this as JSON before loading `terminology_widget.js`, so static JavaScript does not need to be edited:

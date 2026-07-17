@@ -38,12 +38,13 @@ class TS4NFDICollectionsProvider(TS4NFDIBaseProvider):
                 options.append(option)
 
         options = self.deduplicate_options(options, provider_config)
-        options = self.exclude_selected_collection_options(
-            project,
-            options,
-            provider_config,
-            search,
-        )
+        if provider_config.get("exclude_selected_collection_options") is True:
+            options = self.exclude_selected_collection_options(
+                project,
+                options,
+                provider_config,
+                search,
+            )
         return options[: provider_config.get("limit", 20)]
 
     def exclude_selected_collection_options(self, project, options, provider_config, search):

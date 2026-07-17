@@ -31,6 +31,7 @@ help_fields = ["description"]
 uri_fields = ["iri", "uri", "permalink", "permaLink", "permalinkUrl"]
 permalink_base = "https://w3id.org/ts4nfdi/collection/"
 terminology_badge_limit = 12
+exclude_selected_collection_options = false
 preserve_exact_selected_search = false
 selected_match_fields = ["id", "uuid"]
 exclude_selected_attribute_uris = ["https://rdmorganiser.github.io/terms/domain/project/dataset/metadata/standards"]
