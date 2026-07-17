@@ -36,6 +36,20 @@ preserve_exact_selected_search = false
 selected_match_fields = ["id", "uuid"]
 exclude_selected_attribute_uris = ["https://rdmorganiser.github.io/terms/domain/project/dataset/metadata/standards"]
 
+[providers.ts4nfdi_fairagro_collection_terminologies]
+endpoint = "ols4/api/ontologies"
+collection_id = "ff5491d1-d0a9-481e-ac90-0fad065fa097"
+collection_label = "FAIRagro TS collection"
+collection_id_param = "collectionId"
+size = 500
+page = 0
+fallback_endpoint = "collections/"
+limit = 100
+id_fields = ["URI", "config.id", "uri", "ontologyId", "id"]
+label_fields = ["config.title", "label", "ontologyId", "name", "title"]
+help_fields = ["config.description", "description", "definition", "summary"]
+dedupe_fields = ["id"]
+
 [frontend]
 breadcrumbs_enabled = false
 

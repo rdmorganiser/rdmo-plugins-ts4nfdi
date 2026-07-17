@@ -1,12 +1,19 @@
 import json
 import logging
-from html import escape
-from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 from rdmo.options.providers import Provider
 
 from rdmo_ts4nfdi.config import load_config
+
+from .utils import (
+    add_query_params,
+    extract_results,
+    join_url,
+    normalize_list,
+    option_description,
+    redact_sensitive_params,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -29,14 +36,14 @@ class TS4NFDIBaseProvider(Provider):
         api_url = self.get_request_url(provider_config)
         timeout = provider_config.get("timeout", 10)
         params = self.build_query_params(provider_config, search)
-        request_url = self.add_query_params(api_url, params)
+        request_url = add_query_params(api_url, params)
         self.last_request_error = None
 
         logger.debug(
             "TS4NFDI provider '%s' requesting %s with params=%s timeout=%s",
             self.key,
             api_url,
-            self.redact_sensitive_params(params),
+            redact_sensitive_params(params),
             timeout,
         )
 
@@ -57,7 +64,7 @@ class TS4NFDIBaseProvider(Provider):
                 "TS4NFDI provider '%s' received payload type=%s result_count=%s",
                 self.key,
                 type(payload).__name__,
-                len(self.extract_results(payload)),
+                len(extract_results(payload)),
             )
             return payload
 
@@ -68,22 +75,7 @@ class TS4NFDIBaseProvider(Provider):
         base_url = provider_config.get("base_url", API_BASE_URL_DEFAULT)
         endpoint = provider_config.get("endpoint", "")
 
-        return self.join_url(base_url, endpoint)
-
-    def join_url(self, base_url, endpoint):
-        if not endpoint:
-            return base_url
-
-        return f"{base_url.rstrip('/')}/{endpoint.lstrip('/')}"
-
-    def add_query_params(self, api_url, params):
-        params = {key: value for key, value in params.items() if value not in (None, "", [])}
-
-        if not params:
-            return api_url
-
-        separator = "&" if "?" in api_url else "?"
-        return f"{api_url}{separator}{urlencode(params, doseq=True)}"
+        return join_url(base_url, endpoint)
 
     def get_request_headers(self, provider_config):
         headers = {
@@ -117,82 +109,6 @@ class TS4NFDIBaseProvider(Provider):
             sorted(provider_config.keys()),
         )
         return provider_config
-
-    def extract_results(self, payload):
-        if isinstance(payload, list):
-            return payload
-
-        if isinstance(payload, dict):
-            response = payload.get("response")
-            if isinstance(response, dict) and isinstance(response.get("docs"), list):
-                return response["docs"]
-
-            for key in ("items", "results", "artefacts", "data", "collection", "collections"):
-                value = payload.get(key)
-                if isinstance(value, list):
-                    return value
-
-        return []
-
-    def get_first_value(self, data, keys):
-        for key in keys:
-            value = self.get_value(data, key)
-            normalized = self.normalize_value(value)
-            if normalized:
-                return normalized
-        return None
-
-    def get_value(self, data, key):
-        if not isinstance(data, dict):
-            return None
-
-        if key in data:
-            return data[key]
-
-        path_separator = "->" if "->" in key else "."
-        if path_separator not in key:
-            return None
-
-        value = data
-        for part in key.split(path_separator):
-            if not isinstance(value, dict) or part not in value:
-                return None
-            value = value[part]
-
-        return value
-
-    def normalize_value(self, value):
-        if isinstance(value, str):
-            return value.strip() or None
-
-        if isinstance(value, dict):
-            for nested_key in ("label", "value", "text", "en", "de"):
-                nested_value = value.get(nested_key)
-                normalized = self.normalize_value(nested_value)
-                if normalized:
-                    return normalized
-            return None
-
-        if isinstance(value, list):
-            for item in value:
-                normalized = self.normalize_value(item)
-                if normalized:
-                    return normalized
-            return None
-
-        if value is None:
-            return None
-
-        return str(value)
-
-    def normalize_list(self, value):
-        if value is None:
-            return []
-
-        if isinstance(value, str):
-            return [value]
-
-        return list(value)
 
     def deduplicate_options(self, options, provider_config):
         dedupe_fields = provider_config.get("dedupe_fields", ("id",))
@@ -242,7 +158,7 @@ class TS4NFDIBaseProvider(Provider):
             {
                 "id": f"__ts4nfdi_request_error__:{self.key}",
                 "text": text,
-                "help": f'<span class="ts4nfdi-option-description">{escape(help_text)}</span>',
+                "help": option_description([help_text]),
                 "isDisabled": True,
                 "disabled": True,
                 "ts4nfdi_error": True,
@@ -257,7 +173,7 @@ class TS4NFDIBaseProvider(Provider):
         return str(error)
 
     def exclude_selected_options(self, project, options, provider_config):
-        selected_attribute_uris = self.normalize_list(
+        selected_attribute_uris = normalize_list(
             provider_config.get("exclude_selected_attribute_uris")
             or provider_config.get("selected_attribute_uris")
             or provider_config.get("attribute_uris")
@@ -316,11 +232,3 @@ class TS4NFDIBaseProvider(Provider):
             option.get(field) in selected_values
             for field in selected_match_fields
         )
-
-    def redact_sensitive_params(self, params):
-        sensitive_keys = {"api_key", "apikey", "authorization", "token"}
-
-        return {
-            key: "***" if key.lower() in sensitive_keys else value
-            for key, value in params.items()
-        }

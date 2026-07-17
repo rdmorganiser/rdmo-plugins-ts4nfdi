@@ -1,7 +1,15 @@
 import logging
-from html import escape
 
 from .base import TS4NFDIBaseProvider
+from .utils import (
+    extract_results,
+    get_first_value,
+    normalize_list,
+    option_badge,
+    option_breadcrumb,
+    option_description,
+    option_separator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +28,7 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
         if payload is None:
             return self.get_request_error_options(provider_config)
 
-        results = self.filter_results(self.extract_results(payload), provider_config)
+        results = self.filter_results(extract_results(payload), provider_config)
         options = []
 
         logger.debug(
@@ -83,7 +91,7 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
 
     def matches_ontology_filter(self, result, provider_config):
         ontologies = provider_config.get("ontologies") or provider_config.get("terminologies")
-        ontologies = {ontology.lower() for ontology in self.normalize_list(ontologies)}
+        ontologies = {ontology.lower() for ontology in normalize_list(ontologies)}
 
         if not ontologies:
             return True
@@ -93,7 +101,7 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
             ("ontology", "ontology_iri", "source_name", "sourceName", "short_form", "backend_type"),
         )
         values = [
-            self.get_first_value(result, (field,))
+            get_first_value(result, (field,))
             for field in ontology_fields
         ]
 
@@ -104,22 +112,22 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
 
     def matches_iri_prefix_filter(self, result, provider_config):
         prefixes = provider_config.get("iri_prefixes") or provider_config.get("iri_prefix")
-        prefixes = tuple(self.normalize_list(prefixes))
+        prefixes = tuple(normalize_list(prefixes))
 
         if not prefixes:
             return True
 
-        identifier = self.get_first_value(result, provider_config.get("id_fields", self.DEFAULT_ID_FIELDS))
+        identifier = get_first_value(result, provider_config.get("id_fields", self.DEFAULT_ID_FIELDS))
 
         return bool(identifier and identifier.startswith(prefixes))
 
     def matches_type_filter(self, result, provider_config):
-        entity_types = self.normalize_list(provider_config.get("entity_types"))
+        entity_types = normalize_list(provider_config.get("entity_types"))
 
         if not entity_types or provider_config.get("entity_types_param"):
             return True
 
-        result_type = self.get_first_value(result, ("type", "@type"))
+        result_type = get_first_value(result, ("type", "@type"))
 
         if not result_type:
             return True
@@ -131,8 +139,8 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
         if not isinstance(result, dict):
             return None
 
-        identifier = self.get_first_value(result, provider_config.get("id_fields", self.DEFAULT_ID_FIELDS))
-        label = self.get_first_value(result, provider_config.get("label_fields", self.DEFAULT_LABEL_FIELDS))
+        identifier = get_first_value(result, provider_config.get("id_fields", self.DEFAULT_ID_FIELDS))
+        label = get_first_value(result, provider_config.get("label_fields", self.DEFAULT_LABEL_FIELDS))
 
         if not identifier or not label:
             return None
@@ -150,15 +158,15 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
         return option
 
     def build_help_html(self, result, provider_config):
-        ontology_name = self.get_first_value(
+        ontology_name = get_first_value(
             result,
             provider_config.get("ontology_fields", ("ontology_name", "ontology")),
         )
-        short_form = self.get_first_value(
+        short_form = get_first_value(
             result,
             provider_config.get("short_form_fields", ("short_form", "obo_id")),
         )
-        description = self.get_first_value(
+        description = get_first_value(
             result,
             provider_config.get("help_fields", self.DEFAULT_HELP_FIELDS),
         )
@@ -166,22 +174,16 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
         parts = []
 
         if ontology_name or short_form:
-            breadcrumb = ['<span class="ts4nfdi-option-breadcrumb">']
+            badges = []
             if ontology_name:
-                breadcrumb.append(
-                    f'<span class="ts4nfdi-option-badge ts4nfdi-option-badge--ontology">{escape(ontology_name)}</span>'
-                )
+                badges.append(option_badge(ontology_name, "ontology"))
             if short_form:
-                breadcrumb.append('<span class="ts4nfdi-option-separator">›</span>')  # noqa: RUF001
-                breadcrumb.append(
-                    f'<span class="ts4nfdi-option-badge ts4nfdi-option-badge--term">{escape(short_form)}</span>'
-                )
-            breadcrumb.append('</span>')
-            parts.append("".join(breadcrumb))
+                badges.append(option_separator())
+                badges.append(option_badge(short_form, "term"))
+            parts.append(option_breadcrumb(badges))
 
-        if description:
-            parts.append(
-                f'<span class="ts4nfdi-option-description">{escape(description)}</span>'
-            )
+        description_html = option_description([description])
+        if description_html:
+            parts.append(description_html)
 
         return "".join(parts) or None

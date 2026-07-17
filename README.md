@@ -21,6 +21,7 @@ INSTALLED_APPS += ['rdmo_ts4nfdi']
 OPTIONSET_PROVIDERS += [
     ("ts4nfdi_ontologies", _("TS4NFDI Ontologies"), "rdmo_ts4nfdi.providers.ontologies.TS4NFDIOntologiesProvider"),
     ("ts4nfdi_collections", _("TS4NFDI Collections"), "rdmo_ts4nfdi.providers.collections.TS4NFDICollectionsProvider"),
+    ("ts4nfdi_collection_terminologies_fairagro", _("TS4NFDI Collection Terminologies: FAIRAgro ("), "rdmo_ts4nfdi.providers.collection_terminologies.TS4NFDICollectionTerminologiesProvider"),
 ]
 ```
 
@@ -29,6 +30,8 @@ The gateway base URL is configured through `TS4NFDI_PROVIDER`. See `ts4nfdi_prov
 Providers can also remove already selected project values from autocomplete results by setting `exclude_selected_attribute_uris` for the relevant attribute URI(s) in `ts4nfdi_provider.toml`.
 
 For `TS4NFDICollectionsProvider`, this behavior is disabled by default because repeated RDMO question sets can store the same collection option in different `set_prefix` and `set_index` contexts. To opt in, set `exclude_selected_collection_options = true` in the `ts4nfdi_collections` provider config.
+
+`TS4NFDICollectionTerminologiesProvider` lists the terminologies for one configured collection. Configure `collection_id` and use the `ols4/api/ontologies` endpoint with `collectionId`; `fallback_endpoint = "collections/"` can be used to read the embedded `terminologies` list from the collections overview when the ontology endpoint is unavailable or empty.
 
 If a provider request fails, the plugin can return a disabled diagnostic option by setting `show_request_errors = true` (default). The text can be customized with `request_error_text` and `request_error_help`.
 

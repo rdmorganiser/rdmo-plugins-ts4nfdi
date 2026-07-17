@@ -52,6 +52,16 @@
     color: #1f4f8f;
 }
 
+.ts4nfdi-option-badge--collection {
+    background: #f2ecff;
+    color: #56348f;
+}
+
+.ts4nfdi-option-badge--source {
+    background: #fff3dc;
+    color: #77500f;
+}
+
 .ts4nfdi-option-badge--term {
     background: #e8f7ed;
     color: #25643b;

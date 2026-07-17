@@ -1,7 +1,7 @@
 import logging
-from html import escape
 
 from .base import TS4NFDIBaseProvider
+from .utils import extract_results, get_first_value, option_badge, option_breadcrumb, option_description
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class TS4NFDICollectionsProvider(TS4NFDIBaseProvider):
         if payload is None:
             return self.get_request_error_options(provider_config)
 
-        results = self.extract_results(payload)
+        results = extract_results(payload)
         filtered_results = self.filter_results(results, search)
         options = []
 
@@ -134,11 +134,11 @@ class TS4NFDICollectionsProvider(TS4NFDIBaseProvider):
         if not isinstance(result, dict):
             return None
 
-        uuid = self.get_first_value(
+        uuid = get_first_value(
             result,
             provider_config.get("id_fields", ("id",)),
         )
-        label = self.get_first_value(
+        label = get_first_value(
             result,
             provider_config.get("label_fields", ("label",)),
         )
@@ -160,7 +160,7 @@ class TS4NFDICollectionsProvider(TS4NFDIBaseProvider):
         return option
 
     def get_collection_identifier(self, result, provider_config, uuid):
-        identifier = self.get_first_value(
+        identifier = get_first_value(
             result,
             provider_config.get(
                 "uri_fields",
@@ -174,12 +174,12 @@ class TS4NFDICollectionsProvider(TS4NFDIBaseProvider):
         return self.build_permalink(uuid, provider_config)
 
     def build_help_html(self, result, provider_config):
-        uuid = self.get_first_value(
+        uuid = get_first_value(
             result,
             provider_config.get("id_fields", ("id",)),
         )
-        description = self.get_first_value(result, ("description",))
-        creator = self.get_first_value(result, ("creator",))
+        description = get_first_value(result, ("description",))
+        creator = get_first_value(result, ("creator",))
         is_public = result.get("isPublic")
         permalink = self.get_collection_identifier(result, provider_config, uuid)
 
@@ -187,34 +187,19 @@ class TS4NFDICollectionsProvider(TS4NFDIBaseProvider):
         badges = []
 
         if creator:
-            badges.append(
-                '<span class="ts4nfdi-option-badge ts4nfdi-option-badge--ontology">'
-                f'{escape(creator)}'
-                "</span>"
-            )
+            badges.append(option_badge(creator, "ontology"))
 
         if is_public is not None:
             visibility = "public" if is_public else "restricted"
-            badges.append(
-                '<span class="ts4nfdi-option-badge ts4nfdi-option-badge--term">'
-                f'{visibility}'
-                "</span>"
-            )
+            badges.append(option_badge(visibility, "term"))
 
         terminology_summary = self.build_terminology_summary(result, provider_config)
         if terminology_summary:
-            badges.append(
-                '<span class="ts4nfdi-option-badge ts4nfdi-option-badge--term">'
-                f'{escape(terminology_summary)}'
-                "</span>"
-            )
+            badges.append(option_badge(terminology_summary, "term"))
 
-        if badges:
-            parts.append(
-                '<span class="ts4nfdi-option-breadcrumb">'
-                f'{"".join(badges)}'
-                "</span>"
-            )
+        breadcrumb = option_breadcrumb(badges)
+        if breadcrumb:
+            parts.append(breadcrumb)
 
         details = []
         if uuid:
@@ -225,12 +210,9 @@ class TS4NFDICollectionsProvider(TS4NFDIBaseProvider):
         description_parts = [description] if description else []
         description_parts.extend(details)
 
-        if description_parts:
-            parts.append(
-                '<span class="ts4nfdi-option-description">'
-                f'{escape(" | ".join(description_parts))}'
-                "</span>"
-            )
+        description_html = option_description(description_parts)
+        if description_html:
+            parts.append(description_html)
 
         return "".join(parts) or None
 
@@ -256,8 +238,8 @@ class TS4NFDICollectionsProvider(TS4NFDIBaseProvider):
             if not isinstance(terminology, dict):
                 continue
 
-            label = self.get_first_value(terminology, ("label", "uri"))
-            source = self.get_first_value(terminology, ("source",))
+            label = get_first_value(terminology, ("label", "uri"))
+            source = get_first_value(terminology, ("source",))
             if not label:
                 continue
 
