@@ -1,6 +1,7 @@
 import importlib
 import sys
 import types
+import xml.etree.ElementTree as ElementTree
 from pathlib import Path
 
 import pytest
@@ -9,11 +10,13 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def install_rdmo_stubs(monkeypatch):
-    django = types.ModuleType("django")
-    django_conf = types.ModuleType("django.conf")
-    rdmo = types.ModuleType("rdmo")
-    rdmo_options = types.ModuleType("rdmo.options")
-    rdmo_options_providers = types.ModuleType("rdmo.options.providers")
+    django = types.ModuleType('django')
+    django_conf = types.ModuleType('django.conf')
+    django_core = types.ModuleType('django.core')
+    django_core_cache = types.ModuleType('django.core.cache')
+    rdmo = types.ModuleType('rdmo')
+    rdmo_options = types.ModuleType('rdmo.options')
+    rdmo_options_providers = types.ModuleType('rdmo.options.providers')
 
     class Provider:
         pass
@@ -21,22 +24,34 @@ def install_rdmo_stubs(monkeypatch):
     class Settings:
         TS4NFDI_PROVIDER = {}
 
+    class Cache:
+        def get(self, key):
+            return None
+
+        def set(self, key, value, timeout):
+            return None
+
     django_conf.settings = Settings()
     django.conf = django_conf
+    django.core = django_core
+    django_core.cache = django_core_cache
+    django_core_cache.cache = Cache()
     rdmo.options = rdmo_options
     rdmo_options.providers = rdmo_options_providers
     rdmo_options_providers.Provider = Provider
 
-    monkeypatch.setitem(sys.modules, "django", django)
-    monkeypatch.setitem(sys.modules, "django.conf", django_conf)
-    monkeypatch.setitem(sys.modules, "rdmo", rdmo)
-    monkeypatch.setitem(sys.modules, "rdmo.options", rdmo_options)
-    monkeypatch.setitem(sys.modules, "rdmo.options.providers", rdmo_options_providers)
+    monkeypatch.setitem(sys.modules, 'django', django)
+    monkeypatch.setitem(sys.modules, 'django.conf', django_conf)
+    monkeypatch.setitem(sys.modules, 'django.core', django_core)
+    monkeypatch.setitem(sys.modules, 'django.core.cache', django_core_cache)
+    monkeypatch.setitem(sys.modules, 'rdmo', rdmo)
+    monkeypatch.setitem(sys.modules, 'rdmo.options', rdmo_options)
+    monkeypatch.setitem(sys.modules, 'rdmo.options.providers', rdmo_options_providers)
 
     return django_conf.settings
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope='module')
 def provider_modules():
     monkeypatch = pytest.MonkeyPatch()
     monkeypatch.syspath_prepend(str(ROOT))
@@ -44,11 +59,19 @@ def provider_modules():
     config = None
 
     try:
-        config = importlib.import_module("rdmo_ts4nfdi.config")
-        providers = importlib.import_module("rdmo_ts4nfdi.providers")
+        config = importlib.import_module('rdmo_ts4nfdi.config')
+        providers = importlib.import_module('rdmo_ts4nfdi.providers')
+        gateway = importlib.import_module('rdmo_ts4nfdi.services.gateway')
+        upstream = importlib.import_module('rdmo_ts4nfdi.upstream')
+        utils = importlib.import_module('rdmo_ts4nfdi.utils')
         yield types.SimpleNamespace(
             load_config=config.load_config,
+            load_annotation_matchers=config.load_annotation_matchers,
+            load_frontend_config=config.load_frontend_config,
             settings=settings,
+            gateway=gateway,
+            upstream=upstream,
+            utils=utils,
             collection_terminologies_provider=providers.TS4NFDICollectionTerminologiesProvider,
             collections_provider=providers.TS4NFDICollectionsProvider,
             ontologies_provider=providers.TS4NFDIOntologiesProvider,
@@ -57,19 +80,19 @@ def provider_modules():
         if config is not None:
             config.load_config.cache_clear()
         for module_name in list(sys.modules):
-            if module_name == "rdmo_ts4nfdi" or module_name.startswith("rdmo_ts4nfdi."):
+            if module_name == 'rdmo_ts4nfdi' or module_name.startswith('rdmo_ts4nfdi.'):
                 sys.modules.pop(module_name, None)
         monkeypatch.undo()
 
 
 def configure_provider(provider_modules, key, provider_config):
     provider_modules.settings.TS4NFDI_PROVIDER = {
-        "defaults": {
-            "base_url": "https://example.test/api",
-            "dedupe_fields": ["id"],
-            "limit": 20,
+        'defaults': {
+            'base_url': 'https://example.test/api',
+            'dedupe_fields': ['id'],
+            'limit': 20,
         },
-        "providers": {
+        'providers': {
             key: provider_config,
         },
     }
@@ -84,33 +107,33 @@ def make_provider(provider_class, key, payload):
 
 
 def test_ontology_provider_get_options_returns_mapped_options(provider_modules):
-    key = "ts4nfdi_ontologies"
+    key = 'ts4nfdi_ontologies'
     configure_provider(
         provider_modules,
         key,
         {
-            "endpoint": "search",
-            "id_fields": ["iri"],
-            "label_fields": ["label"],
-            "help_fields": ["description"],
-            "ontology_fields": ["ontology"],
-            "ontologies": ["edam"],
-            "iri_prefixes": ["http://edamontology.org/format_"],
+            'endpoint': 'search',
+            'id_fields': ['iri'],
+            'label_fields': ['label'],
+            'help_fields': ['description'],
+            'ontology_fields': ['ontology'],
+            'ontologies': ['edam'],
+            'iri_prefixes': ['http://edamontology.org/format_'],
         },
     )
     payload = {
-        "response": {
-            "docs": [
+        'response': {
+            'docs': [
                 {
-                    "iri": "http://edamontology.org/format_1915",
-                    "label": "JSON",
-                    "description": "JavaScript Object Notation",
-                    "ontology": "edam",
+                    'iri': 'http://edamontology.org/format_1915',
+                    'label': 'JSON',
+                    'description': 'JavaScript Object Notation',
+                    'ontology': 'edam',
                 },
                 {
-                    "iri": "http://example.test/not-edam",
-                    "label": "Filtered out",
-                    "ontology": "other",
+                    'iri': 'http://example.test/not-edam',
+                    'label': 'Filtered out',
+                    'ontology': 'other',
                 },
             ],
         },
@@ -118,17 +141,17 @@ def test_ontology_provider_get_options_returns_mapped_options(provider_modules):
 
     options = make_provider(provider_modules.ontologies_provider, key, payload).get_options(
         project=None,
-        search="json",
+        search='json',
     )
 
     assert options == [
         {
-            "id": "http://edamontology.org/format_1915",
-            "text": "JSON",
-            "help": (
+            'id': 'http://edamontology.org/format_1915',
+            'text': 'JSON',
+            'help': (
                 '<span class="ts4nfdi-option-breadcrumb">'
                 '<span class="ts4nfdi-option-badge ts4nfdi-option-badge--ontology">edam</span>'
-                "</span>"
+                '</span>'
                 '<span class="ts4nfdi-option-description">JavaScript Object Notation</span>'
             ),
         },
@@ -136,87 +159,87 @@ def test_ontology_provider_get_options_returns_mapped_options(provider_modules):
 
 
 def test_collections_provider_get_options_returns_mapped_collection_options(provider_modules):
-    key = "ts4nfdi_collections"
+    key = 'ts4nfdi_collections'
     configure_provider(
         provider_modules,
         key,
         {
-            "endpoint": "collections/",
-            "id_fields": ["id"],
-            "label_fields": ["label"],
-            "uri_fields": ["iri", "uri"],
-            "permalink_base": "https://w3id.org/ts4nfdi/collection/",
-            "terminology_badge_limit": 2,
-            "exclude_selected_collection_options": False,
+            'endpoint': 'collections/',
+            'id_fields': ['id'],
+            'label_fields': ['label'],
+            'uri_fields': ['iri', 'uri'],
+            'permalink_base': 'https://w3id.org/ts4nfdi/collection/',
+            'terminology_badge_limit': 2,
+            'exclude_selected_collection_options': False,
         },
     )
     payload = {
-        "collections": [
+        'collections': [
             {
-                "id": "collection-1",
-                "label": "NFDI metadata standards",
-                "description": "Relevant metadata standards",
-                "creator": "TS4NFDI",
-                "isPublic": True,
-                "terminologies": [
-                    {"label": "DataCite", "source": "base"},
-                    {"label": "Dublin Core"},
+                'id': 'collection-1',
+                'label': 'NFDI metadata standards',
+                'description': 'Relevant metadata standards',
+                'creator': 'TS4NFDI',
+                'isPublic': True,
+                'terminologies': [
+                    {'label': 'DataCite', 'source': 'base'},
+                    {'label': 'Dublin Core'},
                 ],
             },
             {
-                "id": "collection-2",
-                "label": "Other collection",
-                "description": "Does not match search",
+                'id': 'collection-2',
+                'label': 'Other collection',
+                'description': 'Does not match search',
             },
         ],
     }
 
     options = make_provider(provider_modules.collections_provider, key, payload).get_options(
         project=None,
-        search="metadata",
+        search='metadata',
     )
 
     assert len(options) == 1
-    assert options[0]["id"] == "https://w3id.org/ts4nfdi/collection/collection-1"
-    assert options[0]["text"] == "NFDI metadata standards"
-    assert options[0]["uuid"] == "collection-1"
-    assert "TS4NFDI" in options[0]["help"]
-    assert "Terminologies: DataCite (base), Dublin Core" in options[0]["help"]
-    assert "Relevant metadata standards" in options[0]["help"]
+    assert options[0]['id'] == 'https://w3id.org/ts4nfdi/collection/collection-1'
+    assert options[0]['text'] == 'NFDI metadata standards'
+    assert options[0]['uuid'] == 'collection-1'
+    assert 'TS4NFDI' in options[0]['help']
+    assert 'Terminologies: DataCite (base), Dublin Core' in options[0]['help']
+    assert 'Relevant metadata standards' in options[0]['help']
 
 
 def test_collection_terminologies_provider_get_options_returns_collection_terms(provider_modules):
-    key = "ts4nfdi_collection_terminologies"
+    key = 'ts4nfdi_collection_terminologies'
     configure_provider(
         provider_modules,
         key,
         {
-            "endpoint": "collections/collection-1/terminologies",
-            "collection_id": "collection-1",
-            "collection_label": "NFDI metadata standards",
-            "id_fields": ["URI", "uri"],
-            "label_fields": ["config.title", "label"],
-            "help_fields": ["config.description"],
+            'endpoint': 'collections/collection-1/terminologies',
+            'collection_id': 'collection-1',
+            'collection_label': 'NFDI metadata standards',
+            'id_fields': ['URI', 'uri'],
+            'label_fields': ['config.title', 'label'],
+            'help_fields': ['config.description'],
         },
     )
     payload = {
-        "terminologies": [
+        'terminologies': [
             {
-                "ontologyId": "datacite",
-                "URI": "https://schema.datacite.org",
-                "source": "base",
-                "type": "ontology",
-                "config": {
-                    "title": "DataCite Metadata Schema",
-                    "description": "Metadata schema for research data",
-                    "version": "4.5",
+                'ontologyId': 'datacite',
+                'URI': 'https://schema.datacite.org',
+                'source': 'base',
+                'type': 'ontology',
+                'config': {
+                    'title': 'DataCite Metadata Schema',
+                    'description': 'Metadata schema for research data',
+                    'version': '4.5',
                 },
             },
             {
-                "ontologyId": "other",
-                "URI": "https://example.test/other",
-                "config": {
-                    "title": "Other Terminology",
+                'ontologyId': 'other',
+                'URI': 'https://example.test/other',
+                'config': {
+                    'title': 'Other Terminology',
                 },
             },
         ],
@@ -226,12 +249,135 @@ def test_collection_terminologies_provider_get_options_returns_collection_terms(
         provider_modules.collection_terminologies_provider,
         key,
         payload,
-    ).get_options(project=None, search="datacite")
+    ).get_options(project=None, search='datacite')
 
     assert len(options) == 1
-    assert options[0]["id"] == "https://schema.datacite.org"
-    assert options[0]["text"] == "DataCite Metadata Schema"
-    assert options[0]["ontology_id"] == "datacite"
-    assert "NFDI metadata standards" in options[0]["help"]
-    assert "Metadata schema for research data" in options[0]["help"]
-    assert "version: 4.5" in options[0]["help"]
+    assert options[0]['id'] == 'https://schema.datacite.org'
+    assert options[0]['text'] == 'DataCite Metadata Schema'
+    assert options[0]['ontology_id'] == 'datacite'
+    assert 'NFDI metadata standards' in options[0]['help']
+    assert 'Metadata schema for research data' in options[0]['help']
+    assert 'version: 4.5' in options[0]['help']
+
+
+def test_annotation_config_is_validated_and_sanitized(provider_modules):
+    provider_modules.settings.TS4NFDI_PROVIDER = {
+        'providers': {
+            'ts4nfdi_ontologies': {
+                'endpoint': 'search',
+            },
+        },
+        'frontend': {
+            'annotations': {
+                'enabled': True,
+                'matchers': [
+                    {
+                        'id': 'valid',
+                        'question_uri': 'https://example.test/question',
+                        'attribute_uri': 'https://example.test/attribute',
+                        'optionset_uri': 'https://example.test/optionset',
+                        'resource_type': 'entity',
+                        'provider_key': 'internal-provider-key',
+                        'gateway_params': {
+                            'database': 'ols',
+                            'unsafe': 'ignored',
+                        },
+                    },
+                    {
+                        'id': 'invalid',
+                        'question_uri': 'https://example.test/question',
+                        'resource_type': 'unknown',
+                    },
+                ],
+            },
+        },
+    }
+    provider_modules.load_config.cache_clear()
+
+    matchers = provider_modules.load_annotation_matchers()
+    frontend_config = provider_modules.load_frontend_config()
+
+    assert len(matchers) == 1
+    assert matchers[0]['id'] == 'valid'
+    assert matchers[0]['gateway_params'] == {'database': 'ols'}
+    assert 'provider_key' not in frontend_config['annotations']['matchers'][0]
+    assert 'gateway_params' not in frontend_config['annotations']['matchers'][0]
+
+
+def test_gateway_path_and_query_allowlists(provider_modules):
+    gateway = provider_modules.gateway
+
+    assert gateway.validate_gateway_path('ols4/api/v2/entities') == 'ols4/api/v2/entities'
+
+    with pytest.raises(gateway.GatewayRequestError):
+        gateway.validate_gateway_path('ols4/api/../../auth/me')
+
+    with pytest.raises(gateway.GatewayRequestError):
+        gateway.validate_gateway_path('auth/me')
+
+    with pytest.raises(gateway.GatewayRequestError):
+        gateway.validate_gateway_path('ols4/api/v2/ontologies/%252e%252e/auth')
+
+    class QueryParams(dict):
+        def getlist(self, key):
+            return self[key]
+
+    filtered = gateway.filter_gateway_query(
+        QueryParams(
+            {
+                'iri': ['https://example.test/entity'],
+                'database': ['ols'],
+                'token': ['secret'],
+            }
+        )
+    )
+
+    assert filtered == [
+        ('iri', 'https://example.test/entity'),
+        ('database', 'ols'),
+    ]
+
+
+def test_shared_string_and_iri_utilities(provider_modules):
+    utils = provider_modules.utils
+
+    assert utils.normalize_optional_string('  EDAM  ') == 'EDAM'
+    assert utils.normalize_optional_string('  ') is None
+    assert utils.require_string({'key': ' value '}, 'key') == 'value'
+    assert utils.is_http_iri('https://example.test/terms/1') is True
+    assert utils.is_http_iri('javascript:alert(1)') is False
+
+    with pytest.raises(RuntimeError, match='key is required'):
+        utils.require_string({}, 'key')
+
+
+def test_vendored_tss_assets_match_manifest(provider_modules):
+    manifest = provider_modules.upstream.read_manifest()
+
+    assert manifest['package'] == '@ts4nfdi/terminology-service-suite-js'
+    assert manifest['version']
+    assert provider_modules.upstream.run_vendor_action(check=True) == [
+        f'Vendored TSS {manifest["version"]}: local assets verified.'
+    ]
+
+
+def test_example_catalog_contains_data_format_annotation_question():
+    catalog_path = ROOT / 'xml/rdmo-plugins-ts4nfdi-example-catalog.xml'
+    root = ElementTree.parse(catalog_path).getroot()
+    uri_attribute = '{http://purl.org/dc/elements/1.1/}uri'
+    base_uri = 'https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog'
+
+    elements = {element.get(uri_attribute): element for element in root if element.get(uri_attribute)}
+    page = elements[f'{base_uri}/technical-data-description']
+    question = elements[f'{base_uri}/data-formats']
+
+    assert page.findtext('is_collection') == 'True'
+    assert page.find("questions/question").get(uri_attribute) == f'{base_uri}/data-formats'
+    assert question.findtext('is_collection') == 'True'
+    assert question.findtext("text[@lang='en']") == 'Which data formats arise in your project?'
+    assert question.find('attribute').get(uri_attribute) == (
+        'https://rdmorganiser.github.io/terms/domain/project/dataset/format'
+    )
+    assert question.find('optionsets/optionset').get(uri_attribute) == (
+        'https://rdmo.fairagro.net/terms/options/file_format_ts4nfdi'
+    )

@@ -1,0 +1,25 @@
+{
+  "package": "@ts4nfdi/terminology-service-suite-js",
+  "version": "6.17.0",
+  "repository": "https://github.com/ts4nfdi/terminology-service-suite",
+  "release": "https://github.com/ts4nfdi/terminology-service-suite/releases/tag/v6.17.0",
+  "source": {
+    "registry": "https://registry.npmjs.org",
+    "tarball": "https://registry.npmjs.org/@ts4nfdi/terminology-service-suite-js/-/terminology-service-suite-js-6.17.0.tgz",
+    "integrity": "sha512-OhQeD5LlyjTydUi4msAvbdjT2gmUKYkebOukQ4wQjZiulHFEAMz3K4p0GtOJKRX9tMMkPwAAL1fxdSrEI27kmg=="
+  },
+  "assets": {
+    "script": {
+      "archive_path": "package/dist/index.iife.js",
+      "static_path": "rdmo_ts4nfdi/vendor/tss/index.iife.js",
+      "sha256": "485e020753d744e2e2f3eb20da7098402fa24c7e98081a37a6bd61f644fc918c",
+      "integrity": "sha256-SF4CB1PXROLi8+sg2nCYQC+iTH6YCBo3pr1h9kT8kYw="
+    },
+    "stylesheet": {
+      "archive_path": "package/dist/terminology-service-suite-js.css",
+      "static_path": "rdmo_ts4nfdi/vendor/tss/terminology-service-suite-js.css",
+      "sha256": "016e2479db7bae0d206e8c2b6bb9695fec9f1e4fa31d51fceec0a41939d92fb9",
+      "integrity": "sha256-AW4kedt7rg0gbowra7lpX+yfHk+jHVH87sCkGTnZL7k="
+    }
+  }
+}

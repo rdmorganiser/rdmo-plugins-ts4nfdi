@@ -1,0 +1,252 @@
+.ts4nfdi-annotation-hook:empty {
+    display: none;
+}
+
+.ts4nfdi-annotation-hook {
+    display: grid;
+    gap: 0.45rem;
+    margin: 0.65rem 0 0.25rem;
+}
+
+.ts4nfdi-annotation-row {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 2.3rem;
+    padding: 0.45rem 0.55rem;
+    border: 1px solid #d7e3ef;
+    border-radius: 0.5rem;
+    background: linear-gradient(135deg, #f7fbff 0%, #fbf9ff 100%);
+    box-shadow: 0 1px 2px rgb(16 44 73 / 8%);
+}
+
+.ts4nfdi-annotation-badge,
+.ts4nfdi-option-badge {
+    display: inline-block;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    padding: 0.12rem 0.55rem;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    font-weight: 600;
+}
+
+.ts4nfdi-annotation-badge--entity,
+.ts4nfdi-annotation-badge--term,
+.ts4nfdi-option-badge--term {
+    background: #e8f7ed;
+    color: #25643b;
+}
+
+.ts4nfdi-annotation-badge--ontology,
+.ts4nfdi-option-badge--ontology {
+    background: #e8f1ff;
+    color: #1f4f8f;
+}
+
+.ts4nfdi-annotation-badge--collection,
+.ts4nfdi-option-badge--collection {
+    background: #f2ecff;
+    color: #56348f;
+}
+
+.ts4nfdi-annotation-badge--provider,
+.ts4nfdi-annotation-badge--source,
+.ts4nfdi-annotation-badge--version,
+.ts4nfdi-option-badge--source {
+    background: #fff3dc;
+    color: #77500f;
+}
+
+.ts4nfdi-annotation-label {
+    min-width: 0;
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ts4nfdi-annotation-details {
+    margin-left: auto;
+    padding: 0;
+    border: 0;
+    color: #245f91;
+    background: transparent;
+    font: inherit;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.ts4nfdi-annotation-details:hover,
+.ts4nfdi-annotation-details:focus {
+    color: #174367;
+    text-decoration: underline;
+}
+
+.ts4nfdi-annotation-drawer[hidden] {
+    display: none;
+}
+
+.ts4nfdi-annotation-drawer {
+    position: fixed;
+    z-index: 1045;
+    inset: 0;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.ts4nfdi-annotation-backdrop {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    border: 0;
+    background: rgb(21 38 54 / 42%);
+}
+
+.ts4nfdi-annotation-panel {
+    position: relative;
+    z-index: 1;
+    width: min(46rem, 92vw);
+    height: 100%;
+    overflow-y: auto;
+    padding: 1.25rem;
+    background: #fff;
+    box-shadow: -8px 0 30px rgb(20 42 63 / 22%);
+}
+
+.ts4nfdi-annotation-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e2e8ee;
+}
+
+.ts4nfdi-annotation-header h2 {
+    margin: 0.15rem 0 0;
+    font-size: 1.5rem;
+}
+
+.ts4nfdi-annotation-eyebrow {
+    color: #526b7f;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.ts4nfdi-annotation-close {
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 1px solid #ccd8e2;
+    border-radius: 50%;
+    color: #29475e;
+    background: #fff;
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+.ts4nfdi-annotation-summary {
+    padding: 1rem 0;
+}
+
+.ts4nfdi-annotation-summary-badges {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.85rem;
+}
+
+.ts4nfdi-annotation-description {
+    color: #3e5262;
+    line-height: 1.55;
+}
+
+.ts4nfdi-annotation-iri {
+    display: inline-block;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+.ts4nfdi-annotation-loading,
+.ts4nfdi-annotation-notice {
+    padding: 0.85rem 1rem;
+    border-radius: 0.4rem;
+    background: #f1f5f8;
+    color: #43596a;
+}
+
+.ts4nfdi-annotation-widget {
+    padding-bottom: 2rem;
+}
+
+.ts4nfdi-annotation-widget-root {
+    min-height: 4rem;
+}
+
+.ts4nfdi-annotation-drawer-open {
+    overflow: hidden;
+}
+
+.ts4nfdi-option-breadcrumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    padding: 5px;
+}
+
+.ts4nfdi-option-separator {
+    color: #666;
+    font-size: 0.8rem;
+}
+
+.ts4nfdi-option-description {
+    display: block;
+    margin-top: 0.3rem;
+    color: #666;
+    font-size: 1rem;
+    line-height: 1.45;
+}
+
+@media (max-width: 767px) {
+    .ts4nfdi-annotation-row {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .ts4nfdi-annotation-label {
+        flex: 1 1 50%;
+    }
+
+    .ts4nfdi-annotation-details {
+        width: 100%;
+        margin-left: 0;
+        text-align: left;
+    }
+
+    .ts4nfdi-annotation-panel {
+        width: 100%;
+        padding: 1rem;
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .ts4nfdi-annotation-panel {
+        animation: ts4nfdi-drawer-enter 160ms ease-out;
+    }
+
+    @keyframes ts4nfdi-drawer-enter {
+        from {
+            opacity: 0.7;
+            transform: translateX(1.5rem);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+}

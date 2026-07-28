@@ -12,6 +12,14 @@ show_request_errors = true
 request_error_text = "TS4NFDI service is currently unavailable."
 request_error_help = "Could not load options from the terminology service. Please try again later."
 
+[gateway]
+# The browser can reach only the allowlisted OLS proxy routes exposed by this
+# plugin. Keep tokens server-side; they are never included in frontend config.
+base_url = "https://terminology.services.base4nfdi.de/api-gateway"
+timeout = 10
+cache_timeout = 300
+# api_token = "configure-via-a-secret-bearing-settings-source"
+
 [providers.ts4nfdi_ontologies]
 endpoint = "search"
 database = "ebi"
@@ -51,17 +59,75 @@ help_fields = ["config.description", "description", "definition", "summary"]
 dedupe_fields = ["id"]
 
 [frontend]
-breadcrumbs_enabled = false
+# Interview annotations are opt-in. Each matcher must identify the complete
+# question/attribute/optionset combination.
+[frontend.annotations]
+enabled = true
 
-# Breadcrumbs are rendered only when breadcrumbs_enabled is true and the
-# question/attribute/optionset URIs match the active interview question.
-# [[frontend.breadcrumb_matchers]]
+# EDAM formats selected in the dataset distribution question.
+[[frontend.annotations.matchers]]
+id = "fairagro-dataset-format"
+question_uri = "https://rdmo.fairagro.net/terms/questions/dmp4nfdi/v1-0-0/DMP/Dataset/Distribution/rdadmp_format"
+attribute_uri = "https://rdmorganiser.github.io/terms/domain/project/dataset/format"
+optionset_uri = "https://rdmo.fairagro.net/terms/options/file_format_ts4nfdi"
+resource_type = "entity"
+badge_label = "EDAM"
+ontology_id = "edam"
+entity_type = "class"
+tabs = ["synonyms", "hierarchy", "ontology", "crossref"]
+
+[frontend.annotations.matchers.gateway_params]
+database = "ebi"
+
+# EDAM formats selected in the plugin's example catalog.
+[[frontend.annotations.matchers]]
+id = "example-dataset-format"
+question_uri = "https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/data-formats"
+attribute_uri = "https://rdmorganiser.github.io/terms/domain/project/dataset/format"
+optionset_uri = "https://rdmo.fairagro.net/terms/options/file_format_ts4nfdi"
+resource_type = "entity"
+badge_label = "EDAM"
+ontology_id = "edam"
+entity_type = "class"
+tabs = ["synonyms", "hierarchy", "ontology", "crossref"]
+
+[frontend.annotations.matchers.gateway_params]
+database = "ebi"
+
+# Terminologies selected from the FAIRagro TS4NFDI collection.
+[[frontend.annotations.matchers]]
+id = "fairagro-metadata-standard"
+question_uri = "https://rdmo.fairagro.net/terms/questions/dmp4nfdi/v1-0-0/DMP/Dataset/Metadata/rdadmp_metadata_standard_id/rdadmp_identifier"
+attribute_uri = "https://rdmorganiser.github.io/terms/domain/project/dataset/metadata/standards"
+optionset_uri = "https://rdmo.fairagro.net/terms/options/ts4nfdi/collection_terminologies"
+resource_type = "ontology"
+provider_key = "ts4nfdi_fairagro_collection_terminologies"
+badge_label = "FAIRAgro"
+
+[frontend.annotations.matchers.gateway_params]
+collectionId = "ff5491d1-d0a9-481e-ac90-0fad065fa097"
+
+# [[frontend.annotations.matchers]]
+# id = "dataset-format"
 # question_uri = "https://rdmo.example.org/terms/questions/dataset/format"
 # attribute_uri = "https://rdmorganiser.github.io/terms/domain/project/dataset/format"
 # optionset_uri = "https://rdmo.example.org/terms/options/file_format_ts4nfdi"
-# api = "https://api.terminology.tib.eu/api/"
+# resource_type = "entity"
+# badge_label = "EDAM"
 # ontology_id = "edam"
 # entity_type = "class"
-# parameter = "ontology=edam&fieldList=description,label,iri,ontology_name,type,short_form&childrenOf=http://edamontology.org/format_1915"
-# use_legacy = true
-# class_name = "ts4nfdi-breadcrumb-style"
+# tabs = ["synonyms", "hierarchy", "ontology", "crossref"]
+#
+# [frontend.annotations.matchers.gateway_params]
+# database = "ebi"
+#
+# Ontology annotations additionally use their provider to resolve the selected
+# resource:
+# [[frontend.annotations.matchers]]
+# id = "fairagro-terminology"
+# question_uri = "https://rdmo.example.org/terms/questions/metadata/standard"
+# attribute_uri = "https://rdmo.example.org/terms/domain/metadata/standard"
+# optionset_uri = "https://rdmo.example.org/terms/options/fairagro-terminologies"
+# resource_type = "ontology"
+# provider_key = "ts4nfdi_fairagro_collection_terminologies"
+# badge_label = "FAIRAgro"

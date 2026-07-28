@@ -1,0 +1,3 @@
+{% load ts4nfdi_tags %}
+{% ts4nfdi_frontend_config as ts4nfdi_config %}
+{{ ts4nfdi_config|json_script:"ts4nfdi-frontend-config" }}
