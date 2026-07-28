@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<rdmo xmlns:dc="http://purl.org/dc/elements/1.1/" created="2026-07-28T11:09:31.052930+02:00" required="2.1.0" version="2.5.1">
+<rdmo xmlns:dc="http://purl.org/dc/elements/1.1/" created="2026-07-28T14:29:00.417786+02:00" required="2.1.0" version="2.5.1">
 	<catalog dc:uri="https://rdmo.fairagro.net/terms/questions/dmp4nfdi/v1-0-0">
 		<uri_prefix>https://rdmo.fairagro.net/terms</uri_prefix>
 		<uri_path>dmp4nfdi/v1-0-0</uri_path>
@@ -666,7 +666,22 @@ If non-human genetic resources from other countries are to be used, this may req
 		<default_text lang="en"/>
 		<verbose_name lang="en"/>
 		<help lang="de">Zu nennen wäre beispielsweise: Muss die Rechtslage verschiedener Länder beachtet werden? Hat jeder Mitarbeiter die gleichen Zugriffsrechte? Gibt es personenbezogene Daten, evtl. sogar besonders sensible personenbezogene Daten gemäß Art. 9 Abs. 1 DSGVO? Gibt es vertragliche Regelungen zur Datenüberlassung, etwa im Falle von Industriedaten? Gibt es Dritte, die (Urheber-)Rechte an den Daten haben? Unterliegen Daten Vorschriften zur Exportkontrolle? Beachten Sie, dass für den langfristigen Zugang und die Wiederverwendung, einschließlich der Migration zu aktuellen Dateiformaten, der Übertragung von Daten zwischen Systemen und zwischen zuständigen Organisationen, Rechte zum Kopieren (im Zusammenhang mit dem Urheberrecht), klar definierte Zugangsrechte und Wiederverwendungsrechte erforderlich sind, die auch in ferner Zukunft gelten müssen. &lt;br&gt;
-Sollen nichtmenschliche genetische Ressourcen anderer Länder genutzt werden, kann dies die Genehmigung des jeweiligen Landes nach den Vorschriften der &lt;a href=&quot;https://www.bfn.de/abkommen-richtlinie/uebereinkommen-ueber-die-biologische-vielfalt-cbd&quot; target=&quot;_blank&quot;&gt;Convention on Biological Diversity (CBD)&lt;/a&gt;, dem &lt;a href=&quot;https://nagoyaprotocol-hub.de/?lang=de&quot; target=&quot;_blank&quot;&gt;Nagoya-Protokoll&lt;/a&gt; oder dem &lt;a href=&quot;https://www.fao.org/plant-treaty/en&quot; target=&quot;_blank&quot;&gt;Plant-Treaty &lt;/a&gt; voraussetzen.</help>
+Sollen nichtmenschliche genetische Ressourcen anderer Länder genutzt werden, kann dies die Genehmigung des jeweiligen Landes nach den Vorschriften der &lt;a href=&quot;https://www.bfn.de/abkommen-richtlinie/uebereinkommen-ueber-die-biologische-vielfalt-cbd&quot; target=&quot;_blank&quot;&gt;Convention on Biological Diversity (CBD)&lt;/a&gt;, dem &lt;a href=&quot;https://nagoyaprotocol-hub.de/?lang=de&quot; target=&quot;_blank&quot;&gt;Nagoya-Protokoll&lt;/a&gt; oder dem &lt;a href=&quot;https://www.fao.org/plant-treaty/en&quot; target=&quot;_blank&quot;&gt;Plant-Treaty &lt;/a&gt; voraussetzen.
+
+
+
+Zu nennen wäre beispielsweise:
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Internationale Rechtslage:&lt;/strong&gt; Berücksichtigung der Gesetze verschiedener Länder&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Datenschutz (DSGVO):&lt;/strong&gt; Gibt es personenbezogene oder besonders sensible Daten (&lt;a href=&quot;https://dsgvo-gesetz.de/art-9-dsgvo/&quot; target=&quot;_blank&quot;&gt;Art. 9 Abs. 1 DSGVO&lt;/a&gt;)?&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Urheberrecht &amp; Eigentum:&lt;/strong&gt; Haben Dritte Rechte an den Daten? Sind Nutzungs- und Kopierrechte klar geregelt?&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Vertragliche Vereinbarungen:&lt;/strong&gt; Gibt es Verträge zur Datenüberlassung, etwa im Falle von Industriedaten?&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Exportkontrolle:&lt;/strong&gt;  Unterliegen Daten Vorschriften zur Exportkontrolle?&lt;/li&gt;
+
+  &lt;li&gt;&lt;strong&gt;Zugriffsrechte:&lt;/strong&gt; Sind Zugriffsrechte für Mitarbeiter und Dritte klar definiert (z. B. nach Rolle, Funktion)?&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Langfristige Nutzung:&lt;/strong&gt; Sind Rechte zum Kopieren, Migration, Übertragung und Wiederverwendung der Daten auch zukünftig gewährleistet?&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Biologische Vielfalt:&lt;/strong&gt; Werden nichtmenschliche genetische Ressourcen aus anderen Ländern genutzt? → kann Genehmigung des Landes nach &lt;a href=&quot;https://www.bfn.de/abkommen-richtlinie/uebereinkommen-ueber-die-biologische-vielfalt-cbd&quot; target=&quot;_blank&quot;&gt;Convention on Biological Diversity (CBD)&lt;/a&gt; / &lt;a href=&quot;https://nagoyaprotocol-hub.de/?lang=de&quot; target=&quot;_blank&quot;&gt;Nagoya-Protokoll&lt;/a&gt; / &lt;a href=&quot;https://www.fao.org/plant-treaty/en&quot; target=&quot;_blank&quot;&gt;Plant-Treaty &lt;/a&gt; voraussetzen&lt;/li&gt;
+&lt;/ul&gt;</help>
 		<text lang="de">Welche rechtlichen Besonderheiten bestehen im Zusammenhang mit dem Umgang mit Forschungsdaten in Ihrem Projekt?</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de"/>
@@ -689,12 +704,12 @@ Sollen nichtmenschliche genetische Ressourcen anderer Länder genutzt werden, ka
 		<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/additional_rdm_policy/yesno"/>
 		<is_collection>False</is_collection>
 		<is_optional>False</is_optional>
-		<help lang="en">List standards, guidelines, or specifications that are relevant to your discipline, your research, and your institution. In agricultural research, these could include data management requirements, the FAIR principles, subject-specific metadata standards such as MIAPPE, institutional guidelines on open access, data sharing, and research integrity, such as the &lt;a href=&quot;https://www.dfg.de/resource/blob/171716/richtlinien-forschungsdaten-biodiversitaetsforschung.pdf&quot; target=“_blank”&gt;DFG guidelines on handling research data in biodiversity research&lt;/a&gt;. Please also take into account the &lt;a href=&quot;https://zenodo.org/records/14281892#&quot; target=&quot;_blank&quot;&gt;Guidelines for Safeguarding
+		<help lang="en">List standards, guidelines, or specifications that are relevant to your discipline, your research, and your institution. In agricultural research, these could include data management requirements, the FAIR principles, institutional guidelines on open access, data sharing, and research integrity, such as the &lt;a href=&quot;https://www.dfg.de/resource/blob/171716/richtlinien-forschungsdaten-biodiversitaetsforschung.pdf&quot; target=“_blank”&gt;DFG guidelines on handling research data in biodiversity research&lt;/a&gt;. Please also take into account the &lt;a href=&quot;https://zenodo.org/records/14281892#&quot; target=&quot;_blank&quot;&gt;Guidelines for Safeguarding
 Good Research Practice&lt;/a&gt;, which is often a legal requirement for research projects in Germany.</help>
 		<text lang="en">Are there any significant research codes or professional standards to be taken into account?</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en"/>
-		<help lang="de">Nennen Sie hier Standards, Leitlinien oder Vorgaben, die für Ihre Disziplin, Ihre Forschung und Ihre Einrichtung relevant sind. In der Agrarforschung können dies z. B. Vorgaben zum Datenmanagement, die FAIR-Prinzipien, fachspezifische Metadatenstandards wie MIAPPE, institutionelle Richtlinien zu Open Access, Datenweitergabe und Forschungsintegrität sowie die &lt;a href=&quot;https://www.dfg.de/resource/blob/171716/richtlinien-forschungsdaten-biodiversitaetsforschung.pdf&quot; target=&quot;_blank&quot;&gt;DFG-Richtlinien zum Umgang mit Forschungsdaten in der Biodiversitätsforschung&lt;/a&gt; sein. Beachten Sie dabei außerdem die &lt;a href=&quot;https://zenodo.org/records/14281892#&quot; target=&quot;_blank&quot;&gt;Gute Wissenschaftliche Praxis&lt;/a&gt;, die für deutsche Forschungsprojekte häufig rechtlich verpflichtend ist.</help>
+		<help lang="de">Nennen Sie hier Standards, Leitlinien oder Vorgaben, die für Ihre Disziplin, Ihre Forschung und Ihre Einrichtung relevant sind. In der Agrarforschung können dies z. B. Vorgaben zum Datenmanagement, die FAIR-Prinzipien, institutionelle Richtlinien zu Open Access, Datenweitergabe und Forschungsintegrität sowie die &lt;a href=&quot;https://www.dfg.de/resource/blob/171716/richtlinien-forschungsdaten-biodiversitaetsforschung.pdf&quot; target=&quot;_blank&quot;&gt;DFG-Richtlinien zum Umgang mit Forschungsdaten in der Biodiversitätsforschung&lt;/a&gt; sein. Beachten Sie dabei außerdem die &lt;a href=&quot;https://zenodo.org/records/14281892#&quot; target=&quot;_blank&quot;&gt;Gute Wissenschaftliche Praxis&lt;/a&gt;, die für deutsche Forschungsprojekte häufig rechtlich verpflichtend ist.</help>
 		<text lang="de">Existieren wichtige wissenschaftliche Kodizes bzw. fachliche Normen, die Berücksichtigung finden sollten?</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de"/>
@@ -798,7 +813,7 @@ Other relevant intellectual property rights with regard to agriculture include:
 - &lt;a href=&quot;https://www.dpma.de/english/trade_marks/indications_of_geographical_origin/index.html&quot; target=&quot;_blank&quot;&gt;Geographical Indications of Origin&lt;/a&gt; for products linked to a specific region, e.g., “Champagne”
 
 Other relevant industrial property rights may include semiconductor protection, registered designs, or business names.
-  
+
 &lt;details&gt;
 &lt;summary style=&quot;cursor:pointer;&quot;&gt;Inside the Copyright Act:&lt;/summary&gt;
 &lt;p&gt;Database Protection:&lt;br&gt;
@@ -864,14 +879,16 @@ Das Designrecht (DesignG) schützt die Erscheinungsform eines Produkts, einschli
 		<verbose_name lang="de"/>
 		<default_option/>
 		<default_external_id/>
-		<widget_type>yesno</widget_type>
-		<value_type>boolean</value_type>
+		<widget_type>radio</widget_type>
+		<value_type>text</value_type>
 		<maximum/>
 		<minimum/>
 		<step/>
 		<unit/>
 		<width/>
-		<optionsets/>
+		<optionsets>
+			<optionset dc:uri="https://rdmo.fairagro.net/terms/options/other_requirements_options"/>
+		</optionsets>
 		<conditions/>
 	</question>
 	<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/legal_aspects/ipr/yesno">
@@ -1517,13 +1534,13 @@ Wir empfehlen, die Personen in folgender Form anzugeben: Titel; Vorname, Nachnam
 		<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/pids/responsible_person/name"/>
 		<is_collection>True</is_collection>
 		<is_optional>False</is_optional>
-		<help lang="en">The prerequisite for persistent identifiers to really deliver what they promise is that they - like the objects referenced - are maintained permanently and reliably. This means, for example, that if the storage location of the object is changed, the information about the new storage location must be updated accordingly. If the data is stored in a data center or repository, this responsibility is usually assumed by the data center or repository. However, to be on the safe side, the responsibilities should always be checked or clarified. If there’s no information about identifier maintenance, please contact the respective data center or repository. 
+		<help lang="en">The prerequisite for persistent identifiers to really deliver what they promise is that they - like the objects referenced - are maintained permanently and reliably. This means, for example, that if the storage location of the object is changed, the information about the new storage location must be updated accordingly. If the data is stored in a data center or repository, this responsibility is usually assumed by the data center or repository. However, to be on the safe side, the responsibilities should always be checked or clarified. If there’s no information about identifier maintenance, please contact the respective data center or repository.
 
 We recommend specifying the persons in the following form: title; first name, last Name; ORCID (if available); professional position; affiliation; contact details; role in the project.</help>
 		<text lang="en">Who is responsible for the maintenance of the PIDs - i.e. the long-term object accessibility?</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en">Person</verbose_name>
-		<help lang="de">Die Voraussetzung dafür, dass persistente Identifikatoren auch wirklich halten, was sie versprechen, ist, dass sie - wie auch die Objekte, auf die referenziert wird - dauerhaft und verlässlich gepflegt werden. D. h. beispielsweise, dass bei einer Änderung des Speicherortes des Objekts die Information über den neuen Speicherort entsprechend aktualisiert werden muss. Werden die Daten in einem Datenzentrum oder -repositorium gespeichert, wird diese Verantwortung i.d.R. von diesem übernommen. Um sicher zu sein, sollten die Verantwortlichkeiten jedoch in jedem Fall geprüft bzw. geklärt werden. Wenn keine Informationen zur Wartung der Identifikatoren vorliegen, wenden Sie sich bitte an das jeweilige Rechenzentrum oder Repository. 
+		<help lang="de">Die Voraussetzung dafür, dass persistente Identifikatoren auch wirklich halten, was sie versprechen, ist, dass sie - wie auch die Objekte, auf die referenziert wird - dauerhaft und verlässlich gepflegt werden. D. h. beispielsweise, dass bei einer Änderung des Speicherortes des Objekts die Information über den neuen Speicherort entsprechend aktualisiert werden muss. Werden die Daten in einem Datenzentrum oder -repositorium gespeichert, wird diese Verantwortung i.d.R. von diesem übernommen. Um sicher zu sein, sollten die Verantwortlichkeiten jedoch in jedem Fall geprüft bzw. geklärt werden. Wenn keine Informationen zur Wartung der Identifikatoren vorliegen, wenden Sie sich bitte an das jeweilige Rechenzentrum oder Repository.
 
 Wir empfehlen, die Personen in folgender Form anzugeben: Titel; Vorname, Nachname; ORCID (falls verfügbar); berufliche Position; Zugehörigkeit; Kontaktdaten; Rolle im Projekt.</help>
 		<text lang="de">Wer ist für die Pflege der PIDs verantwortlich – d. h. für die langfristige Zugänglichkeit der Objekte?</text>
@@ -1865,7 +1882,7 @@ Die Bildung von Datensätzen kann sich beispielsweise orientieren an:
 
 - Erhebungs- oder Generierungsmethoden
 - Datentypen oder Formaten
-- Arbeitspaketen 
+- Arbeitspaketen
 - Rechtliche, ethische oder organisatorische Anforderungen
 
 &lt;p&gt;&lt;font color=&quot;red&quot;&gt;Bitte füllen Sie die folgenden Fragen für jede Datenkategorie aus. Bitte legen Sie mindestens ein Set an.&lt;/font&gt;&lt;/p&gt;</help>
@@ -2667,19 +2684,7 @@ Idealerweise geben Sie eine zitierfähige Quelle (z.B. über eine PID) für die 
 		<text lang="en">Which data formats arise in your project?</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en">Format</verbose_name>
-		<help lang="de">Bei der Wahl des Datenformats sollten die Konsequenzen für die gemeinsame Nutzung, die digitale Archivierung und Langzeitspeicherung sowie die Wiederverwendung berücksichtigt werden. Es empfiehlt sich, möglichst standardisierte, nicht-proprietäre und allgemein bzw. in der spezifischen Community verbreitete Formate zu nutzen. Empfehlungen sind z. B. unter &lt;a href=&quot;https://www.forschungsdaten.info/themen/veroeffentlichen-und-archivieren/formate-erhalten/&quot; target=&quot;_blank&quot;&gt;forschungsdaten.info&lt;/a&gt; zu finden.
-
-&lt;span
-  class=&quot;fairagro-terminology-config&quot;
-  data-api=&quot;https://api.terminology.tib.eu/api/&quot;
-  data-parameter=&quot;terminologies=agrovoc&quot;
-  data-placeholder=&quot;Search for a term...&quot;
-  data-single-selection=&quot;true&quot;
-  data-allow-custom-terms=&quot;false&quot;
-  data-output-format=&quot;label&quot;
-&gt;&lt;/span&gt;
-
-test123</help>
+		<help lang="de">Bei der Wahl des Datenformats sollten die Konsequenzen für die gemeinsame Nutzung, die digitale Archivierung und Langzeitspeicherung sowie die Wiederverwendung berücksichtigt werden. Es empfiehlt sich, möglichst standardisierte, nicht-proprietäre und allgemein bzw. in der spezifischen Community verbreitete Formate zu nutzen. Empfehlungen sind z. B. unter &lt;a href=&quot;https://www.forschungsdaten.info/themen/veroeffentlichen-und-archivieren/formate-erhalten/&quot; target=&quot;_blank&quot;&gt;forschungsdaten.info&lt;/a&gt; zu finden.</help>
 		<text lang="de">Welche Datenformate entstehen in Ihrem Projekt?</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de">Format</verbose_name>
@@ -2693,7 +2698,7 @@ test123</help>
 		<unit/>
 		<width/>
 		<optionsets>
-			<optionset dc:uri="https://rdmo.fairagro.net/terms/options/file_format_ts4nfdi"/>
+			<optionset dc:uri="https://rdmo.fairagro.net/terms/options/ts4nfdi/file_format_grouped"/>
 		</optionsets>
 		<conditions/>
 	</question>
@@ -2704,10 +2709,10 @@ test123</help>
 		<dc:comment/>
 		<parent dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset"/>
 	</attribute>
-	<optionset dc:uri="https://rdmo.fairagro.net/terms/options/file_format_ts4nfdi">
+	<optionset dc:uri="https://rdmo.fairagro.net/terms/options/ts4nfdi/file_format_grouped">
 		<uri_prefix>https://rdmo.fairagro.net/terms</uri_prefix>
-		<uri_path>file_format_ts4nfdi</uri_path>
-		<dc:comment>via optionset provider plugin</dc:comment>
+		<uri_path>ts4nfdi/file_format_grouped</uri_path>
+		<dc:comment/>
 		<provider_key>ts4nfdi_ontologies</provider_key>
 		<options/>
 		<conditions/>
@@ -3001,7 +3006,7 @@ Falls Sie zum Beispiel README-Dateien oder zusätzliche Tabellenblätter zur Bes
 		<unit/>
 		<width/>
 		<optionsets>
-			<optionset dc:uri="https://rdmo.fairagro.net/terms/options/ts4nfdi/collection_terminologies"/>
+			<optionset dc:uri="https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro"/>
 		</optionsets>
 		<conditions/>
 	</question>
@@ -3012,13 +3017,11 @@ Falls Sie zum Beispiel README-Dateien oder zusätzliche Tabellenblätter zur Bes
 		<dc:comment/>
 		<parent dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/metadata"/>
 	</attribute>
-	<optionset dc:uri="https://rdmo.fairagro.net/terms/options/ts4nfdi/collection_terminologies">
+	<optionset dc:uri="https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro">
 		<uri_prefix>https://rdmo.fairagro.net/terms</uri_prefix>
-		<uri_path>ts4nfdi/collection_terminologies</uri_path>
-		<dc:comment>https://rdmo.fairagro.net/terms/questions/dmp4nfdi/v1-0-0/DMP/Dataset/Metadata/rdadmp_metadata_standard_id/rdadmp_identifier
-https://rdmorganiser.github.io/terms/domain/project/dataset/metadata/standards
-https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
-		<provider_key>ts4nfdi_fairagro_collection_terminologies</provider_key>
+		<uri_path>ts4nfdi/metadata_agro</uri_path>
+		<dc:comment/>
+		<provider_key>ts4nfdi_collections</provider_key>
 		<options/>
 		<conditions/>
 	</optionset>
