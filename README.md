@@ -47,9 +47,35 @@ The gateway base URL is configured through `TS4NFDI_PROVIDER`. See
 `ts4nfdi_provider.toml` for example provider keys using
 `https://terminology.services.base4nfdi.de/api-gateway`.
 
+Terminology sources are declared once and referenced by providers and
+annotation matchers. The source supplies both the human-readable breadcrumb
+and the Gateway `database` parameter:
+
+```toml
+[sources.ebi]
+label = "EBI"
+database = "ebi"
+backend_type = "ols2"
+url = "https://www.ebi.ac.uk/ols4/api/v2"
+
+[providers.ts4nfdi_ontologies]
+endpoint = "search"
+source_key = "ebi"
+ontologies = ["edam"]
+```
+
+The autocomplete help then presents results as
+`EBI › EDAM › EDAM_format_2332`, followed by the concept definition. A
+provider or matcher with a `database` that conflicts with its source fails
+configuration validation instead of silently querying a different source.
+
 Providers can also remove already selected project values from autocomplete results by setting `exclude_selected_attribute_uris` for the relevant attribute URI(s) in `ts4nfdi_provider.toml`.
 
 For `TS4NFDICollectionsProvider`, this behavior is disabled by default because repeated RDMO question sets can store the same collection option in different `set_prefix` and `set_index` contexts. To opt in, set `exclude_selected_collection_options = true` in the `ts4nfdi_collections` provider config.
+
+Provider results are intentionally not deduplicated. This preserves distinct
+Gateway results and allows the same concept to remain selectable in separate
+RDMO collection/set contexts.
 
 `TS4NFDICollectionTerminologiesProvider` lists the terminologies for one configured collection. Configure `collection_id` and use the `ols4/api/ontologies` endpoint with `collectionId`; `fallback_endpoint = "collections/"` can be used to read the embedded `terminologies` list from the collections overview when the ontology endpoint is unavailable or empty.
 
@@ -74,19 +100,32 @@ question_uri = "https://rdmo.example.org/terms/questions/dataset/format"
 attribute_uri = "https://rdmorganiser.github.io/terms/domain/project/dataset/format"
 optionset_uri = "https://rdmo.example.org/terms/options/file_format_ts4nfdi"
 resource_type = "entity"
+widget_type = "entity_info"
 badge_label = "EDAM"
 ontology_id = "edam"
 entity_type = "class"
-tabs = ["synonyms", "hierarchy", "ontology", "crossref"]
-
-[frontend.annotations.matchers.gateway_params]
-database = "ebi"
+source_key = "ebi"
 ```
+
+Entity matchers support `entity_info`, `metadata`, or `none` as
+`widget_type`. `entity_info` is the lightweight default for the example
+configuration. The configured source consistently supplies parameters such as
+`database=ebi`. `metadata` enables the larger tabbed TSS widget, while `none`
+keeps only the plugin's native detail view.
 
 The annotation list endpoint returns only values belonging to a project the
 authenticated user may access. Terminology detail is resolved on demand. The
 browser-facing Gateway proxy is restricted to OLS endpoints and an allowlist
 of query parameters; it never accepts an arbitrary upstream URL.
+
+Each saved annotation is displayed as a clickable
+`source › terminology › term` row. Its drawer renders normalized Gateway
+metadata directly: definitions, synonyms, source/database/backend,
+terminology, short form, type, status, IRI actions, and a source link. The
+official Terminology Service Suite widget is an optional collapsed enhancement
+and is loaded only when the user expands it. Consequently, the useful detail
+view remains available if a widget cannot interpret an upstream response, and
+the widget does not issue background requests while collapsed.
 
 Template composition
 --------------------

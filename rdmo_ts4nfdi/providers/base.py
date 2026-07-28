@@ -4,7 +4,7 @@ from urllib.request import Request, urlopen
 
 from rdmo.options.providers import Provider
 
-from rdmo_ts4nfdi.config import load_config
+from rdmo_ts4nfdi.config import attach_source_config, load_config
 
 from .utils import (
     add_query_params,
@@ -102,40 +102,16 @@ class TS4NFDIBaseProvider(Provider):
                 f"Missing TS4NFDI provider configuration for key '{self.key}'."
             )
 
-        provider_config = {**defaults, **providers[self.key]}
+        provider_config = attach_source_config(
+            {**defaults, **providers[self.key]},
+            context=f"provider '{self.key}'",
+        )
         logger.debug(
             "Resolved TS4NFDI provider config for key='%s' with config keys=%s",
             self.key,
             sorted(provider_config.keys()),
         )
         return provider_config
-
-    def deduplicate_options(self, options, provider_config):
-        dedupe_fields = provider_config.get("dedupe_fields", ("id",))
-        seen = set()
-        deduplicated = []
-
-        for option in options:
-            dedupe_key = tuple(option.get(field) for field in dedupe_fields)
-            if dedupe_key in seen:
-                logger.debug(
-                    "Skipping duplicate TS4NFDI option for provider '%s': dedupe_fields=%s dedupe_key=%s",
-                    self.key,
-                    dedupe_fields,
-                    dedupe_key,
-                )
-                continue
-
-            seen.add(dedupe_key)
-            deduplicated.append(option)
-
-        logger.debug(
-            "Deduplicated TS4NFDI options for provider '%s': before=%s after=%s",
-            self.key,
-            len(options),
-            len(deduplicated),
-        )
-        return deduplicated
 
     def get_request_error_options(self, provider_config):
         if provider_config.get("show_request_errors", True) is False:

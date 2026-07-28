@@ -112,9 +112,49 @@
                 annotation.kind,
                 annotation.label,
                 annotation.iri,
-                annotation.badge_label
+                annotation.badge_label,
+                annotation.source && annotation.source.id,
+                annotation.terminology && annotation.terminology.id
             ].join(":");
         }).join("|");
+    }
+
+    function createBadge(text, modifier, title) {
+        if (!text) {
+            return null;
+        }
+        const badge = document.createElement("span");
+        badge.className = "ts4nfdi-annotation-badge ts4nfdi-annotation-badge--" + modifier;
+        badge.textContent = text;
+        if (title) {
+            badge.title = title;
+        }
+        return badge;
+    }
+
+    function appendBreadcrumb(parent, segments) {
+        const availableSegments = segments.filter(function (segment) {
+            return Boolean(segment.text);
+        });
+        if (!availableSegments.length) {
+            return;
+        }
+
+        const breadcrumb = document.createElement("span");
+        breadcrumb.className = "ts4nfdi-annotation-breadcrumb";
+        availableSegments.forEach(function (segment, index) {
+            if (index) {
+                const separator = document.createElement("span");
+                separator.className = "ts4nfdi-annotation-separator";
+                separator.textContent = "›";
+                separator.setAttribute("aria-hidden", "true");
+                breadcrumb.appendChild(separator);
+            }
+            breadcrumb.appendChild(
+                createBadge(segment.text, segment.modifier, segment.title)
+            );
+        });
+        parent.appendChild(breadcrumb);
     }
 
     function renderQuestionAnnotations(hook, occurrence) {
@@ -133,38 +173,48 @@
                 return;
             }
 
-            const row = document.createElement("div");
+            const row = document.createElement("button");
+            row.type = "button";
             row.className = ROW_CLASS;
-
-            const kindBadge = document.createElement("span");
-            kindBadge.className = "ts4nfdi-annotation-badge ts4nfdi-annotation-badge--" + annotation.kind;
-            kindBadge.textContent = annotation.kind;
-            row.appendChild(kindBadge);
-
-            if (annotation.badge_label) {
-                const providerBadge = document.createElement("span");
-                providerBadge.className = "ts4nfdi-annotation-badge ts4nfdi-annotation-badge--provider";
-                providerBadge.textContent = annotation.badge_label;
-                row.appendChild(providerBadge);
-            }
+            row.setAttribute(
+                "aria-label",
+                gettext("Terminology details") + ": " + (annotation.label || annotation.iri)
+            );
 
             const label = document.createElement("span");
             label.className = "ts4nfdi-annotation-label";
             label.textContent = annotation.label || annotation.iri;
             row.appendChild(label);
 
-            const button = document.createElement("button");
-            button.type = "button";
-            button.className = "ts4nfdi-annotation-details";
-            button.textContent = gettext("Terminology details");
-            button.setAttribute(
-                "aria-label",
-                gettext("Terminology details") + ": " + (annotation.label || annotation.iri)
-            );
-            button.addEventListener("click", function () {
-                openDrawer(annotation, button);
+            const source = annotation.source || {};
+            const terminology = annotation.terminology || {};
+            appendBreadcrumb(row, [
+                {
+                    text: source.label,
+                    modifier: "source",
+                    title: source.url
+                },
+                {
+                    text: terminology.label || annotation.badge_label,
+                    modifier: "ontology",
+                    title: terminology.iri
+                },
+                {
+                    text: annotation.label || annotation.kind,
+                    modifier: "term",
+                    title: annotation.iri
+                }
+            ]);
+
+            const chevron = document.createElement("span");
+            chevron.className = "ts4nfdi-annotation-chevron";
+            chevron.textContent = "›";
+            chevron.setAttribute("aria-hidden", "true");
+            row.appendChild(chevron);
+
+            row.addEventListener("click", function () {
+                openDrawer(annotation, row);
             });
-            row.appendChild(button);
 
             hook.appendChild(row);
         });
@@ -314,46 +364,63 @@
 
     function renderDrawerDetail(detail) {
         const drawer = getDrawer();
+        const title = drawer.querySelector("#ts4nfdi-annotation-drawer-title");
         const summary = drawer.querySelector("#ts4nfdi-annotation-summary");
+        const widgetHost = drawer.querySelector("#ts4nfdi-annotation-widget");
+        title.textContent = detail.label || gettext("Terminology details");
         summary.replaceChildren();
+        widgetHost.replaceChildren();
 
-        const badges = document.createElement("div");
-        badges.className = "ts4nfdi-annotation-summary-badges";
-        [
-            [detail.kind, detail.kind],
-            [detail.ontology_id, "ontology"],
-            [detail.source, "source"],
-            [detail.version, "version"]
-        ].forEach(function (badgeData) {
-            if (!badgeData[0]) {
-                return;
+        const source = normalizeResource(detail.source);
+        const terminology = normalizeResource(detail.terminology);
+        const breadcrumbSection = document.createElement("div");
+        breadcrumbSection.className = "ts4nfdi-annotation-summary-breadcrumb";
+        appendBreadcrumb(breadcrumbSection, [
+            {
+                text: source.label,
+                modifier: "source",
+                title: source.url
+            },
+            {
+                text: terminology.label || detail.ontology_id,
+                modifier: "ontology",
+                title: terminology.iri
+            },
+            {
+                text: detail.short_form || detail.label,
+                modifier: "term",
+                title: detail.iri
             }
-            const badge = document.createElement("span");
-            badge.className = "ts4nfdi-annotation-badge ts4nfdi-annotation-badge--" + badgeData[1];
-            badge.textContent = badgeData[0];
-            badges.appendChild(badge);
-        });
-        summary.appendChild(badges);
+        ]);
+        summary.appendChild(breadcrumbSection);
 
-        if (detail.description) {
-            const description = document.createElement("p");
-            description.className = "ts4nfdi-annotation-description";
-            description.textContent = detail.description;
-            summary.appendChild(description);
-        }
+        renderDefinitions(
+            summary,
+            (detail.definitions && detail.definitions.length)
+                ? detail.definitions
+                : (detail.description ? [detail.description] : [])
+        );
+        renderSynonyms(summary, detail.synonyms || []);
 
-        const iriLink = document.createElement("a");
-        iriLink.className = "ts4nfdi-annotation-iri";
-        iriLink.href = detail.iri;
-        iriLink.target = "_blank";
-        iriLink.rel = "noopener noreferrer";
-        iriLink.textContent = detail.iri;
-        summary.appendChild(iriLink);
+        const properties = [
+            [gettext("Source"), source.label],
+            [gettext("Database"), source.database || source.id],
+            [gettext("Backend"), source.backend_type],
+            [gettext("Terminology"), terminology.label || detail.ontology_id],
+            [gettext("Short form"), detail.short_form],
+            [gettext("Type"), (detail.entity_types || []).join(", ")],
+            [gettext("Status"), detail.obsolete === true ? gettext("Obsolete") : (
+                detail.obsolete === false ? gettext("Current") : null
+            )],
+            [gettext("Version"), detail.version]
+        ];
+        renderProperties(summary, properties);
+        renderActions(summary, detail, source);
 
         if (
             detail.metadata_status === "available" &&
             detail.widget &&
-            ["metadata", "ontology_info"].includes(detail.widget.type)
+            ["metadata", "entity_info", "ontology_info"].includes(detail.widget.type)
         ) {
             renderTssWidget(detail.widget);
         } else if (detail.metadata_status !== "available") {
@@ -366,34 +433,164 @@
         }
     }
 
-    async function renderTssWidget(widgetDescriptor) {
+    function normalizeResource(resource) {
+        if (!resource) {
+            return {};
+        }
+        if (typeof resource === "string") {
+            return { id: resource, label: resource };
+        }
+        return resource;
+    }
+
+    function renderDefinitions(parent, definitions) {
+        const values = definitions.filter(Boolean);
+        if (!values.length) {
+            return;
+        }
+        const section = createSection(gettext("Definition"));
+        values.forEach(function (definition) {
+            const paragraph = document.createElement("p");
+            paragraph.className = "ts4nfdi-annotation-description";
+            paragraph.textContent = definition;
+            section.appendChild(paragraph);
+        });
+        parent.appendChild(section);
+    }
+
+    function renderSynonyms(parent, synonyms) {
+        const values = synonyms.filter(Boolean);
+        if (!values.length) {
+            return;
+        }
+        const section = createSection(gettext("Synonyms"));
+        const list = document.createElement("div");
+        list.className = "ts4nfdi-annotation-synonyms";
+        values.forEach(function (synonym) {
+            list.appendChild(createBadge(synonym, "synonym"));
+        });
+        section.appendChild(list);
+        parent.appendChild(section);
+    }
+
+    function createSection(headingText) {
+        const section = document.createElement("section");
+        section.className = "ts4nfdi-annotation-section";
+        const heading = document.createElement("h3");
+        heading.textContent = headingText;
+        section.appendChild(heading);
+        return section;
+    }
+
+    function renderProperties(parent, properties) {
+        const available = properties.filter(function (property) {
+            return property[1] != null && property[1] !== "";
+        });
+        if (!available.length) {
+            return;
+        }
+        const section = createSection(gettext("Concept information"));
+        const list = document.createElement("dl");
+        list.className = "ts4nfdi-annotation-properties";
+        available.forEach(function (property) {
+            const term = document.createElement("dt");
+            term.textContent = property[0];
+            const description = document.createElement("dd");
+            description.textContent = property[1];
+            list.appendChild(term);
+            list.appendChild(description);
+        });
+        section.appendChild(list);
+        parent.appendChild(section);
+    }
+
+    function renderActions(parent, detail, source) {
+        const section = createSection(gettext("Links"));
+        const actions = document.createElement("div");
+        actions.className = "ts4nfdi-annotation-actions";
+
+        if (detail.iri && HTTP_IRI.test(detail.iri)) {
+            actions.appendChild(createExternalLink(detail.iri, gettext("Open concept IRI")));
+            const copy = document.createElement("button");
+            copy.type = "button";
+            copy.className = "ts4nfdi-annotation-action";
+            copy.textContent = gettext("Copy IRI");
+            copy.addEventListener("click", async function () {
+                try {
+                    await navigator.clipboard.writeText(detail.iri);
+                    copy.textContent = gettext("Copied");
+                } catch (error) {
+                    console.warn("Could not copy terminology IRI.", error);
+                }
+            });
+            actions.appendChild(copy);
+        }
+        if (source.url && HTTP_IRI.test(source.url)) {
+            actions.appendChild(createExternalLink(source.url, gettext("Open source")));
+        }
+        if (!actions.childElementCount) {
+            return;
+        }
+        section.appendChild(actions);
+        parent.appendChild(section);
+    }
+
+    function createExternalLink(url, label) {
+        const link = document.createElement("a");
+        link.className = "ts4nfdi-annotation-action";
+        link.href = url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = label;
+        return link;
+    }
+
+    function renderTssWidget(widgetDescriptor) {
         const widgetHost = document.getElementById("ts4nfdi-annotation-widget");
         widgetHost.replaceChildren();
+        const disclosure = document.createElement("details");
+        disclosure.className = "ts4nfdi-annotation-widget-disclosure";
+        const disclosureLabel = document.createElement("summary");
+        disclosureLabel.textContent = gettext("Additional interactive terminology view");
+        disclosure.appendChild(disclosureLabel);
         const container = document.createElement("div");
         container.className = "ts4nfdi-annotation-widget-root";
-        widgetHost.appendChild(container);
+        disclosure.appendChild(container);
+        widgetHost.appendChild(disclosure);
 
-        try {
-            await loadTssAssets();
-            const factories = {
-                metadata: "createMetadata",
-                ontology_info: "createOntologyInfo"
-            };
-            const factoryName = factories[widgetDescriptor.type];
-            const factory = window.ts4nfdiWidgets && window.ts4nfdiWidgets[factoryName];
-            if (typeof factory !== "function") {
-                throw new Error("The requested TS4NFDI widget is not available.");
+        let mounted = false;
+        disclosure.addEventListener("toggle", async function () {
+            if (!disclosure.open || mounted) {
+                return;
             }
-            const props = removeNullValues(widgetDescriptor.props || {});
-            if (props.api && props.api.startsWith("/")) {
-                props.api = getBaseUrl() + props.api;
+            mounted = true;
+            container.classList.add("ts4nfdi-annotation-loading");
+            container.textContent = gettext("Loading interactive terminology view …");
+            try {
+                await loadTssAssets();
+                const factories = {
+                    metadata: "createMetadata",
+                    entity_info: "createEntityInfo",
+                    ontology_info: "createOntologyInfo"
+                };
+                const factoryName = factories[widgetDescriptor.type];
+                const factory = window.ts4nfdiWidgets && window.ts4nfdiWidgets[factoryName];
+                if (typeof factory !== "function") {
+                    throw new Error("The requested TS4NFDI widget is not available.");
+                }
+                const props = removeNullValues(widgetDescriptor.props || {});
+                if (props.api && props.api.startsWith("/")) {
+                    props.api = getBaseUrl() + props.api;
+                }
+                container.className = "ts4nfdi-annotation-widget-root";
+                container.replaceChildren();
+                factory(props, container);
+            } catch (error) {
+                container.className = "ts4nfdi-annotation-notice";
+                container.textContent = gettext("The interactive terminology widget could not be loaded.");
+                console.warn("Could not mount TS4NFDI widget.", error);
             }
-            factory(props, container);
-        } catch (error) {
-            container.className = "ts4nfdi-annotation-notice";
-            container.textContent = gettext("The interactive terminology widget could not be loaded.");
-            console.warn("Could not mount TS4NFDI widget.", error);
-        }
+        });
     }
 
     function removeNullValues(value) {

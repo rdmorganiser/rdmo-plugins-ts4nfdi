@@ -3,11 +3,21 @@ from functools import cache
 
 from django.conf import settings
 
-from rdmo_ts4nfdi.utils import normalize_optional_string, require_string
+from rdmo_ts4nfdi.utils import is_http_iri, normalize_optional_string, require_string
 
 logger = logging.getLogger(__name__)
 
 ANNOTATION_RESOURCE_TYPES = frozenset({'entity', 'ontology', 'collection'})
+ANNOTATION_WIDGET_TYPES = {
+    'entity': frozenset({'entity_info', 'metadata', 'none'}),
+    'ontology': frozenset({'ontology_info', 'none'}),
+    'collection': frozenset({'collection_summary', 'none'}),
+}
+DEFAULT_ANNOTATION_WIDGET_TYPES = {
+    'entity': 'metadata',
+    'ontology': 'ontology_info',
+    'collection': 'collection_summary',
+}
 ANNOTATION_ENTITY_TYPES = frozenset(
     {
         'term',
@@ -106,6 +116,55 @@ def load_gateway_config():
     }
 
 
+def load_source_configs():
+    raw_sources = load_config().get('sources', {})
+    if not isinstance(raw_sources, dict):
+        raise RuntimeError('TS4NFDI_PROVIDER sources config must be a dictionary.')
+
+    sources = {}
+    for source_key, raw_source in raw_sources.items():
+        if not isinstance(raw_source, dict):
+            raise RuntimeError(f"TS4NFDI source '{source_key}' must be a dictionary.")
+
+        source_url = normalize_optional_string(raw_source.get('url'))
+        if source_url and not is_http_iri(source_url):
+            raise RuntimeError(f"TS4NFDI source '{source_key}' url must be an HTTP(S) URL.")
+
+        sources[source_key] = {
+            'id': source_key,
+            'label': require_string(raw_source, 'label'),
+            'database': require_string(raw_source, 'database'),
+            'backend_type': normalize_optional_string(raw_source.get('backend_type')),
+            'url': source_url,
+        }
+
+    return sources
+
+
+def attach_source_config(config, *, context):
+    resolved = dict(config)
+    source_key = normalize_optional_string(resolved.get('source_key'))
+    if not source_key:
+        return resolved
+
+    sources = load_source_configs()
+    if source_key not in sources:
+        raise RuntimeError(f"{context} references unknown source_key '{source_key}'.")
+
+    source = dict(sources[source_key])
+    configured_database = normalize_optional_string(resolved.get('database'))
+    if configured_database and configured_database != source['database']:
+        raise RuntimeError(
+            f"{context} database '{configured_database}' does not match "
+            f"source '{source_key}' database '{source['database']}'."
+        )
+
+    resolved['source_key'] = source_key
+    resolved['source'] = source
+    resolved['database'] = source['database']
+    return resolved
+
+
 def load_annotation_matchers():
     frontend_config = _load_raw_frontend_config()
     annotations_config = frontend_config.get('annotations', {})
@@ -155,6 +214,16 @@ def normalize_annotation_matcher(raw_matcher, index, providers):
     if resource_type not in ANNOTATION_RESOURCE_TYPES:
         raise RuntimeError(f'resource_type must be one of {sorted(ANNOTATION_RESOURCE_TYPES)}')
 
+    widget_type = (
+        normalize_optional_string(raw_matcher.get('widget_type'))
+        or DEFAULT_ANNOTATION_WIDGET_TYPES[resource_type]
+    )
+    if widget_type not in ANNOTATION_WIDGET_TYPES[resource_type]:
+        raise RuntimeError(
+            f"widget_type for resource_type '{resource_type}' must be one of "
+            f'{sorted(ANNOTATION_WIDGET_TYPES[resource_type])}'
+        )
+
     provider_key = normalize_optional_string(raw_matcher.get('provider_key'))
     if resource_type in {'ontology', 'collection'}:
         if not provider_key:
@@ -170,6 +239,16 @@ def normalize_annotation_matcher(raw_matcher, index, providers):
     if not isinstance(tabs, list) or any(tab not in ANNOTATION_TABS for tab in tabs):
         raise RuntimeError(f'tabs must contain only {sorted(ANNOTATION_TABS)}')
 
+    source_config = attach_source_config(
+        {
+            'source_key': raw_matcher.get('source_key'),
+            'database': raw_matcher.get('gateway_params', {}).get('database')
+            if isinstance(raw_matcher.get('gateway_params', {}), dict)
+            else None,
+        },
+        context=f"annotation matcher '{matcher_id}'",
+    )
+
     raw_gateway_params = raw_matcher.get('gateway_params', {})
     if not isinstance(raw_gateway_params, dict):
         raise RuntimeError('gateway_params must be a dictionary')
@@ -178,6 +257,8 @@ def normalize_annotation_matcher(raw_matcher, index, providers):
         for key, value in raw_gateway_params.items()
         if key in GATEWAY_PARAM_NAMES and value not in (None, '', [])
     }
+    if source_config.get('database'):
+        gateway_params['database'] = source_config['database']
     ignored_params = sorted(set(raw_gateway_params) - set(gateway_params))
     if ignored_params:
         logger.warning(
@@ -192,7 +273,10 @@ def normalize_annotation_matcher(raw_matcher, index, providers):
         'attribute_uri': attribute_uri,
         'optionset_uri': optionset_uri,
         'resource_type': resource_type,
+        'widget_type': widget_type,
         'provider_key': provider_key,
+        'source_key': source_config.get('source_key'),
+        'source': source_config.get('source'),
         'badge_label': normalize_optional_string(raw_matcher.get('badge_label')),
         'entity_type': entity_type,
         'ontology_id': normalize_optional_string(raw_matcher.get('ontology_id')),

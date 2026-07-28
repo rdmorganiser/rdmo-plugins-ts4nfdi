@@ -48,6 +48,20 @@ def get_first_value(data, keys):
     return None
 
 
+def get_values(data, keys):
+    for key in keys:
+        value = get_value(data, key)
+        raw_values = value if isinstance(value, list) else [value]
+        values = []
+        for raw_value in raw_values:
+            normalized = normalize_value(raw_value)
+            if normalized and normalized not in values:
+                values.append(normalized)
+        if values:
+            return values
+    return []
+
+
 def get_value(data, key):
     if not isinstance(data, dict):
         return None
@@ -110,9 +124,10 @@ def redact_sensitive_params(params):
     }
 
 
-def option_badge(text, modifier):
+def option_badge(text, modifier, title=None):
+    title_attribute = f' title="{escape(str(title), quote=True)}"' if title else ""
     return (
-        f'<span class="ts4nfdi-option-badge ts4nfdi-option-badge--{modifier}">'
+        f'<span class="ts4nfdi-option-badge ts4nfdi-option-badge--{modifier}"{title_attribute}>'
         f'{escape(str(text))}'
         "</span>"
     )

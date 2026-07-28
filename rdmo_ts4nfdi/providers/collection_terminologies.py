@@ -41,7 +41,6 @@ class TS4NFDICollectionTerminologiesProvider(TS4NFDIBaseProvider):
             if option:
                 options.append(option)
 
-        options = self.deduplicate_options(options, provider_config)
         options = self.exclude_selected_options(project, options, provider_config)
         return options[: provider_config.get("limit", 100)]
 

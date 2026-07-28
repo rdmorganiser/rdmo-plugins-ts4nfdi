@@ -61,17 +61,24 @@ def provider_modules():
     try:
         config = importlib.import_module('rdmo_ts4nfdi.config')
         providers = importlib.import_module('rdmo_ts4nfdi.providers')
+        provider_utils = importlib.import_module('rdmo_ts4nfdi.providers.utils')
+        annotation_metadata = importlib.import_module(
+            'rdmo_ts4nfdi.services.annotation_metadata'
+        )
         gateway = importlib.import_module('rdmo_ts4nfdi.services.gateway')
         upstream = importlib.import_module('rdmo_ts4nfdi.upstream')
         utils = importlib.import_module('rdmo_ts4nfdi.utils')
         yield types.SimpleNamespace(
             load_config=config.load_config,
+            load_source_configs=config.load_source_configs,
             load_annotation_matchers=config.load_annotation_matchers,
             load_frontend_config=config.load_frontend_config,
             settings=settings,
             gateway=gateway,
             upstream=upstream,
             utils=utils,
+            provider_utils=provider_utils,
+            annotation_metadata=annotation_metadata,
             collection_terminologies_provider=providers.TS4NFDICollectionTerminologiesProvider,
             collections_provider=providers.TS4NFDICollectionsProvider,
             ontologies_provider=providers.TS4NFDIOntologiesProvider,
@@ -85,17 +92,18 @@ def provider_modules():
         monkeypatch.undo()
 
 
-def configure_provider(provider_modules, key, provider_config):
+def configure_provider(provider_modules, key, provider_config, sources=None):
     provider_modules.settings.TS4NFDI_PROVIDER = {
         'defaults': {
             'base_url': 'https://example.test/api',
-            'dedupe_fields': ['id'],
             'limit': 20,
         },
         'providers': {
             key: provider_config,
         },
     }
+    if sources:
+        provider_modules.settings.TS4NFDI_PROVIDER['sources'] = sources
     provider_modules.load_config.cache_clear()
 
 
@@ -156,6 +164,50 @@ def test_ontology_provider_get_options_returns_mapped_options(provider_modules):
             ),
         },
     ]
+
+
+def test_ontology_provider_renders_source_terminology_term_breadcrumb(provider_modules):
+    key = 'ts4nfdi_ontologies'
+    configure_provider(
+        provider_modules,
+        key,
+        {
+            'endpoint': 'search',
+            'source_key': 'ebi',
+            'ontologies': ['edam'],
+            'iri_prefixes': ['http://edamontology.org/format_'],
+        },
+        sources={
+            'ebi': {
+                'label': 'EBI',
+                'database': 'ebi',
+                'backend_type': 'ols2',
+                'url': 'https://www.ebi.ac.uk/ols4/api/v2',
+            },
+        },
+    )
+    payload = [
+        {
+            'iri': 'http://edamontology.org/format_2332',
+            'label': 'XML',
+            'descriptions': ['eXtensible Markup Language format.'],
+            'ontology': 'edam',
+            'short_form': 'EDAM_format_2332',
+            'source_name': 'ebi',
+        },
+    ]
+    provider = make_provider(provider_modules.ontologies_provider, key, payload)
+
+    options = provider.get_options(project=None, search='xml')
+    provider_config = provider.get_provider_config()
+
+    assert provider_config['database'] == 'ebi'
+    assert provider_config['source']['label'] == 'EBI'
+    assert options[0]['help'].index('>EBI</span>') < options[0]['help'].index('>edam</span>')
+    assert options[0]['help'].index('>edam</span>') < options[0]['help'].index(
+        '>EDAM_format_2332</span>'
+    )
+    assert 'https://www.ebi.ac.uk/ols4/api/v2' in options[0]['help']
 
 
 def test_collections_provider_get_options_returns_mapped_collection_options(provider_modules):
@@ -277,6 +329,7 @@ def test_annotation_config_is_validated_and_sanitized(provider_modules):
                         'attribute_uri': 'https://example.test/attribute',
                         'optionset_uri': 'https://example.test/optionset',
                         'resource_type': 'entity',
+                        'widget_type': 'entity_info',
                         'provider_key': 'internal-provider-key',
                         'gateway_params': {
                             'database': 'ols',
@@ -299,9 +352,92 @@ def test_annotation_config_is_validated_and_sanitized(provider_modules):
 
     assert len(matchers) == 1
     assert matchers[0]['id'] == 'valid'
+    assert matchers[0]['widget_type'] == 'entity_info'
     assert matchers[0]['gateway_params'] == {'database': 'ols'}
     assert 'provider_key' not in frontend_config['annotations']['matchers'][0]
     assert 'gateway_params' not in frontend_config['annotations']['matchers'][0]
+
+
+def test_annotation_source_config_supplies_gateway_database(provider_modules):
+    provider_modules.settings.TS4NFDI_PROVIDER = {
+        'sources': {
+            'ebi': {
+                'label': 'EBI',
+                'database': 'ebi',
+                'backend_type': 'ols2',
+                'url': 'https://www.ebi.ac.uk/ols4/api/v2',
+            },
+        },
+        'providers': {},
+        'frontend': {
+            'annotations': {
+                'enabled': True,
+                'matchers': [
+                    {
+                        'id': 'edam-format',
+                        'question_uri': 'https://example.test/question',
+                        'attribute_uri': 'https://example.test/attribute',
+                        'optionset_uri': 'https://example.test/optionset',
+                        'resource_type': 'entity',
+                        'source_key': 'ebi',
+                        'ontology_id': 'edam',
+                    },
+                ],
+            },
+        },
+    }
+    provider_modules.load_config.cache_clear()
+
+    matcher = provider_modules.load_annotation_matchers()[0]
+
+    assert matcher['gateway_params'] == {'database': 'ebi'}
+    assert matcher['source'] == {
+        'id': 'ebi',
+        'label': 'EBI',
+        'database': 'ebi',
+        'backend_type': 'ols2',
+        'url': 'https://www.ebi.ac.uk/ols4/api/v2',
+    }
+
+
+def test_entity_metadata_normalizes_gateway_fields(provider_modules):
+    metadata = provider_modules.annotation_metadata.normalize_entity_metadata(
+        {
+            'iri': 'http://edamontology.org/format_2332',
+            'label': 'XML',
+            'shortForm': 'EDAM_format_2332',
+            'ontologyId': 'edam',
+            'ontologyIri': 'http://edamontology.org',
+            'definition': ['First definition.', 'Second definition.'],
+            'synonym': ['eXtensible Markup Language'],
+            'type': ['class'],
+            'isObsolete': False,
+        },
+        {
+            'badge_label': 'EDAM',
+            'ontology_id': 'edam',
+            'source': {
+                'id': 'ebi',
+                'label': 'EBI',
+                'database': 'ebi',
+                'backend_type': 'ols2',
+                'url': 'https://www.ebi.ac.uk/ols4/api/v2',
+            },
+        },
+    )
+
+    assert metadata['description'] == 'First definition.'
+    assert metadata['definitions'] == ['First definition.', 'Second definition.']
+    assert metadata['synonyms'] == ['eXtensible Markup Language']
+    assert metadata['short_form'] == 'EDAM_format_2332'
+    assert metadata['entity_types'] == ['class']
+    assert metadata['obsolete'] is False
+    assert metadata['source']['label'] == 'EBI'
+    assert metadata['terminology'] == {
+        'id': 'edam',
+        'label': 'EDAM',
+        'iri': 'http://edamontology.org',
+    }
 
 
 def test_gateway_path_and_query_allowlists(provider_modules):

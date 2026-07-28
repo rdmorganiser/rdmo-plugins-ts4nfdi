@@ -7,7 +7,6 @@ id_fields = ["iri", "uri", "id"]
 label_fields = ["label", "prefLabel", "short_form", "name", "title"]
 help_fields = ["descriptions", "description", "definition", "scopeNote", "summary"]
 ontology_fields = ["ontology", "ontology_iri", "source_name", "sourceName", "backend_type", "short_form"]
-dedupe_fields = ["id"]
 show_request_errors = true
 request_error_text = "TS4NFDI service is currently unavailable."
 request_error_help = "Could not load options from the terminology service. Please try again later."
@@ -20,16 +19,21 @@ timeout = 10
 cache_timeout = 300
 # api_token = "configure-via-a-secret-bearing-settings-source"
 
+[sources.ebi]
+label = "EBI"
+database = "ebi"
+backend_type = "ols2"
+url = "https://www.ebi.ac.uk/ols4/api/v2"
+
 [providers.ts4nfdi_ontologies]
 endpoint = "search"
-database = "ebi"
+source_key = "ebi"
 ontologies = ["edam"]
 iri_prefixes = ["http://edamontology.org/format_"]
-display = ["iri", "label", "descriptions", "ontology", "ontology_iri", "short_form", "source_name", "type"]
-# Remove options from autocomplete results when the option id is already stored
-# in project values for one of these attribute URIs.
-exclude_selected_attribute_uris = ["https://rdmorganiser.github.io/terms/domain/project/dataset/format"]
-selected_match_fields = ["id"]
+display = ["iri", "label", "descriptions", "ontology", "ontology_iri", "short_form", "source", "source_name", "backend_type", "type"]
+# Dataset question sets can legitimately select the same format in different
+# set_prefix/set_index contexts. Do not exclude options selected elsewhere in
+# the project.
 
 [providers.ts4nfdi_collections]
 endpoint = "collections/"
@@ -56,7 +60,6 @@ limit = 100
 id_fields = ["URI", "config.id", "uri", "ontologyId", "id"]
 label_fields = ["config.title", "label", "ontologyId", "name", "title"]
 help_fields = ["config.description", "description", "definition", "summary"]
-dedupe_fields = ["id"]
 
 [frontend]
 # Interview annotations are opt-in. Each matcher must identify the complete
@@ -69,15 +72,13 @@ enabled = true
 id = "fairagro-dataset-format"
 question_uri = "https://rdmo.fairagro.net/terms/questions/dmp4nfdi/v1-0-0/DMP/Dataset/Distribution/rdadmp_format"
 attribute_uri = "https://rdmorganiser.github.io/terms/domain/project/dataset/format"
-optionset_uri = "https://rdmo.fairagro.net/terms/options/file_format_ts4nfdi"
+optionset_uri = "https://rdmo.fairagro.net/terms/options/ts4nfdi/file_format_grouped"
 resource_type = "entity"
+widget_type = "entity_info"
 badge_label = "EDAM"
 ontology_id = "edam"
 entity_type = "class"
-tabs = ["synonyms", "hierarchy", "ontology", "crossref"]
-
-[frontend.annotations.matchers.gateway_params]
-database = "ebi"
+source_key = "ebi"
 
 # EDAM formats selected in the plugin's example catalog.
 [[frontend.annotations.matchers]]
@@ -86,13 +87,11 @@ question_uri = "https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-e
 attribute_uri = "https://rdmorganiser.github.io/terms/domain/project/dataset/format"
 optionset_uri = "https://rdmo.fairagro.net/terms/options/file_format_ts4nfdi"
 resource_type = "entity"
+widget_type = "entity_info"
 badge_label = "EDAM"
 ontology_id = "edam"
 entity_type = "class"
-tabs = ["synonyms", "hierarchy", "ontology", "crossref"]
-
-[frontend.annotations.matchers.gateway_params]
-database = "ebi"
+source_key = "ebi"
 
 # Terminologies selected from the FAIRagro TS4NFDI collection.
 [[frontend.annotations.matchers]]
@@ -116,10 +115,8 @@ collectionId = "ff5491d1-d0a9-481e-ac90-0fad065fa097"
 # badge_label = "EDAM"
 # ontology_id = "edam"
 # entity_type = "class"
+# source_key = "ebi"
 # tabs = ["synonyms", "hierarchy", "ontology", "crossref"]
-#
-# [frontend.annotations.matchers.gateway_params]
-# database = "ebi"
 #
 # Ontology annotations additionally use their provider to resolve the selected
 # resource:

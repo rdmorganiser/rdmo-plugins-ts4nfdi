@@ -43,7 +43,6 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
             if option:
                 options.append(option)
 
-        options = self.deduplicate_options(options, provider_config)
         options = self.exclude_selected_options(project, options, provider_config)
         return options[: provider_config.get("limit", 20)]
 
@@ -158,6 +157,12 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
         return option
 
     def build_help_html(self, result, provider_config):
+        source = provider_config.get("source") or {}
+        source_name = (
+            source.get("label")
+            or get_first_value(result, ("source_name", "sourceName"))
+        )
+        source_url = source.get("url") or get_first_value(result, ("source",))
         ontology_name = get_first_value(
             result,
             provider_config.get("ontology_fields", ("ontology_name", "ontology")),
@@ -173,12 +178,17 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
 
         parts = []
 
-        if ontology_name or short_form:
+        if source_name or ontology_name or short_form:
             badges = []
+            if source_name:
+                badges.append(option_badge(source_name, "source", title=source_url))
             if ontology_name:
+                if badges:
+                    badges.append(option_separator())
                 badges.append(option_badge(ontology_name, "ontology"))
             if short_form:
-                badges.append(option_separator())
+                if badges:
+                    badges.append(option_separator())
                 badges.append(option_badge(short_form, "term"))
             parts.append(option_breadcrumb(badges))
 

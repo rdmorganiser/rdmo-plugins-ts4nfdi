@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 
 from rdmo.projects.utils import check_conditions
 from rdmo.questions.models import Question, QuestionSet
@@ -9,6 +9,11 @@ from rdmo_ts4nfdi.config import find_annotation_matcher, load_annotation_matcher
 from rdmo_ts4nfdi.providers.utils import extract_results, get_first_value
 from rdmo_ts4nfdi.utils import is_http_iri
 
+from .annotation_metadata import (
+    build_source_metadata,
+    build_terminology_metadata,
+    normalize_entity_metadata,
+)
 from .gateway import gateway_get
 
 logger = logging.getLogger(__name__)
@@ -67,6 +72,8 @@ def serialize_annotation_value(value, question, matcher):
         'label': value.text,
         'iri': value.external_id,
         'badge_label': matcher.get('badge_label'),
+        'source': build_source_metadata(matcher),
+        'terminology': build_terminology_metadata(matcher),
         'question_id': question.id,
     }
 
@@ -94,8 +101,12 @@ def resolve_annotation(project, value, matcher_id=None):
     detail = {
         **serialize_annotation_value(value, question, matcher),
         'metadata_status': 'available',
-        'source': None,
         'description': None,
+        'definitions': [],
+        'synonyms': [],
+        'short_form': None,
+        'entity_types': [],
+        'obsolete': None,
         'version': None,
         'ontology_id': matcher.get('ontology_id'),
     }
@@ -122,18 +133,17 @@ def resolve_entity(iri, matcher):
         ('iri', iri),
         *((key, value) for key, value in matcher['gateway_params'].items() if key != 'iri'),
     ]
-    payload, _ = gateway_get('ols4/api/v2/entities', query)
+    ontology_id = matcher.get('ontology_id')
+    if ontology_id:
+        endpoint = f'ols4/api/v2/ontologies/{quote(ontology_id, safe="")}/entities'
+    else:
+        endpoint = 'ols4/api/v2/entities'
+    payload, _ = gateway_get(endpoint, query)
     results = extract_entity_results(payload)
-    result = results[0] if results else {}
+    if not results:
+        raise LookupError(f'No Gateway entity metadata was returned for {iri}.')
 
-    return {
-        'label': get_first_value(result, ('label', 'prefLabel')) or None,
-        'description': get_first_value(result, ('description', 'definition')) or None,
-        'ontology_id': (
-            get_first_value(result, ('ontologyId', 'ontology_name', 'ontology_id')) or matcher.get('ontology_id')
-        ),
-        'source': get_first_value(result, ('source', 'source_name')) or None,
-    }
+    return normalize_entity_metadata(results[0], matcher)
 
 
 def resolve_provider_resource(value, matcher):
@@ -184,18 +194,35 @@ def resolve_provider_resource(value, matcher):
 def build_widget_descriptor(project, detail, matcher):
     proxy_api = f'/api/v1/ts4nfdi/projects/{project.id}/gateway/ols4/api/'
     parameter = urlencode(matcher['gateway_params'])
+    widget_type = matcher['widget_type']
+
+    if widget_type == 'none':
+        return {'type': 'none', 'props': {}}
 
     if detail['kind'] == 'entity':
+        props = {
+            'api': proxy_api,
+            'iri': detail['iri'],
+            'ontologyId': detail.get('ontology_id'),
+            'entityType': matcher.get('entity_type'),
+            'parameter': parameter,
+            'useLegacy': matcher['use_legacy'],
+        }
+        if widget_type == 'entity_info':
+            props.update(
+                {
+                    'hasTitle': False,
+                    'showBadges': True,
+                }
+            )
+            return {
+                'type': 'entity_info',
+                'props': props,
+            }
+
         tabs = set(matcher['tabs'])
-        return {
-            'type': 'metadata',
-            'props': {
-                'api': proxy_api,
-                'iri': detail['iri'],
-                'ontologyId': detail.get('ontology_id'),
-                'entityType': matcher.get('entity_type'),
-                'parameter': parameter,
-                'useLegacy': matcher['use_legacy'],
+        props.update(
+            {
                 'altNamesTab': 'synonyms' in tabs,
                 'hierarchyTab': 'hierarchy' in tabs,
                 'crossRefTab': 'crossref' in tabs,
@@ -205,10 +232,14 @@ def build_widget_descriptor(project, detail, matcher):
                 'entityInfoTab': 'entityinfo' in tabs,
                 'entityRelationTab': 'entityrelations' in tabs,
                 'copyButton': 'right',
-            },
+            }
+        )
+        return {
+            'type': 'metadata',
+            'props': props,
         }
 
-    if detail['kind'] == 'ontology' and detail.get('ontology_id'):
+    if widget_type == 'ontology_info' and detail.get('ontology_id'):
         return {
             'type': 'ontology_info',
             'props': {
@@ -219,7 +250,7 @@ def build_widget_descriptor(project, detail, matcher):
             },
         }
 
-    return {'type': 'collection_summary', 'props': {}}
+    return {'type': widget_type, 'props': {}}
 
 
 def flatten_questions(elements):

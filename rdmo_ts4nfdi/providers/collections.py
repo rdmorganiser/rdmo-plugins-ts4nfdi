@@ -37,7 +37,6 @@ class TS4NFDICollectionsProvider(TS4NFDIBaseProvider):
             if option:
                 options.append(option)
 
-        options = self.deduplicate_options(options, provider_config)
         if provider_config.get("exclude_selected_collection_options") is True:
             options = self.exclude_selected_collection_options(
                 project,

@@ -12,12 +12,25 @@
     display: flex;
     align-items: center;
     gap: 0.45rem;
+    width: 100%;
     min-height: 2.3rem;
     padding: 0.45rem 0.55rem;
     border: 1px solid #d7e3ef;
     border-radius: 0.5rem;
+    color: #203548;
     background: linear-gradient(135deg, #f7fbff 0%, #fbf9ff 100%);
     box-shadow: 0 1px 2px rgb(16 44 73 / 8%);
+    font: inherit;
+    text-align: left;
+    transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.ts4nfdi-annotation-row:hover,
+.ts4nfdi-annotation-row:focus-visible {
+    border-color: #8bb3d3;
+    outline: 0;
+    background: #f1f8fe;
+    box-shadow: 0 0 0 3px rgb(71 137 187 / 14%);
 }
 
 .ts4nfdi-annotation-badge,
@@ -36,6 +49,11 @@
 .ts4nfdi-option-badge--term {
     background: #e8f7ed;
     color: #25643b;
+}
+
+.ts4nfdi-annotation-badge--synonym {
+    background: #f0f3f6;
+    color: #3c5264;
 }
 
 .ts4nfdi-annotation-badge--ontology,
@@ -59,6 +77,7 @@
 }
 
 .ts4nfdi-annotation-label {
+    flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
     font-weight: 600;
@@ -66,21 +85,24 @@
     white-space: nowrap;
 }
 
-.ts4nfdi-annotation-details {
-    margin-left: auto;
-    padding: 0;
-    border: 0;
-    color: #245f91;
-    background: transparent;
-    font: inherit;
-    font-weight: 600;
-    white-space: nowrap;
+.ts4nfdi-annotation-breadcrumb {
+    display: inline-flex;
+    flex: 0 1 auto;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.3rem;
+    min-width: 0;
 }
 
-.ts4nfdi-annotation-details:hover,
-.ts4nfdi-annotation-details:focus {
-    color: #174367;
-    text-decoration: underline;
+.ts4nfdi-annotation-separator,
+.ts4nfdi-annotation-chevron {
+    color: #7890a3;
+    font-weight: 700;
+}
+
+.ts4nfdi-annotation-chevron {
+    margin-left: 0.15rem;
+    font-size: 1.2rem;
 }
 
 .ts4nfdi-annotation-drawer[hidden] {
@@ -152,22 +174,95 @@
     padding: 1rem 0;
 }
 
-.ts4nfdi-annotation-summary-badges {
-    display: flex;
-    gap: 0.4rem;
-    flex-wrap: wrap;
-    margin-bottom: 0.85rem;
+.ts4nfdi-annotation-summary-breadcrumb {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e6edf2;
+}
+
+.ts4nfdi-annotation-summary-breadcrumb .ts4nfdi-annotation-breadcrumb {
+    justify-content: flex-start;
 }
 
 .ts4nfdi-annotation-description {
+    margin: 0.55rem 0 0;
     color: #3e5262;
     line-height: 1.55;
 }
 
-.ts4nfdi-annotation-iri {
-    display: inline-block;
-    max-width: 100%;
+.ts4nfdi-annotation-section {
+    padding: 1rem 0;
+    border-bottom: 1px solid #e6edf2;
+}
+
+.ts4nfdi-annotation-section h3 {
+    margin: 0 0 0.65rem;
+    color: #273f52;
+    font-size: 0.86rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.ts4nfdi-annotation-synonyms,
+.ts4nfdi-annotation-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.ts4nfdi-annotation-properties {
+    display: grid;
+    grid-template-columns: minmax(7rem, 0.7fr) minmax(0, 1.3fr);
+    gap: 0;
+    margin: 0;
+    border: 1px solid #e1e9ef;
+    border-radius: 0.45rem;
+    overflow: hidden;
+}
+
+.ts4nfdi-annotation-properties dt,
+.ts4nfdi-annotation-properties dd {
+    margin: 0;
+    padding: 0.55rem 0.7rem;
+    border-bottom: 1px solid #e8eef3;
     overflow-wrap: anywhere;
+}
+
+.ts4nfdi-annotation-properties dt {
+    color: #50687a;
+    background: #f6f8fa;
+    font-weight: 600;
+}
+
+.ts4nfdi-annotation-properties dd {
+    color: #283e50;
+}
+
+.ts4nfdi-annotation-properties > :nth-last-child(-n + 2) {
+    border-bottom: 0;
+}
+
+.ts4nfdi-annotation-action {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    padding: 0.32rem 0.7rem;
+    border: 1px solid #b9d3e6;
+    border-radius: 0.4rem;
+    color: #1e5d8b;
+    background: #f1f8fd;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.ts4nfdi-annotation-action:hover,
+.ts4nfdi-annotation-action:focus {
+    border-color: #70a6cc;
+    color: #174367;
+    background: #e7f3fb;
+    text-decoration: none;
 }
 
 .ts4nfdi-annotation-loading,
@@ -182,8 +277,23 @@
     padding-bottom: 2rem;
 }
 
+.ts4nfdi-annotation-widget-disclosure {
+    margin-top: 0.9rem;
+    border: 1px solid #dbe5ec;
+    border-radius: 0.5rem;
+    background: #fafcfd;
+}
+
+.ts4nfdi-annotation-widget-disclosure > summary {
+    padding: 0.75rem 0.9rem;
+    color: #2c536f;
+    cursor: pointer;
+    font-weight: 650;
+}
+
 .ts4nfdi-annotation-widget-root {
     min-height: 4rem;
+    padding: 0.25rem 0.75rem 0.9rem;
 }
 
 .ts4nfdi-annotation-drawer-open {
@@ -218,13 +328,26 @@
     }
 
     .ts4nfdi-annotation-label {
-        flex: 1 1 50%;
+        flex: 1 1 100%;
     }
 
-    .ts4nfdi-annotation-details {
-        width: 100%;
-        margin-left: 0;
-        text-align: left;
+    .ts4nfdi-annotation-breadcrumb {
+        flex: 1 1 calc(100% - 2rem);
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .ts4nfdi-annotation-properties {
+        grid-template-columns: 1fr;
+    }
+
+    .ts4nfdi-annotation-properties dt,
+    .ts4nfdi-annotation-properties dd {
+        border-bottom: 0;
+    }
+
+    .ts4nfdi-annotation-properties dd {
+        border-bottom: 1px solid #e8eef3;
     }
 
     .ts4nfdi-annotation-panel {
