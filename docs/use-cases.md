@@ -16,18 +16,24 @@ terminology integration should help a respondent:
 4. store a stable identifier together with the readable answer; and
 5. inspect additional context without leaving the interview.
 
-In this document, a **terminology** is a controlled vocabulary such as EDAM or
-AGROVOC. A **semantic artefact** is a complete terminology, ontology,
-classification, or similar resource. A **concept** or **entity** is one entry
-in such a resource, for example the EDAM concept for PNG or the ENVO concept
-for soil. Concepts should be identified by a stable HTTP IRI; their human
-readable labels may change or be translated.
+This document follows the vocabulary in the project
+[glossary](glossary.md): **terminology**, **ontology**, and **vocabulary** are
+treated as synonyms; a **term** is a class or individual in a terminology; a
+**terminology collection** groups complete terminologies; and an **entity
+set** groups selected terms or properties, potentially from several
+terminologies. The Gateway and TSS APIs sometimes call a term an `entity` and
+a complete terminology a `semantic artefact`; these are API names rather than
+additional categories in this document.
+
+For example, EDAM and AGROVOC are terminologies, while PNG is an EDAM term.
+Selected terms should be identified by a stable HTTP IRI; their
+human-readable labels may change or be translated.
 
 TS4NFDI provides two complementary integration layers:
 
 - The **API Gateway** provides a common search and retrieval interface over
   several terminology services.
-- The **TSS widgets** provide ready-made interfaces for autocomplete, entity
+- The **TSS widgets** provide ready-made interfaces for autocomplete, term
   information, ontology information, hierarchies, relations, and other
   terminology views.
 
@@ -39,11 +45,11 @@ optional details view.
 
 Most of the use cases below follow the same flow:
 
-1. An RDMO option provider searches a deliberately restricted terminology or
-   TS4NFDI collection.
+1. An RDMO option provider searches a deliberately restricted terminology,
+   terminology collection, or entity set.
 2. Search results show the preferred label, terminology badge, and a short
    definition where available.
-3. RDMO stores the label as the visible answer and the concept IRI as the
+3. RDMO stores the label as the visible answer and the term IRI as the
    value's `external_id`.
 4. The plugin adds a compact annotation below the completed answer, for
    example `format · EDAM · PNG`.
@@ -54,12 +60,44 @@ The answer must remain usable if the external service is unavailable. The
 stored label and IRI should therefore be shown without a Gateway request;
 remote definitions and widgets are progressive enhancement.
 
-Searches should normally be limited by ontology, terminology collection,
-backend, entity type, or IRI prefix. An unrestricted federated search can
-produce many duplicates and several legitimate meanings of the same word. For
-example, “soil” can refer to a subject in AGROVOC, an environmental material
-in ENVO, or a sample/checklist context in MIxS. Source badges and definitions
-are essential when several such results are valid.
+Searches should normally be limited by terminology, terminology collection,
+entity set, backend, term type, or IRI prefix. An unrestricted federated
+search can produce many duplicates and several legitimate meanings of the
+same word. For example, “soil” can refer to a subject in AGROVOC, an
+environmental material in ENVO, or a sample/checklist context in MIxS. Source
+badges and definitions are essential when several such results are valid.
+
+## Lessons from existing integrations
+
+RADAR and the NFDI4Health Health Study Hub demonstrate a useful pattern for
+RDMO: terminology support is attached to an ordinary metadata field rather
+than presented as a separate ontology tool.
+
+RADAR integrates TS4NFDI in its **Keywords** field. While users type, they
+receive suggestions of standardized terms from configured terminology
+collections. On a published dataset landing page, a selected keyword remains
+compact and readable, while the terminology and further information are
+available on demand through TSS widgets. RADAR also uses the semantic
+information downstream for separate keyword and terminology filters.
+
+The Health Study Hub uses terminology autocomplete to standardize key terms
+that describe a study and terminology metadata widgets to expose additional
+information for already selected terms. Its resource pages illustrate the
+same separation between the primary record and optional semantic context:
+terminology details enrich the metadata display without dominating it.
+
+The transferable interaction for RDMO is therefore:
+
+1. search and select a controlled keyword inside the interview;
+2. show selected keywords as concise labels or chips;
+3. open definitions, synonyms, source terminology, and IRI only on demand;
+4. retain the IRI for exports, validation, and later discovery features; and
+5. keep free-text entry available when no suitable term exists.
+
+This pattern is more useful to most respondents than embedding a large
+terminology browser. It also fits the plugin architecture: RDMO's option
+provider handles entry, while the injected annotation layer can mount a TSS
+information widget for selected values.
 
 ## Overview
 
@@ -67,7 +105,7 @@ are essential when several such results are valid.
 | --- | --- | --- | --- |
 | Data-format selection | Technical Data Description | EDAM formats | Implemented |
 | Metadata-standard selection | Data Documentation | FAIRagro TS collection | Implemented |
-| Dataset topics and keywords | Project Data Description / Data Documentation | AGROVOC | Catalog extension |
+| Dataset topics and keywords | Project Data Description / Data Documentation | FAIRagro collection or keyword entity set | Catalog extension |
 | Environmental and sample context | Project Data Description | ENVO and MIxS | Catalog extension |
 | Plant traits and observed variables | Project Data Description | Plant Trait Ontology | Catalog extension |
 | Experiment and data-creation methods | Project Data Description | PPEO and AGROVOC | Provider/catalog extension |
@@ -88,8 +126,8 @@ are essential when several such results are valid.
 `https://rdmorganiser.github.io/terms/domain/project/dataset/format`
 
 This is the most mature use case in the plugin. The option provider searches
-EDAM and restricts results to format concepts. A respondent can enter a
-familiar name such as “PNG”, “xlsx”, or “XML” and select a concept carrying a
+EDAM and restricts results to format terms. A respondent can enter a familiar
+name such as “PNG”, “xlsx”, or “XML” and select a term carrying a
 stable EDAM IRI.
 
 The search result should display:
@@ -100,8 +138,8 @@ The search result should display:
 - a short description, if supplied by EDAM.
 
 The annotation details can show the definition, synonyms, IRI, broader format
-category, and the source ontology. A full ontology graph is unlikely to help
-most respondents and should not be opened by default.
+category, and the source terminology. A full terminology graph is unlikely to
+help most respondents and should not be opened by default.
 
 This use case improves the consistency of format names and distinguishes
 formats with similar labels. The RDMO question remains creatable so that users
@@ -122,14 +160,14 @@ used to describe the data and contextual information?”
 
 `https://rdmorganiser.github.io/terms/domain/project/dataset/metadata/standards`
 
-This question selects complete semantic artefacts rather than individual
-concepts. Its provider is restricted to the FAIRagro TS4NFDI collection. At
+This question selects complete terminologies rather than individual terms.
+Its provider is restricted to the FAIRagro TS4NFDI collection. At
 the time of writing, this collection includes ENVO, the Plant Trait Ontology
 (TO), PPEO, GSC MIxS, and AGROVOC.
 
 Autocomplete results should identify:
 
-- the artefact title and acronym;
+- the terminology title and acronym;
 - the terminology provider or backend;
 - a short description;
 - its public URI;
@@ -138,8 +176,8 @@ Autocomplete results should identify:
 
 After selection, an ontology-information view can explain the purpose of the
 resource and link to its landing page. Entity hierarchy tabs do not apply
-because the selected value represents the ontology itself, not one of its
-concepts.
+because the selected value represents the terminology itself, not one of its
+terms.
 
 This use case is also useful as guidance: selecting MIxS, for example, can
 remind the respondent that a community checklist may influence which
@@ -153,24 +191,66 @@ contextual metadata should be collected during the project.
 - “Will search keywords be provided in the metadata to optimize the
   possibility for discovery and then potential re-use?”
 
-The current keyword question records only a yes/no answer, while the dataset
-description is free text. A useful catalog extension would add a repeatable
-question such as “Which controlled subjects or keywords describe the
-dataset?”.
+**Existing keyword question URI:**
+
+`https://rdmo.fairagro.net/terms/questions/horizon-europe/fair_data/findable_data/metadata_keywords`
+
+**Existing attribute URI:**
+
+`https://rdmorganiser.github.io/terms/domain/project/dataset/metadata/search_keywords`
+
+The current keyword question stores only a yes/no answer, while “What kind of
+dataset is it?” stores a free-text description. The boolean answer should
+remain: it records the project's intention to publish keywords. If the answer
+is “yes”, a new repeatable question can be shown:
+
+> Which keywords will be included in the dataset metadata?
+
+This follow-up should use its own collection-valued RDMO attribute so that it
+does not mix boolean and text values under the existing
+`metadata/search_keywords` attribute. Each row should use RDMO's normal
+select-or-create interaction:
+
+- typeahead searches a configured TS4NFDI scope;
+- selecting a result stores its preferred label and term IRI;
+- creating an unmatched value stores a valid free-text keyword without an
+  IRI; and
+- the answer remains editable even if TS4NFDI is temporarily unavailable.
 
 AGROVOC is a strong default for agricultural topics, crops, practices,
-materials, and processes. The field should also allow ordinary free-text
-keywords because not every locally relevant term will have a suitable
-controlled concept.
+materials, and processes. For the FAIRagro catalog, however, a curated
+keyword entity set may be better than AGROVOC alone: it can contain useful
+terms from AGROVOC, ENVO, TO, PPEO, and MIxS without exposing every term from
+every terminology in the broader FAIRagro terminology collection. Such an
+entity set also gives catalog maintainers a reviewable, versionable search
+scope.
 
-For a controlled keyword, the interview can display the preferred label,
-AGROVOC badge, definition or scope note, alternative labels, and broader
-topic. This helps respondents select a concept that improves discovery
-without requiring them to understand SKOS or ontology modelling.
+After selection, the interview should present the keywords as compact labels
+or chips below the answer. A source badge distinguishes otherwise ambiguous
+terms, for example `soil · ENVO` versus `soil · AGROVOC`. Activating
+“Terminology details” can show:
 
-The controlled keyword is complementary to the project description. The
-plugin should not automatically extract or assign concepts from the free-text
-description without explicit user confirmation.
+- preferred label and definition or scope note;
+- synonyms and translations, when available;
+- source terminology;
+- stable IRI; and
+- immediate broader and narrower terms for orientation.
+
+This deliberately resembles the RADAR and Health Study Hub integrations:
+semantic detail is available at the point of use, but the keyword list still
+looks and behaves like normal metadata. In a later RDMO export or project
+overview, the same stored IRIs could support keyword links, grouping, or
+filters without another matching step.
+
+The first implementation should use the existing RDMO option-provider path
+for autocomplete and the annotation layer for read-only details. Replacing
+the RDMO input with a TSS React autocomplete widget would require lifecycle
+and state synchronization with RDMO's pre-built frontend and is not necessary
+to deliver the core benefit.
+
+Controlled keywords complement the project description; they do not replace
+it. The plugin should not automatically extract or assign terms from free
+text without explicit user confirmation.
 
 ## UC-4: Environmental material and sample context
 
@@ -186,7 +266,7 @@ free-text answer. A repeatable structured question could ask:
 The FAIRagro collection already provides two complementary sources:
 
 - **ENVO** for environmental materials, environmental features, and biomes;
-- **MIxS** for sample contexts and checklist-related metadata concepts.
+- **MIxS** for sample contexts and checklist-related metadata terms.
 
 This is a good example of why definitions and provider badges matter. A user
 searching for “soil” may need to choose between a general agricultural
@@ -208,7 +288,7 @@ question could ask:
 
 The Plant Trait Ontology (TO) is the natural first search scope. Results such
 as “plant height” can be distinguished from more specific traits by showing
-their definition and parent concepts. The selected IRI can later help users
+their definition and parent terms. The selected IRI can later help users
 understand whether two datasets measure the same trait even if their local
 column names differ.
 
@@ -239,12 +319,12 @@ Terminology support can be added as a more specific follow-up, for example:
 
 > Which experimental designs or domain-specific collection methods are used?
 
-PPEO can provide concepts related to plant phenotyping experiments, while
+PPEO can provide terms related to plant phenotyping experiments, while
 AGROVOC can cover broader agricultural methods and processes. Depending on
 the project, a separately curated collection may also include OBI or CHMO.
 
 The terminology field should supplement rather than replace the existing
-high-level choices. A concept definition is valuable here because similar
+high-level choices. A term definition is valuable here because similar
 method names can refer to a general activity, a protocol, or an experimental
 design.
 
@@ -257,7 +337,7 @@ design.
 `https://rdmorganiser.github.io/terms/domain/project/dataset/usage_description`
 
 The existing textarea is appropriate for documenting a processing workflow
-and should remain the primary answer. An optional repeatable concept field
+and should remain the primary answer. An optional repeatable term field
 could capture common operations such as conversion, normalization, image
 analysis, sequence analysis, or statistical processing.
 
@@ -313,11 +393,11 @@ maintained static list.
 ### Semantic review of completed answers
 
 On an interview review page, the plugin could summarize all values carrying
-concept IRIs and flag:
+term IRIs and flag:
 
-- duplicate concepts entered under different labels;
+- duplicate terms entered under different labels;
 - values whose IRI can no longer be resolved;
-- obsolete concepts, if the source reports them;
+- obsolete terms, if the source reports them;
 - free-text entries next to semantically annotated values; and
 - answers from a terminology outside the catalog's recommended collection.
 
@@ -326,8 +406,8 @@ answers.
 
 ### Contextual help before selection
 
-Question help can explain which terminology is searched and what kind of
-concept the user is expected to choose. For example, the plant-trait question
+Question help can explain which terminology is searched and what kind of term
+the user is expected to choose. For example, the plant-trait question
 should say that TO describes the measured characteristic, not the unit or
 measurement method.
 
@@ -341,7 +421,7 @@ terminology set without rewriting the interview integration.
 ## Technical and UX principles
 
 1. **Store stable IRIs.** Labels are for display; the IRI is the semantic
-   identity of a selected concept.
+   identity of a selected term.
 2. **Keep search scopes narrow.** Prefer a catalog-specific collection or a
    small ontology list over unrestricted federated search.
 3. **Show provenance.** Every result and annotation should identify its
@@ -364,7 +444,8 @@ terminology set without rewriting the interview integration.
 
 1. Stabilize the existing EDAM data-format and FAIRagro
    metadata-standard annotations.
-2. Add an example controlled-keyword question using AGROVOC.
+2. Add an example controlled-keyword question using AGROVOC or a curated
+   FAIRagro keyword entity set.
 3. Add environmental/sample-context and plant-trait questions using the
    current FAIRagro collection.
 4. Evaluate PPEO for a specific experiment-method follow-up question.
@@ -380,3 +461,7 @@ terminology set without rewriting the interview integration.
 - [Terminology Service Suite](https://terminology.services.base4nfdi.de/tss/comp/latest/)
 - [TS4NFDI API Gateway](https://ts4nfdi.github.io/api-gateway/)
 - [TS4NFDI public collections](https://terminology.services.base4nfdi.de/api-gateway/collections/)
+- [RADAR TS4NFDI integration overview](https://radar.products.fiz-karlsruhe.de/en/nachricht/teilnahme-am-inkubator-zyklus-des-nfdi-basisdienstes-ts4nfdi)
+- [Example RADAR dataset](https://www.radar-service.eu/radar/en/dataset/drn56dwfku72hn16)
+- [NFDI4Health terminology service and widget use cases](https://www.nfdi4health.de/en/service/terminology-service.html)
+- [Example Health Study Hub resource](https://health-study-hub.de/resource/4680aee5f8124b24beda10ca36862de7)
