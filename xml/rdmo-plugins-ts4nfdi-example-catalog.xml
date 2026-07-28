@@ -23,6 +23,7 @@
 		<short_title lang="de"/>
 		<pages>
 			<page dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/page" order="1"/>
+			<page dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/technical-data-description" order="2"/>
 		</pages>
 	</section>
 	<page dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/page">
@@ -189,6 +190,91 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<uri_path>rdmo-plugins-ts4nfdi/collection-terminologies</uri_path>
 		<dc:comment>https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/collection-terminologies</dc:comment>
 		<provider_key>ts4nfdi_fairagro_collection_terminologies</provider_key>
+		<options/>
+		<conditions/>
+	</optionset>
+	<page dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/technical-data-description">
+		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
+		<uri_path>rdmo-plugins-ts4nfdi-example-catalog/technical-data-description</uri_path>
+		<dc:comment>Based on https://rdmo.fairagro.net/terms/questions/dmp4nfdi/v1-0-0/Dataset/data_description_technical</dc:comment>
+		<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/id"/>
+		<is_collection>True</is_collection>
+		<title lang="en">Technical Data Description</title>
+		<short_title lang="en"/>
+		<help lang="en"/>
+		<verbose_name lang="en"/>
+		<title lang="de">Technische Datenbeschreibung</title>
+		<short_title lang="de"/>
+		<help lang="de"/>
+		<verbose_name lang="de"/>
+		<questionsets/>
+		<questions>
+			<question dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/data-formats" order="0"/>
+		</questions>
+		<conditions/>
+	</page>
+	<question dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/data-formats">
+		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
+		<uri_path>rdmo-plugins-ts4nfdi-example-catalog/data-formats</uri_path>
+		<dc:comment>Based on https://rdmo.fairagro.net/terms/questions/dmp4nfdi/v1-0-0/DMP/Dataset/Distribution/rdadmp_format</dc:comment>
+		<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/format"/>
+		<is_collection>True</is_collection>
+		<is_optional>False</is_optional>
+		<help lang="en">When choosing a data format, one should consider the consequences for collaborative use, digital preservation and long-term storage as well as re-use. It is advisable to prefer formats that are standardised, open, non-proprietary and well-established in the respective scholarly community. Recommendations can be found in &lt;a href=&quot;https://www.howtofair.dk/how-to-fair/file-formats/&quot; target=&quot;_blank&quot;&gt;How to FAIR&lt;/a&gt;, for example.</help>
+		<text lang="en">Which data formats arise in your project?</text>
+		<default_text lang="en"/>
+		<verbose_name lang="en">Format</verbose_name>
+		<help lang="de">Bei der Wahl des Datenformats sollten die Konsequenzen für die gemeinsame Nutzung, die digitale Archivierung und Langzeitspeicherung sowie die Wiederverwendung berücksichtigt werden. Es empfiehlt sich, möglichst standardisierte, nicht-proprietäre und allgemein bzw. in der spezifischen Community verbreitete Formate zu nutzen. Empfehlungen sind z. B. unter &lt;a href=&quot;https://www.forschungsdaten.info/themen/veroeffentlichen-und-archivieren/formate-erhalten/&quot; target=&quot;_blank&quot;&gt;forschungsdaten.info&lt;/a&gt; zu finden.</help>
+		<text lang="de">Welche Datenformate entstehen in Ihrem Projekt?</text>
+		<default_text lang="de"/>
+		<verbose_name lang="de">Format</verbose_name>
+		<default_option/>
+		<default_external_id/>
+		<widget_type>select_creatable</widget_type>
+		<value_type>option</value_type>
+		<maximum/>
+		<minimum/>
+		<step/>
+		<unit/>
+		<width/>
+		<optionsets>
+			<optionset dc:uri="https://rdmo.fairagro.net/terms/options/file_format_ts4nfdi"/>
+		</optionsets>
+		<conditions/>
+	</question>
+	<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/id">
+		<uri_prefix>https://rdmorganiser.github.io/terms</uri_prefix>
+		<key>id</key>
+		<path>project/dataset/id</path>
+		<dc:comment>Short ID for a dataset, used as questionset attribute for dataset related questionsets.</dc:comment>
+		<parent dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset"/>
+	</attribute>
+	<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/format">
+		<uri_prefix>https://rdmorganiser.github.io/terms</uri_prefix>
+		<key>format</key>
+		<path>project/dataset/format</path>
+		<dc:comment/>
+		<parent dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset"/>
+	</attribute>
+	<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset">
+		<uri_prefix>https://rdmorganiser.github.io/terms</uri_prefix>
+		<key>dataset</key>
+		<path>project/dataset</path>
+		<dc:comment/>
+		<parent dc:uri="https://rdmorganiser.github.io/terms/domain/project"/>
+	</attribute>
+	<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project">
+		<uri_prefix>https://rdmorganiser.github.io/terms</uri_prefix>
+		<key>project</key>
+		<path>project</path>
+		<dc:comment/>
+		<parent/>
+	</attribute>
+	<optionset dc:uri="https://rdmo.fairagro.net/terms/options/file_format_ts4nfdi">
+		<uri_prefix>https://rdmo.fairagro.net/terms</uri_prefix>
+		<uri_path>file_format_ts4nfdi</uri_path>
+		<dc:comment>via optionset provider plugin</dc:comment>
+		<provider_key>ts4nfdi_ontologies</provider_key>
 		<options/>
 		<conditions/>
 	</optionset>
