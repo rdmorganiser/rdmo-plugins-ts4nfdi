@@ -35,11 +35,18 @@ class AnnotationPresentationRegistry:
         metadata: ResolvedMetadata,
         matcher: AnnotationMatcher,
     ) -> PresentationDescriptor:
-        try:
-            factory = self._factories[matcher.presentation.adapter]
-        except KeyError as exc:
-            raise LookupError(f"Unknown annotation presentation adapter '{matcher.presentation.adapter}'.") from exc
-        return factory(project_id, annotation, metadata, matcher)
+        factory = self._factories.get(matcher.presentation.adapter)
+        if factory:
+            return factory(project_id, annotation, metadata, matcher)
+
+        # Deployment-defined browser adapters receive their matcher options
+        # unchanged. They do not require a Python adapter merely to select a
+        # different renderer.
+        return PresentationDescriptor(
+            adapter=matcher.presentation.adapter,
+            component=matcher.presentation.component,
+            props=dict(matcher.presentation.options),
+        )
 
     @staticmethod
     def _native(

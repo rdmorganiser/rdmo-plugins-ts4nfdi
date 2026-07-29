@@ -127,3 +127,11 @@ collectionId = "ff5491d1-d0a9-481e-ac90-0fad065fa097"
 # provider_key = "ts4nfdi_fairagro_collection_terminologies"
 # badge_label = "FAIRAgro"
 # presentation = { adapter = "tss", component = "ontology-info" }
+#
+# A deployment can instead register an ES module from its Django static files:
+# [frontend.presentation_adapters.fairagro-concept-card]
+# static_path = "fairagro/js/ts4nfdi_concept_card.js"
+# export = "createConceptCard"
+#
+# Then select it in a matcher without changing the plugin's Python code:
+# presentation = { adapter = "fairagro-concept-card", component = "compact", accent = "green" }

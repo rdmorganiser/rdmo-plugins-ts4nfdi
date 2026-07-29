@@ -1,15 +1,18 @@
 import {InterviewAnnotationController} from "./controller.js";
-import {readJsonConfig} from "./core.js";
+import {readJsonConfig, translate} from "./core.js";
 import {
     NativeAnnotationDrawer,
     NativeInlineAnnotationRenderer
 } from "./native_presentation.js";
 import {PluginAnnotationApi} from "./plugin_api.js";
+import {
+    loadConfiguredPresentationAdapters
+} from "./presentation_modules.js";
 import {BrowserPresentationRegistry} from "./presentation_registry.js";
 import {RDMOTemplateInterviewHost} from "./rdmo_template_host.js";
 import {TssPresentationAdapter} from "./tss_presentation.js";
 
-function boot() {
+async function boot() {
     const frontendConfig = readJsonConfig("ts4nfdi-frontend-config");
     if (!frontendConfig.annotations?.enabled) {
         return;
@@ -26,6 +29,14 @@ function boot() {
     });
     const presentations = new BrowserPresentationRegistry()
         .register("tss", tssPresentation);
+    await loadConfiguredPresentationAdapters(
+        presentations,
+        frontendConfig.presentation_adapters,
+        {
+            baseUrl: host.baseUrl(),
+            translate
+        }
+    );
     const controller = new InterviewAnnotationController({
         host,
         api: new PluginAnnotationApi(host.baseUrl()),
@@ -39,4 +50,6 @@ function boot() {
     window.addEventListener("pagehide", () => controller.stop(), {once: true});
 }
 
-boot();
+boot().catch((error) => {
+    console.warn("Could not start TS4NFDI interview annotations.", error);
+});

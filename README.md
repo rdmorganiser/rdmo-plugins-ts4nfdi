@@ -113,6 +113,14 @@ annotations and `ontology-info` for ontology annotations. Use
 prototype view. The configured source consistently supplies parameters such as
 `database=ebi`.
 
+A deployment-owned ES module can also be registered under
+`frontend.presentation_adapters` and selected by its adapter name. This makes
+switching between native, TSS, and custom widgets a TOML configuration change,
+without a plugin Python fork. See
+[`docs/presentation-adapters.md`](docs/presentation-adapters.md) for the
+deployment steps, supported TSS combinations, module contract, and cleanup
+lifecycle.
+
 This is a clean configuration cut. The former top-level matcher keys
 `widget_type`, `entity_type`, `tabs`, and `use_legacy` are not accepted.
 Move presentation-specific values into the nested `presentation` table as

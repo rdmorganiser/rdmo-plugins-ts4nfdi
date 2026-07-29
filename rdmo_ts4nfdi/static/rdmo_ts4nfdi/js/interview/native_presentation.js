@@ -111,6 +111,7 @@ export class NativeAnnotationDrawer {
         this.activeTrigger = null;
         this.onClose = null;
         this.keydown = (event) => this.onKeydown(event);
+        this.closeClick = () => this.close();
     }
 
     start(onClose) {
@@ -119,10 +120,17 @@ export class NativeAnnotationDrawer {
         }
         this.onClose = onClose;
         this.root.querySelectorAll("[data-ts4nfdi-close]").forEach((button) => {
-            button.addEventListener("click", () => this.close());
+            button.addEventListener("click", this.closeClick);
         });
         document.addEventListener("keydown", this.keydown);
-        return () => document.removeEventListener("keydown", this.keydown);
+        return () => {
+            this.root.querySelectorAll("[data-ts4nfdi-close]").forEach((button) => {
+                button.removeEventListener("click", this.closeClick);
+            });
+            document.removeEventListener("keydown", this.keydown);
+            this.presentations.clear(this.widget());
+            this.onClose = null;
+        };
     }
 
     loading(annotation, trigger) {
@@ -135,7 +143,7 @@ export class NativeAnnotationDrawer {
         document.body.classList.add("ts4nfdi-annotation-drawer-open");
         this.title().textContent = annotation.label || translate("Terminology details");
         this.summary().replaceChildren();
-        this.widget().replaceChildren();
+        this.presentations.clear(this.widget());
 
         const loading = document.createElement("div");
         loading.className = "ts4nfdi-annotation-loading";
@@ -151,7 +159,7 @@ export class NativeAnnotationDrawer {
         }
         this.title().textContent = detail.label || translate("Terminology details");
         this.summary().replaceChildren();
-        this.widget().replaceChildren();
+        this.presentations.clear(this.widget());
 
         const source = normalizeResource(detail.source);
         const terminology = normalizeResource(detail.terminology);
@@ -205,7 +213,11 @@ export class NativeAnnotationDrawer {
             );
             this.summary().appendChild(notice);
         } else {
-            this.presentations.render(this.widget(), detail.presentation);
+            this.presentations.render(
+                this.widget(),
+                detail.presentation,
+                {detail}
+            );
         }
     }
 
@@ -213,6 +225,7 @@ export class NativeAnnotationDrawer {
         if (!this.root) {
             return;
         }
+        this.presentations.clear(this.widget());
         this.summary().replaceChildren();
         const message = document.createElement("p");
         message.className = "ts4nfdi-annotation-notice";
@@ -235,7 +248,7 @@ export class NativeAnnotationDrawer {
         this.root.hidden = true;
         this.root.setAttribute("aria-hidden", "true");
         document.body.classList.remove("ts4nfdi-annotation-drawer-open");
-        this.widget().replaceChildren();
+        this.presentations.clear(this.widget());
         this.onClose?.();
         if (this.activeTrigger && document.contains(this.activeTrigger)) {
             this.activeTrigger.focus();

@@ -83,7 +83,10 @@ The built-in choices are:
 - `native`, which needs no external widget;
 - `tss`, which produces public Terminology Service Suite component props.
 
-Adding a presentation adapter does not change the application service.
+Other adapter names pass their matcher options through as a browser descriptor.
+A deployment can register the corresponding ES module under
+`frontend.presentation_adapters` without adding a Python adapter. Adding or
+switching a presentation adapter does not change the application service.
 
 Matcher configuration uses a nested `presentation` table. This keeps RDMO
 resource matching (`question_uri`, `attribute_uri`, and `optionset_uri`)
@@ -112,6 +115,12 @@ read or mutate the RDMO Redux store.
 The TSS adapter is lazy. It loads the pinned external bundle only after the
 user expands the interactive view. A failure stays inside that adapter and the
 native annotation details remain usable.
+
+Deployment-defined presentation modules are loaded from Django staticfiles by
+the browser composition root. They receive normalized plugin detail and mount
+only into a plugin-owned element. The presentation registry owns their cleanup
+lifecycle and contains module/render failures. The complete configuration and
+JavaScript contract are documented in `docs/presentation-adapters.md`.
 
 ## Replacing the current RDMO integration
 

@@ -18,7 +18,6 @@ export class TssPresentationAdapter {
     }
 
     render(host, descriptor) {
-        host.replaceChildren();
         if (!this.supports(descriptor)) {
             return;
         }
@@ -34,8 +33,10 @@ export class TssPresentationAdapter {
         disclosure.appendChild(container);
         host.appendChild(disclosure);
 
+        let disposed = false;
         let mounted = false;
-        disclosure.addEventListener("toggle", async () => {
+        let widgetCleanup = null;
+        const onToggle = async () => {
             if (!disclosure.open || mounted) {
                 return;
             }
@@ -44,6 +45,9 @@ export class TssPresentationAdapter {
             container.textContent = translate("Loading interactive terminology view …");
             try {
                 await this.loadAssets();
+                if (disposed) {
+                    return;
+                }
                 const factory = window.ts4nfdiWidgets?.[FACTORIES[descriptor.component]];
                 if (typeof factory !== "function") {
                     throw new Error(`TSS component '${descriptor.component}' is unavailable.`);
@@ -54,15 +58,39 @@ export class TssPresentationAdapter {
                 }
                 container.className = "ts4nfdi-annotation-widget-root";
                 container.replaceChildren();
-                factory(props, container);
+                widgetCleanup = this.normalizeCleanup(factory(props, container));
             } catch (error) {
+                if (disposed) {
+                    return;
+                }
                 container.className = "ts4nfdi-annotation-notice";
                 container.textContent = translate(
                     "The interactive terminology widget could not be loaded."
                 );
                 console.warn("Could not mount TSS presentation adapter.", error);
             }
-        });
+        };
+        disclosure.addEventListener("toggle", onToggle);
+
+        return () => {
+            disposed = true;
+            disclosure.removeEventListener("toggle", onToggle);
+            widgetCleanup?.();
+            container.replaceChildren();
+        };
+    }
+
+    normalizeCleanup(lifecycle) {
+        if (typeof lifecycle === "function") {
+            return lifecycle;
+        }
+        if (lifecycle && typeof lifecycle.unmount === "function") {
+            return () => lifecycle.unmount();
+        }
+        if (lifecycle && typeof lifecycle.destroy === "function") {
+            return () => lifecycle.destroy();
+        }
+        return null;
     }
 
     loadAssets() {
@@ -98,6 +126,14 @@ export class TssPresentationAdapter {
 
             const existing = document.getElementById("ts4nfdi-tss-script");
             if (existing) {
+                if (existing.dataset.loadState === "loaded") {
+                    resolve();
+                    return;
+                }
+                if (existing.dataset.loadState === "error") {
+                    reject(new Error("The TSS script previously failed to load."));
+                    return;
+                }
                 existing.addEventListener("load", resolve, {once: true});
                 existing.addEventListener("error", reject, {once: true});
                 return;
@@ -109,8 +145,14 @@ export class TssPresentationAdapter {
             if (scriptIntegrity) {
                 script.integrity = scriptIntegrity;
             }
-            script.addEventListener("load", resolve, {once: true});
-            script.addEventListener("error", reject, {once: true});
+            script.addEventListener("load", () => {
+                script.dataset.loadState = "loaded";
+                resolve();
+            }, {once: true});
+            script.addEventListener("error", () => {
+                script.dataset.loadState = "error";
+                reject(new Error("The TSS script could not be loaded."));
+            }, {once: true});
             document.body.appendChild(script);
         });
         return this.assetsPromise;

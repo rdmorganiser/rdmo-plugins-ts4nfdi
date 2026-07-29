@@ -199,3 +199,46 @@ def test_tss_presentation_descriptor_keeps_gateway_source_parameters():
     assert descriptor['props']['parameter'] == 'database=ebi'
     assert descriptor['props']['entityType'] == 'class'
     assert 'useLegacy' not in descriptor['props']
+
+
+def test_custom_presentation_descriptor_passes_matcher_options_to_browser():
+    matcher = replace(
+        make_matcher(),
+        presentation=PresentationPolicy(
+            adapter='fairagro-concept-card',
+            component='compact',
+            options=(
+                ('accent', 'green'),
+                ('show_source', True),
+            ),
+        ),
+    )
+    annotation = (
+        make_service((make_candidate(),))
+        .list_page(
+            SimpleNamespace(id=24),
+            SimpleNamespace(id=341),
+        )
+        .occurrences[0]
+        .annotations[0]
+    )
+
+    descriptor = (
+        AnnotationPresentationRegistry()
+        .build(
+            24,
+            annotation,
+            ResolvedMetadata(ontology_id='edam'),
+            matcher,
+        )
+        .to_dict()
+    )
+
+    assert descriptor == {
+        'adapter': 'fairagro-concept-card',
+        'component': 'compact',
+        'props': {
+            'accent': 'green',
+            'show_source': True,
+        },
+    }

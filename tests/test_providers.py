@@ -3,6 +3,7 @@ import sys
 import types
 import xml.etree.ElementTree as ElementTree
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
@@ -14,6 +15,9 @@ def install_rdmo_stubs(monkeypatch):
     django_conf = types.ModuleType('django.conf')
     django_core = types.ModuleType('django.core')
     django_core_cache = types.ModuleType('django.core.cache')
+    django_template = types.ModuleType('django.template')
+    django_templatetags = types.ModuleType('django.templatetags')
+    django_templatetags_static = types.ModuleType('django.templatetags.static')
     rdmo = types.ModuleType('rdmo')
     rdmo_options = types.ModuleType('rdmo.options')
     rdmo_options_providers = types.ModuleType('rdmo.options.providers')
@@ -31,11 +35,22 @@ def install_rdmo_stubs(monkeypatch):
         def set(self, key, value, timeout):
             return None
 
+    class Library:
+        def simple_tag(self, function=None, **kwargs):
+            if function:
+                return function
+            return lambda decorated: decorated
+
     django_conf.settings = Settings()
     django.conf = django_conf
     django.core = django_core
     django_core.cache = django_core_cache
+    django.template = django_template
+    django.templatetags = django_templatetags
     django_core_cache.cache = Cache()
+    django_template.Library = Library
+    django_templatetags.static = django_templatetags_static
+    django_templatetags_static.static = lambda path: f'/static/{path}'
     rdmo.options = rdmo_options
     rdmo_options.providers = rdmo_options_providers
     rdmo_options_providers.Provider = Provider
@@ -44,6 +59,9 @@ def install_rdmo_stubs(monkeypatch):
     monkeypatch.setitem(sys.modules, 'django.conf', django_conf)
     monkeypatch.setitem(sys.modules, 'django.core', django_core)
     monkeypatch.setitem(sys.modules, 'django.core.cache', django_core_cache)
+    monkeypatch.setitem(sys.modules, 'django.template', django_template)
+    monkeypatch.setitem(sys.modules, 'django.templatetags', django_templatetags)
+    monkeypatch.setitem(sys.modules, 'django.templatetags.static', django_templatetags_static)
     monkeypatch.setitem(sys.modules, 'rdmo', rdmo)
     monkeypatch.setitem(sys.modules, 'rdmo.options', rdmo_options)
     monkeypatch.setitem(sys.modules, 'rdmo.options.providers', rdmo_options_providers)
@@ -64,6 +82,7 @@ def provider_modules():
         annotation_metadata = importlib.import_module('rdmo_ts4nfdi.integrations.ts4nfdi.metadata')
         gateway = importlib.import_module('rdmo_ts4nfdi.integrations.ts4nfdi.gateway')
         domain = importlib.import_module('rdmo_ts4nfdi.domain')
+        template_tags = importlib.import_module('rdmo_ts4nfdi.templatetags.ts4nfdi_tags')
         upstream = importlib.import_module('rdmo_ts4nfdi.upstream')
         utils = importlib.import_module('rdmo_ts4nfdi.utils')
         yield types.SimpleNamespace(
@@ -77,6 +96,7 @@ def provider_modules():
             utils=utils,
             annotation_metadata=annotation_metadata,
             domain=domain,
+            template_tags=template_tags,
             collection_terminologies_provider=providers.TS4NFDICollectionTerminologiesProvider,
             collections_provider=providers.TS4NFDICollectionsProvider,
             ontologies_provider=providers.TS4NFDIOntologiesProvider,
@@ -359,8 +379,122 @@ def test_annotation_config_is_validated_and_sanitized(provider_modules):
         'annotations': {
             'api_version': '1',
             'enabled': True,
-        }
+        },
+        'presentation_adapters': [],
     }
+
+
+def test_custom_frontend_presentation_adapter_config_is_normalized(provider_modules):
+    provider_modules.settings.TS4NFDI_PROVIDER = {
+        'providers': {},
+        'frontend': {
+            'presentation_adapters': {
+                'fairagro-concept-card': {
+                    'static_path': 'fairagro/js/ts4nfdi_concept_card.js',
+                    'export': 'createConceptCard',
+                },
+            },
+        },
+    }
+    provider_modules.load_config.cache_clear()
+
+    assert provider_modules.load_frontend_config()['presentation_adapters'] == [
+        {
+            'name': 'fairagro-concept-card',
+            'static_path': 'fairagro/js/ts4nfdi_concept_card.js',
+            'export': 'createConceptCard',
+        }
+    ]
+
+
+def test_frontend_template_config_resolves_custom_adapter_static_url(provider_modules):
+    config = {
+        'annotations': {
+            'api_version': '1',
+            'enabled': True,
+        },
+        'presentation_adapters': [
+            {
+                'name': 'fairagro-concept-card',
+                'static_path': 'fairagro/js/ts4nfdi_concept_card.js',
+                'export': 'createConceptCard',
+            }
+        ],
+    }
+
+    with mock.patch.object(
+        provider_modules.template_tags,
+        'load_frontend_config',
+        return_value=config,
+    ):
+        resolved = provider_modules.template_tags.ts4nfdi_frontend_config()
+
+    assert resolved == {
+        'annotations': {
+            'api_version': '1',
+            'enabled': True,
+        },
+        'presentation_adapters': [
+            {
+                'name': 'fairagro-concept-card',
+                'module_url': '/static/fairagro/js/ts4nfdi_concept_card.js',
+                'export': 'createConceptCard',
+            }
+        ],
+    }
+
+
+def test_custom_matcher_requires_a_registered_frontend_adapter(provider_modules):
+    provider_modules.settings.TS4NFDI_PROVIDER = {
+        'providers': {},
+        'frontend': {
+            'annotations': {
+                'enabled': True,
+                'matchers': [
+                    {
+                        'id': 'custom',
+                        'question_uri': 'https://example.test/question',
+                        'attribute_uri': 'https://example.test/attribute',
+                        'optionset_uri': 'https://example.test/optionset',
+                        'resource_type': 'entity',
+                        'presentation': {
+                            'adapter': 'missing-concept-card',
+                        },
+                    },
+                ],
+            },
+        },
+    }
+    provider_modules.load_config.cache_clear()
+
+    with pytest.raises(RuntimeError, match='unregistered frontend presentation adapters'):
+        provider_modules.load_frontend_config()
+
+
+@pytest.mark.parametrize(
+    'adapter_config',
+    (
+        {'tss': {'static_path': 'deployment/tss.js'}},
+        {'custom': {'static_path': '../outside.js'}},
+        {'custom': {'static_path': 'https://example.test/widget.js'}},
+        {'custom': {'static_path': 'deployment/widget.css'}},
+        {'custom': {'static_path': 'deployment/widget.js', 'unexpected': True}},
+    ),
+)
+def test_invalid_custom_frontend_presentation_adapter_config_fails(
+    provider_modules,
+    adapter_config,
+):
+    provider_modules.settings.TS4NFDI_PROVIDER = {
+        'providers': {},
+        'frontend': {
+            'presentation_adapters': adapter_config,
+        },
+    }
+    provider_modules.load_config.cache_clear()
+
+    with pytest.raises(RuntimeError):
+        provider_modules.load_frontend_config()
 
 
 def test_annotation_source_config_supplies_gateway_database(provider_modules):

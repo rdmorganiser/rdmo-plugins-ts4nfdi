@@ -1,6 +1,7 @@
 import logging
 import re
 from functools import cache
+from pathlib import PurePosixPath
 from typing import Any
 
 from django.conf import settings
@@ -79,6 +80,9 @@ GATEWAY_PARAM_NAMES = frozenset(
         'viewMode',
     }
 )
+PRESENTATION_ADAPTER_NAME = re.compile(r'[a-z][a-z0-9_.-]*')
+JAVASCRIPT_EXPORT_NAME = re.compile(r'(?:default|[A-Za-z_$][A-Za-z0-9_$]*)')
+BUILTIN_PRESENTATION_ADAPTERS = frozenset({'native', 'tss'})
 
 
 @cache
@@ -281,7 +285,7 @@ def normalize_presentation(raw_presentation: Any, resource_type: str) -> Present
 
     adapter = normalize_optional_string(raw_presentation.get('adapter')) or 'native'
     component = normalize_optional_string(raw_presentation.get('component'))
-    if not re.fullmatch(r'[a-z][a-z0-9_.-]*', adapter):
+    if not PRESENTATION_ADAPTER_NAME.fullmatch(adapter):
         raise RuntimeError('presentation adapter must be a lower-case identifier')
     if adapter == 'native':
         if component:
@@ -319,19 +323,87 @@ def normalize_presentation(raw_presentation: Any, resource_type: str) -> Present
 
 
 def load_frontend_config() -> dict[str, Any]:
-    raw_annotations = _load_raw_frontend_config().get('annotations', {})
+    raw_frontend = _load_raw_frontend_config()
+    raw_annotations = raw_frontend.get('annotations', {})
     if raw_annotations in (None, False):
         raw_annotations = {}
     if not isinstance(raw_annotations, dict):
         raise RuntimeError('TS4NFDI_PROVIDER frontend annotations config must be a dictionary.')
 
     matchers = load_annotation_matchers()
+    presentation_adapters = normalize_frontend_presentation_adapters(raw_frontend.get('presentation_adapters', {}))
+    configured_adapter_names = {
+        *BUILTIN_PRESENTATION_ADAPTERS,
+        *(adapter['name'] for adapter in presentation_adapters),
+    }
+    missing_adapter_names = sorted(
+        {
+            matcher.presentation.adapter
+            for matcher in matchers
+            if matcher.presentation.adapter not in configured_adapter_names
+        }
+    )
+    if missing_adapter_names:
+        raise RuntimeError(
+            f'Annotation matchers reference unregistered frontend presentation adapters {missing_adapter_names}'
+        )
+
     return {
         'annotations': {
             'api_version': '1',
             'enabled': bool(raw_annotations.get('enabled', False) and matchers),
-        }
+        },
+        'presentation_adapters': presentation_adapters,
     }
+
+
+def normalize_frontend_presentation_adapters(raw_adapters: Any) -> list[dict[str, str]]:
+    if raw_adapters in (None, False):
+        return []
+    if not isinstance(raw_adapters, dict):
+        raise RuntimeError('TS4NFDI_PROVIDER frontend presentation_adapters config must be a dictionary.')
+
+    adapters = []
+    for name, raw_adapter in raw_adapters.items():
+        if not isinstance(name, str) or not PRESENTATION_ADAPTER_NAME.fullmatch(name):
+            raise RuntimeError('frontend presentation adapter names must be lower-case identifiers')
+        if name in BUILTIN_PRESENTATION_ADAPTERS:
+            raise RuntimeError(f"frontend presentation adapter '{name}' cannot replace a built-in adapter")
+        if not isinstance(raw_adapter, dict):
+            raise RuntimeError(f"frontend presentation adapter '{name}' must be a dictionary")
+
+        unsupported = sorted(set(raw_adapter) - {'static_path', 'export'})
+        if unsupported:
+            raise RuntimeError(f"frontend presentation adapter '{name}' has unsupported keys {unsupported}")
+
+        static_path = require_string(raw_adapter, 'static_path')
+        module_path = PurePosixPath(static_path)
+        if (
+            module_path.is_absolute()
+            or '\\' in static_path
+            or '?' in static_path
+            or '#' in static_path
+            or '..' in module_path.parts
+            or not module_path.parts
+            or module_path.parts[0].endswith(':')
+            or module_path.suffix not in {'.js', '.mjs'}
+        ):
+            raise RuntimeError(
+                f"frontend presentation adapter '{name}' static_path must be a relative .js or .mjs static path"
+            )
+
+        export_name = normalize_optional_string(raw_adapter.get('export')) or 'default'
+        if not JAVASCRIPT_EXPORT_NAME.fullmatch(export_name):
+            raise RuntimeError(f"frontend presentation adapter '{name}' export must be a JavaScript export name")
+
+        adapters.append(
+            {
+                'name': name,
+                'static_path': static_path,
+                'export': export_name,
+            }
+        )
+    return adapters
 
 
 def _load_raw_frontend_config() -> dict[str, Any]:
