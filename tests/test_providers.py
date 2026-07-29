@@ -61,11 +61,9 @@ def provider_modules():
     try:
         config = importlib.import_module('rdmo_ts4nfdi.config')
         providers = importlib.import_module('rdmo_ts4nfdi.providers')
-        provider_utils = importlib.import_module('rdmo_ts4nfdi.providers.utils')
-        annotation_metadata = importlib.import_module(
-            'rdmo_ts4nfdi.services.annotation_metadata'
-        )
-        gateway = importlib.import_module('rdmo_ts4nfdi.services.gateway')
+        annotation_metadata = importlib.import_module('rdmo_ts4nfdi.integrations.ts4nfdi.metadata')
+        gateway = importlib.import_module('rdmo_ts4nfdi.integrations.ts4nfdi.gateway')
+        domain = importlib.import_module('rdmo_ts4nfdi.domain')
         upstream = importlib.import_module('rdmo_ts4nfdi.upstream')
         utils = importlib.import_module('rdmo_ts4nfdi.utils')
         yield types.SimpleNamespace(
@@ -77,8 +75,8 @@ def provider_modules():
             gateway=gateway,
             upstream=upstream,
             utils=utils,
-            provider_utils=provider_utils,
             annotation_metadata=annotation_metadata,
+            domain=domain,
             collection_terminologies_provider=providers.TS4NFDICollectionTerminologiesProvider,
             collections_provider=providers.TS4NFDICollectionsProvider,
             ontologies_provider=providers.TS4NFDIOntologiesProvider,
@@ -204,9 +202,7 @@ def test_ontology_provider_renders_source_terminology_term_breadcrumb(provider_m
     assert provider_config['database'] == 'ebi'
     assert provider_config['source']['label'] == 'EBI'
     assert options[0]['help'].index('>EBI</span>') < options[0]['help'].index('>edam</span>')
-    assert options[0]['help'].index('>edam</span>') < options[0]['help'].index(
-        '>EDAM_format_2332</span>'
-    )
+    assert options[0]['help'].index('>edam</span>') < options[0]['help'].index('>EDAM_format_2332</span>')
     assert 'https://www.ebi.ac.uk/ols4/api/v2' in options[0]['help']
 
 
@@ -329,7 +325,11 @@ def test_annotation_config_is_validated_and_sanitized(provider_modules):
                         'attribute_uri': 'https://example.test/attribute',
                         'optionset_uri': 'https://example.test/optionset',
                         'resource_type': 'entity',
-                        'widget_type': 'entity_info',
+                        'presentation': {
+                            'adapter': 'tss',
+                            'component': 'entity-info',
+                            'entity_type': 'class',
+                        },
                         'provider_key': 'internal-provider-key',
                         'gateway_params': {
                             'database': 'ols',
@@ -351,11 +351,16 @@ def test_annotation_config_is_validated_and_sanitized(provider_modules):
     frontend_config = provider_modules.load_frontend_config()
 
     assert len(matchers) == 1
-    assert matchers[0]['id'] == 'valid'
-    assert matchers[0]['widget_type'] == 'entity_info'
-    assert matchers[0]['gateway_params'] == {'database': 'ols'}
-    assert 'provider_key' not in frontend_config['annotations']['matchers'][0]
-    assert 'gateway_params' not in frontend_config['annotations']['matchers'][0]
+    assert matchers[0].id == 'valid'
+    assert matchers[0].presentation.adapter == 'tss'
+    assert matchers[0].presentation.component == 'entity-info'
+    assert matchers[0].gateway_query == (('database', 'ols'),)
+    assert frontend_config == {
+        'annotations': {
+            'api_version': '1',
+            'enabled': True,
+        }
+    }
 
 
 def test_annotation_source_config_supplies_gateway_database(provider_modules):
@@ -390,14 +395,14 @@ def test_annotation_source_config_supplies_gateway_database(provider_modules):
 
     matcher = provider_modules.load_annotation_matchers()[0]
 
-    assert matcher['gateway_params'] == {'database': 'ebi'}
-    assert matcher['source'] == {
-        'id': 'ebi',
-        'label': 'EBI',
-        'database': 'ebi',
-        'backend_type': 'ols2',
-        'url': 'https://www.ebi.ac.uk/ols4/api/v2',
-    }
+    assert matcher.gateway_query == (('database', 'ebi'),)
+    assert matcher.source == provider_modules.domain.ResourceReference(
+        id='ebi',
+        label='EBI',
+        database='ebi',
+        backend_type='ols2',
+        url='https://www.ebi.ac.uk/ols4/api/v2',
+    )
 
 
 def test_entity_metadata_normalizes_gateway_fields(provider_modules):
@@ -413,31 +418,40 @@ def test_entity_metadata_normalizes_gateway_fields(provider_modules):
             'type': ['class'],
             'isObsolete': False,
         },
-        {
-            'badge_label': 'EDAM',
-            'ontology_id': 'edam',
-            'source': {
-                'id': 'ebi',
-                'label': 'EBI',
-                'database': 'ebi',
-                'backend_type': 'ols2',
-                'url': 'https://www.ebi.ac.uk/ols4/api/v2',
-            },
-        },
+        provider_modules.domain.AnnotationMatcher(
+            id='edam-format',
+            question_uri='https://example.test/question',
+            attribute_uri='https://example.test/attribute',
+            optionset_uri='https://example.test/optionset',
+            resource_type='entity',
+            presentation=provider_modules.domain.PresentationPolicy(
+                adapter='tss',
+                component='entity-info',
+            ),
+            badge_label='EDAM',
+            ontology_id='edam',
+            source=provider_modules.domain.ResourceReference(
+                id='ebi',
+                label='EBI',
+                database='ebi',
+                backend_type='ols2',
+                url='https://www.ebi.ac.uk/ols4/api/v2',
+            ),
+        ),
     )
 
-    assert metadata['description'] == 'First definition.'
-    assert metadata['definitions'] == ['First definition.', 'Second definition.']
-    assert metadata['synonyms'] == ['eXtensible Markup Language']
-    assert metadata['short_form'] == 'EDAM_format_2332'
-    assert metadata['entity_types'] == ['class']
-    assert metadata['obsolete'] is False
-    assert metadata['source']['label'] == 'EBI'
-    assert metadata['terminology'] == {
-        'id': 'edam',
-        'label': 'EDAM',
-        'iri': 'http://edamontology.org',
-    }
+    assert metadata.description == 'First definition.'
+    assert metadata.definitions == ('First definition.', 'Second definition.')
+    assert metadata.synonyms == ('eXtensible Markup Language',)
+    assert metadata.short_form == 'EDAM_format_2332'
+    assert metadata.entity_types == ('class',)
+    assert metadata.obsolete is False
+    assert metadata.source.label == 'EBI'
+    assert metadata.terminology == provider_modules.domain.ResourceReference(
+        id='edam',
+        label='EDAM',
+        iri='http://edamontology.org',
+    )
 
 
 def test_gateway_path_and_query_allowlists(provider_modules):
@@ -508,7 +522,7 @@ def test_example_catalog_contains_data_format_annotation_question():
     question = elements[f'{base_uri}/data-formats']
 
     assert page.findtext('is_collection') == 'True'
-    assert page.find("questions/question").get(uri_attribute) == f'{base_uri}/data-formats'
+    assert page.find('questions/question').get(uri_attribute) == f'{base_uri}/data-formats'
     assert question.findtext('is_collection') == 'True'
     assert question.findtext("text[@lang='en']") == 'Which data formats arise in your project?'
     assert question.find('attribute').get(uri_attribute) == (

@@ -2,11 +2,11 @@
 {% ts4nfdi_tss_vendor as tss_vendor %}
 <script
     id="ts4nfdi-annotation-controller"
-    src="{% static 'rdmo_ts4nfdi/js/terminology_widget.js' %}"
+    type="module"
+    src="{% static 'rdmo_ts4nfdi/js/interview/main.js' %}"
     data-tss-version="{{ tss_vendor.version }}"
     data-tss-script="{% static tss_vendor.assets.script.static_path %}?v={{ tss_vendor.version }}"
     data-tss-script-integrity="{{ tss_vendor.assets.script.integrity }}"
     data-tss-stylesheet="{% static tss_vendor.assets.stylesheet.static_path %}?v={{ tss_vendor.version }}"
     data-tss-stylesheet-integrity="{{ tss_vendor.assets.stylesheet.integrity }}"
-    defer
 ></script>

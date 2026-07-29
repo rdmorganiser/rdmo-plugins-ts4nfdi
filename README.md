@@ -100,18 +100,24 @@ question_uri = "https://rdmo.example.org/terms/questions/dataset/format"
 attribute_uri = "https://rdmorganiser.github.io/terms/domain/project/dataset/format"
 optionset_uri = "https://rdmo.example.org/terms/options/file_format_ts4nfdi"
 resource_type = "entity"
-widget_type = "entity_info"
 badge_label = "EDAM"
 ontology_id = "edam"
-entity_type = "class"
 source_key = "ebi"
+presentation = { adapter = "tss", component = "entity-info", entity_type = "class" }
 ```
 
-Entity matchers support `entity_info`, `metadata`, or `none` as
-`widget_type`. `entity_info` is the lightweight default for the example
-configuration. The configured source consistently supplies parameters such as
-`database=ebi`. `metadata` enables the larger tabbed TSS widget, while `none`
-keeps only the plugin's native detail view.
+The `presentation` table selects a replaceable browser presentation adapter.
+The bundled `tss` adapter supports `entity-info` and `metadata` for entity
+annotations and `ontology-info` for ontology annotations. Use
+`presentation = { adapter = "native" }` to keep only the plugin's native
+prototype view. The configured source consistently supplies parameters such as
+`database=ebi`.
+
+This is a clean configuration cut. The former top-level matcher keys
+`widget_type`, `entity_type`, `tabs`, and `use_legacy` are not accepted.
+Move presentation-specific values into the nested `presentation` table as
+shown above. Invalid matchers are logged and excluded, so deployments should
+update their TOML before enabling the refactored plugin.
 
 The annotation list endpoint returns only values belonging to a project the
 authenticated user may access. Terminology detail is resolved on demand. The
@@ -154,6 +160,45 @@ The question-help hook is provided by
 render that interview template in the React application. The hook deliberately
 contains no widget markup or TS4NFDI API assumptions; it is only a stable DOM
 mount point for the controller.
+
+Architecture
+------------
+
+The annotation implementation has four explicit boundaries:
+
+- the application layer coordinates plugin-owned annotation models;
+- the current RDMO host adapter translates project models and the
+  template/React DOM into occurrence-aware annotation slots;
+- TS4NFDI Gateway adapters own external HTTP requests and response mapping;
+- a presentation registry selects the native prototype or TSS descriptor.
+
+The browser follows the same composition. `RDMOTemplateInterviewHost` is the
+only module which knows the current RDMO URL shape, loading indicator, React
+CSS classes, or question-help marker. The controller communicates with it
+through slot and lifecycle methods. The plugin REST client, native renderer,
+drawer, and TSS adapter do not inspect RDMO's React state.
+
+This separation is intentional. A future official RDMO front-end extension API
+can replace `RDMOTemplateInterviewHost` while retaining the annotation API,
+Gateway integration, and presentation adapters. The possible generic RDMO
+extension points are documented in
+`docs/rdmo-upstream-feature-requests.md`.
+
+Backend adapters can be replaced through normal Django dotted paths:
+
+```python
+TS4NFDI_ADAPTERS = {
+    "interview_host": "rdmo_ts4nfdi.integrations.rdmo.RDMOInterviewHost",
+    "gateway": "rdmo_ts4nfdi.integrations.ts4nfdi.GatewayClient",
+    "metadata_resolver": "rdmo_ts4nfdi.integrations.ts4nfdi.GatewayMetadataResolver",
+    "presentation": "rdmo_ts4nfdi.presentation.AnnotationPresentationRegistry",
+}
+```
+
+The defaults shown above do not need to be configured. Alternative classes
+must implement the small protocols in
+`rdmo_ts4nfdi.application.annotations`; their constructors follow the same
+composition contract as the defaults.
 
 Upstream TS4NFDI dependencies
 -----------------------------
@@ -198,11 +243,12 @@ After an upgrade, run the deployment's normal `collectstatic` step and restart
 the Django processes so the cached manifest is reloaded. With `runserver`, a
 restart followed by a hard browser reload is sufficient.
 
-The Gateway itself is not vendored. The plugin targets the configured
-`gateway.base_url`, forwards official JSON responses without translating their
-shape, and limits its authenticated browser proxy to known hosts, paths, and
-query parameters. This keeps response-model compatibility in the upstream
-Gateway/TSS pair. To detect a removed Gateway route before deployment, run:
+The Gateway itself is not vendored. The authenticated browser proxy forwards
+official JSON responses without translating their shape and is limited to known
+hosts, paths, and query parameters. This keeps the TSS widget on the upstream
+Gateway response contract. The separate server-side metadata adapter maps
+Gateway fields into the plugin's native annotation model. To detect a removed
+Gateway route before deployment, run:
 
 ```shell
 python manage.py ts4nfdi_gateway_check

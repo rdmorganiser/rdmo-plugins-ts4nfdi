@@ -1,22 +1,29 @@
 import logging
+import re
 from functools import cache
+from typing import Any
 
 from django.conf import settings
 
+from rdmo_ts4nfdi.domain import AnnotationMatcher, PresentationPolicy, ResourceReference
 from rdmo_ts4nfdi.utils import is_http_iri, normalize_optional_string, require_string
 
 logger = logging.getLogger(__name__)
 
 ANNOTATION_RESOURCE_TYPES = frozenset({'entity', 'ontology', 'collection'})
-ANNOTATION_WIDGET_TYPES = {
-    'entity': frozenset({'entity_info', 'metadata', 'none'}),
-    'ontology': frozenset({'ontology_info', 'none'}),
-    'collection': frozenset({'collection_summary', 'none'}),
+ANNOTATION_PRESENTATIONS = {
+    'entity': frozenset({'metadata', 'entity-info'}),
+    'ontology': frozenset({'ontology-info'}),
+    'collection': frozenset(),
 }
-DEFAULT_ANNOTATION_WIDGET_TYPES = {
-    'entity': 'metadata',
-    'ontology': 'ontology_info',
-    'collection': 'collection_summary',
+DEFAULT_ANNOTATION_PRESENTATIONS = {
+    'entity': PresentationPolicy(
+        adapter='tss',
+        component='metadata',
+        options=(('tabs', ('synonyms', 'hierarchy', 'ontology')),),
+    ),
+    'ontology': PresentationPolicy(adapter='tss', component='ontology-info'),
+    'collection': PresentationPolicy(adapter='native'),
 }
 ANNOTATION_ENTITY_TYPES = frozenset(
     {
@@ -75,12 +82,11 @@ GATEWAY_PARAM_NAMES = frozenset(
 
 
 @cache
-def load_config():
+def load_config() -> dict[str, Any]:
     config = getattr(settings, 'TS4NFDI_PROVIDER', None)
 
     if config is None:
         raise RuntimeError('Missing TS4NFDI_PROVIDER setting.')
-
     if not isinstance(config, dict):
         raise RuntimeError('TS4NFDI_PROVIDER must be a dictionary.')
 
@@ -90,11 +96,10 @@ def load_config():
         sorted(config.keys()),
         sorted(providers.keys()) if isinstance(providers, dict) else providers,
     )
-
     return config
 
 
-def load_gateway_config():
+def load_gateway_config() -> dict[str, Any]:
     config = load_config()
     defaults = config.get('defaults', {})
     gateway_config = config.get('gateway', {})
@@ -116,7 +121,7 @@ def load_gateway_config():
     }
 
 
-def load_source_configs():
+def load_source_configs() -> dict[str, dict[str, str | None]]:
     raw_sources = load_config().get('sources', {})
     if not isinstance(raw_sources, dict):
         raise RuntimeError('TS4NFDI_PROVIDER sources config must be a dictionary.')
@@ -137,11 +142,10 @@ def load_source_configs():
             'backend_type': normalize_optional_string(raw_source.get('backend_type')),
             'url': source_url,
         }
-
     return sources
 
 
-def attach_source_config(config, *, context):
+def attach_source_config(config: dict[str, Any], *, context: str) -> dict[str, Any]:
     resolved = dict(config)
     source_key = normalize_optional_string(resolved.get('source_key'))
     if not source_key:
@@ -165,16 +169,16 @@ def attach_source_config(config, *, context):
     return resolved
 
 
-def load_annotation_matchers():
+def load_annotation_matchers() -> tuple[AnnotationMatcher, ...]:
     frontend_config = _load_raw_frontend_config()
     annotations_config = frontend_config.get('annotations', {})
 
     if annotations_config in (None, False):
-        return []
+        return ()
     if not isinstance(annotations_config, dict):
         raise RuntimeError('TS4NFDI_PROVIDER frontend annotations config must be a dictionary.')
     if not annotations_config.get('enabled', False):
-        return []
+        return ()
 
     raw_matchers = annotations_config.get('matchers', [])
     if not isinstance(raw_matchers, list):
@@ -183,7 +187,6 @@ def load_annotation_matchers():
     providers = load_config().get('providers', {})
     matchers = []
     matcher_ids = set()
-
     for index, raw_matcher in enumerate(raw_matchers):
         try:
             matcher = normalize_annotation_matcher(raw_matcher, index, providers)
@@ -191,38 +194,33 @@ def load_annotation_matchers():
             logger.error('Ignoring invalid TS4NFDI annotation matcher at index %s: %s', index, exc)
             continue
 
-        if matcher['id'] in matcher_ids:
-            logger.error("Ignoring duplicate TS4NFDI annotation matcher id '%s'.", matcher['id'])
+        if matcher.id in matcher_ids:
+            logger.error("Ignoring duplicate TS4NFDI annotation matcher id '%s'.", matcher.id)
             continue
 
-        matcher_ids.add(matcher['id'])
+        matcher_ids.add(matcher.id)
         matchers.append(matcher)
+    return tuple(matchers)
 
-    return matchers
 
-
-def normalize_annotation_matcher(raw_matcher, index, providers):
+def normalize_annotation_matcher(
+    raw_matcher: dict[str, Any],
+    index: int,
+    providers: dict[str, Any],
+) -> AnnotationMatcher:
     if not isinstance(raw_matcher, dict):
         raise RuntimeError('matcher must be a dictionary')
 
-    matcher_id = str(raw_matcher.get('id') or f'annotation-{index + 1}').strip()
-    question_uri = require_string(raw_matcher, 'question_uri')
-    attribute_uri = require_string(raw_matcher, 'attribute_uri')
-    optionset_uri = require_string(raw_matcher, 'optionset_uri')
-    resource_type = require_string(raw_matcher, 'resource_type')
+    removed_keys = sorted(set(raw_matcher) & {'widget_type', 'entity_type', 'tabs', 'use_legacy'})
+    if removed_keys:
+        raise RuntimeError(
+            f'legacy presentation keys {removed_keys} are no longer supported; configure the nested presentation table'
+        )
 
+    matcher_id = str(raw_matcher.get('id') or f'annotation-{index + 1}').strip()
+    resource_type = require_string(raw_matcher, 'resource_type')
     if resource_type not in ANNOTATION_RESOURCE_TYPES:
         raise RuntimeError(f'resource_type must be one of {sorted(ANNOTATION_RESOURCE_TYPES)}')
-
-    widget_type = (
-        normalize_optional_string(raw_matcher.get('widget_type'))
-        or DEFAULT_ANNOTATION_WIDGET_TYPES[resource_type]
-    )
-    if widget_type not in ANNOTATION_WIDGET_TYPES[resource_type]:
-        raise RuntimeError(
-            f"widget_type for resource_type '{resource_type}' must be one of "
-            f'{sorted(ANNOTATION_WIDGET_TYPES[resource_type])}'
-        )
 
     provider_key = normalize_optional_string(raw_matcher.get('provider_key'))
     if resource_type in {'ontology', 'collection'}:
@@ -230,14 +228,6 @@ def normalize_annotation_matcher(raw_matcher, index, providers):
             raise RuntimeError(f"provider_key is required for resource_type '{resource_type}'")
         if provider_key not in providers:
             raise RuntimeError(f"unknown provider_key '{provider_key}'")
-
-    entity_type = normalize_optional_string(raw_matcher.get('entity_type'))
-    if entity_type and entity_type not in ANNOTATION_ENTITY_TYPES:
-        raise RuntimeError(f'entity_type must be one of {sorted(ANNOTATION_ENTITY_TYPES)}')
-
-    tabs = raw_matcher.get('tabs', ['synonyms', 'hierarchy', 'ontology'])
-    if not isinstance(tabs, list) or any(tab not in ANNOTATION_TABS for tab in tabs):
-        raise RuntimeError(f'tabs must contain only {sorted(ANNOTATION_TABS)}')
 
     source_config = attach_source_config(
         {
@@ -248,6 +238,7 @@ def normalize_annotation_matcher(raw_matcher, index, providers):
         },
         context=f"annotation matcher '{matcher_id}'",
     )
+    source = source_config.get('source')
 
     raw_gateway_params = raw_matcher.get('gateway_params', {})
     if not isinstance(raw_gateway_params, dict):
@@ -267,68 +258,84 @@ def normalize_annotation_matcher(raw_matcher, index, providers):
             ignored_params,
         )
 
-    return {
-        'id': matcher_id,
-        'question_uri': question_uri,
-        'attribute_uri': attribute_uri,
-        'optionset_uri': optionset_uri,
-        'resource_type': resource_type,
-        'widget_type': widget_type,
-        'provider_key': provider_key,
-        'source_key': source_config.get('source_key'),
-        'source': source_config.get('source'),
-        'badge_label': normalize_optional_string(raw_matcher.get('badge_label')),
-        'entity_type': entity_type,
-        'ontology_id': normalize_optional_string(raw_matcher.get('ontology_id')),
-        'use_legacy': bool(raw_matcher.get('use_legacy', False)),
-        'tabs': list(dict.fromkeys(tabs)),
-        'gateway_params': gateway_params,
-    }
+    return AnnotationMatcher(
+        id=matcher_id,
+        question_uri=require_string(raw_matcher, 'question_uri'),
+        attribute_uri=require_string(raw_matcher, 'attribute_uri'),
+        optionset_uri=require_string(raw_matcher, 'optionset_uri'),
+        resource_type=resource_type,
+        presentation=normalize_presentation(raw_matcher.get('presentation'), resource_type),
+        provider_key=provider_key,
+        source=ResourceReference(**source) if source else None,
+        badge_label=normalize_optional_string(raw_matcher.get('badge_label')),
+        ontology_id=normalize_optional_string(raw_matcher.get('ontology_id')),
+        gateway_params=tuple(gateway_params.items()),
+    )
 
 
-def find_annotation_matcher(question, matchers=None):
-    if matchers is None:
-        matchers = load_annotation_matchers()
+def normalize_presentation(raw_presentation: Any, resource_type: str) -> PresentationPolicy:
+    if raw_presentation is None:
+        return DEFAULT_ANNOTATION_PRESENTATIONS[resource_type]
+    if not isinstance(raw_presentation, dict):
+        raise RuntimeError('presentation must be a dictionary')
 
-    if not question or not getattr(question, 'attribute', None):
-        return None
+    adapter = normalize_optional_string(raw_presentation.get('adapter')) or 'native'
+    component = normalize_optional_string(raw_presentation.get('component'))
+    if not re.fullmatch(r'[a-z][a-z0-9_.-]*', adapter):
+        raise RuntimeError('presentation adapter must be a lower-case identifier')
+    if adapter == 'native':
+        if component:
+            raise RuntimeError('native presentation does not accept a component')
+        return PresentationPolicy(adapter='native')
+    if adapter != 'tss':
+        return PresentationPolicy(
+            adapter=adapter,
+            component=component,
+            options=tuple(
+                (key, value) for key, value in raw_presentation.items() if key not in {'adapter', 'component'}
+            ),
+        )
+    if component not in ANNOTATION_PRESENTATIONS[resource_type]:
+        raise RuntimeError(
+            f"TSS component for resource_type '{resource_type}' must be one of "
+            f'{sorted(ANNOTATION_PRESENTATIONS[resource_type])}'
+        )
 
-    optionset_uris = {optionset.uri for optionset in question.optionsets.all()}
+    options = {key: value for key, value in raw_presentation.items() if key not in {'adapter', 'component'}}
+    entity_type = normalize_optional_string(options.get('entity_type'))
+    if entity_type and entity_type not in ANNOTATION_ENTITY_TYPES:
+        raise RuntimeError(f'presentation entity_type must be one of {sorted(ANNOTATION_ENTITY_TYPES)}')
 
-    for matcher in matchers:
-        if (
-            matcher['question_uri'] == question.uri
-            and matcher['attribute_uri'] == question.attribute.uri
-            and matcher['optionset_uri'] in optionset_uris
-        ):
-            return matcher
+    tabs = options.get('tabs', ['synonyms', 'hierarchy', 'ontology'])
+    if not isinstance(tabs, list) or any(tab not in ANNOTATION_TABS for tab in tabs):
+        raise RuntimeError(f'presentation tabs must contain only {sorted(ANNOTATION_TABS)}')
+    options['tabs'] = tuple(dict.fromkeys(tabs))
 
-    return None
+    return PresentationPolicy(
+        adapter='tss',
+        component=component,
+        options=tuple(options.items()),
+    )
 
 
-def load_frontend_config():
-    frontend_config = dict(_load_raw_frontend_config())
-    raw_annotations = frontend_config.get('annotations', {})
+def load_frontend_config() -> dict[str, Any]:
+    raw_annotations = _load_raw_frontend_config().get('annotations', {})
     if raw_annotations in (None, False):
         raw_annotations = {}
     if not isinstance(raw_annotations, dict):
         raise RuntimeError('TS4NFDI_PROVIDER frontend annotations config must be a dictionary.')
 
-    frontend_config['annotations'] = {
-        'enabled': bool(raw_annotations.get('enabled', False)),
-        'matchers': [
-            {key: value for key, value in matcher.items() if key not in {'provider_key', 'gateway_params'}}
-            for matcher in load_annotation_matchers()
-        ],
+    matchers = load_annotation_matchers()
+    return {
+        'annotations': {
+            'api_version': '1',
+            'enabled': bool(raw_annotations.get('enabled', False) and matchers),
+        }
     }
 
-    return frontend_config
 
-
-def _load_raw_frontend_config():
-    config = load_config()
-    frontend_config = config.get('frontend', {})
-
+def _load_raw_frontend_config() -> dict[str, Any]:
+    frontend_config = load_config().get('frontend', {})
     if not isinstance(frontend_config, dict):
         raise RuntimeError('TS4NFDI_PROVIDER frontend config must be a dictionary.')
 

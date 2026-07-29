@@ -8,12 +8,12 @@ from rest_framework.views import APIView
 
 from rdmo.projects.models import Project, Value
 
-from rdmo_ts4nfdi.services.annotations import build_page_annotations, resolve_annotation
-from rdmo_ts4nfdi.services.gateway import (
+from rdmo_ts4nfdi.composition import build_annotation_service
+from rdmo_ts4nfdi.integrations.ts4nfdi.gateway import (
+    GatewayClient,
     GatewayError,
     GatewayRequestError,
     filter_gateway_query,
-    gateway_get,
 )
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ class AnnotationListView(ProjectAPIView):
         if page is None:
             raise Http404
 
-        return Response(build_page_annotations(project, page))
+        return Response(build_annotation_service().list_page(project, page).to_dict())
 
 
 class AnnotationDetailView(ProjectAPIView):
@@ -57,7 +57,7 @@ class AnnotationDetailView(ProjectAPIView):
             raise Http404 from exc
 
         try:
-            payload = resolve_annotation(
+            payload = build_annotation_service().detail(
                 project,
                 value,
                 matcher_id=request.query_params.get('matcher'),
@@ -65,7 +65,7 @@ class AnnotationDetailView(ProjectAPIView):
         except LookupError as exc:
             raise Http404 from exc
 
-        return Response(payload)
+        return Response(payload.to_dict())
 
 
 class GatewayProxyView(ProjectAPIView):
@@ -74,7 +74,7 @@ class GatewayProxyView(ProjectAPIView):
         gateway_path = f'ols4/api/{gateway_path}'
 
         try:
-            payload, cache_hit = gateway_get(
+            payload, cache_hit = GatewayClient().get(
                 gateway_path,
                 filter_gateway_query(request.query_params),
             )

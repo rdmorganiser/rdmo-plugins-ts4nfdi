@@ -1,9 +1,9 @@
 import logging
 
+from rdmo_ts4nfdi.integrations.ts4nfdi.payload import extract_results, get_first_value
+
 from .base import TS4NFDIBaseProvider
 from .utils import (
-    extract_results,
-    get_first_value,
     normalize_list,
     option_badge,
     option_breadcrumb,
@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
-
     search = True
     refresh = False
 
@@ -44,37 +43,37 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
                 options.append(option)
 
         options = self.exclude_selected_options(project, options, provider_config)
-        return options[: provider_config.get("limit", 20)]
+        return options[: provider_config.get('limit', 20)]
 
     def build_query_params(self, provider_config, search):
         query_params = {
-            provider_config.get("search_param", "query"): search,
+            provider_config.get('search_param', 'query'): search,
         }
 
-        if provider_config.get("limit") is not None and provider_config.get("limit_param"):
-            query_params[provider_config.get("limit_param", "limit")] = provider_config["limit"]
+        if provider_config.get('limit') is not None and provider_config.get('limit_param'):
+            query_params[provider_config.get('limit_param', 'limit')] = provider_config['limit']
 
         for config_key, default_param in (
-            ("database", "database"),
-            ("collection_id", "collectionId"),
-            ("target_db_schema", "targetDbSchema"),
+            ('database', 'database'),
+            ('collection_id', 'collectionId'),
+            ('target_db_schema', 'targetDbSchema'),
         ):
             if provider_config.get(config_key):
-                query_params[provider_config.get(f"{config_key}_param", default_param)] = provider_config[config_key]
+                query_params[provider_config.get(f'{config_key}_param', default_param)] = provider_config[config_key]
 
-        display = provider_config.get("display", [])
+        display = provider_config.get('display', [])
         if display:
-            query_params[provider_config.get("display_param", "display")] = ",".join(display)
+            query_params[provider_config.get('display_param', 'display')] = ','.join(display)
 
-        terminologies = provider_config.get("terminologies", [])
-        if terminologies and provider_config.get("terminologies_param"):
-            query_params[provider_config["terminologies_param"]] = ",".join(terminologies)
+        terminologies = provider_config.get('terminologies', [])
+        if terminologies and provider_config.get('terminologies_param'):
+            query_params[provider_config['terminologies_param']] = ','.join(terminologies)
 
-        entity_types = provider_config.get("entity_types", [])
-        if entity_types and provider_config.get("entity_types_param"):
-            query_params[provider_config["entity_types_param"]] = ",".join(entity_types)
+        entity_types = provider_config.get('entity_types', [])
+        if entity_types and provider_config.get('entity_types_param'):
+            query_params[provider_config['entity_types_param']] = ','.join(entity_types)
 
-        extra_params = provider_config.get("extra_params", {})
+        extra_params = provider_config.get('extra_params', {})
         query_params.update(extra_params)
 
         return query_params
@@ -89,20 +88,17 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
         ]
 
     def matches_ontology_filter(self, result, provider_config):
-        ontologies = provider_config.get("ontologies") or provider_config.get("terminologies")
+        ontologies = provider_config.get('ontologies') or provider_config.get('terminologies')
         ontologies = {ontology.lower() for ontology in normalize_list(ontologies)}
 
         if not ontologies:
             return True
 
         ontology_fields = provider_config.get(
-            "ontology_fields",
-            ("ontology", "ontology_iri", "source_name", "sourceName", "short_form", "backend_type"),
+            'ontology_fields',
+            ('ontology', 'ontology_iri', 'source_name', 'sourceName', 'short_form', 'backend_type'),
         )
-        values = [
-            get_first_value(result, (field,))
-            for field in ontology_fields
-        ]
+        values = [get_first_value(result, (field,)) for field in ontology_fields]
 
         return any(
             value and any(ontology == value.lower() or ontology in value.lower() for ontology in ontologies)
@@ -110,23 +106,23 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
         )
 
     def matches_iri_prefix_filter(self, result, provider_config):
-        prefixes = provider_config.get("iri_prefixes") or provider_config.get("iri_prefix")
+        prefixes = provider_config.get('iri_prefixes') or provider_config.get('iri_prefix')
         prefixes = tuple(normalize_list(prefixes))
 
         if not prefixes:
             return True
 
-        identifier = get_first_value(result, provider_config.get("id_fields", self.DEFAULT_ID_FIELDS))
+        identifier = get_first_value(result, provider_config.get('id_fields', self.DEFAULT_ID_FIELDS))
 
         return bool(identifier and identifier.startswith(prefixes))
 
     def matches_type_filter(self, result, provider_config):
-        entity_types = normalize_list(provider_config.get("entity_types"))
+        entity_types = normalize_list(provider_config.get('entity_types'))
 
-        if not entity_types or provider_config.get("entity_types_param"):
+        if not entity_types or provider_config.get('entity_types_param'):
             return True
 
-        result_type = get_first_value(result, ("type", "@type"))
+        result_type = get_first_value(result, ('type', '@type'))
 
         if not result_type:
             return True
@@ -138,8 +134,8 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
         if not isinstance(result, dict):
             return None
 
-        identifier = get_first_value(result, provider_config.get("id_fields", self.DEFAULT_ID_FIELDS))
-        label = get_first_value(result, provider_config.get("label_fields", self.DEFAULT_LABEL_FIELDS))
+        identifier = get_first_value(result, provider_config.get('id_fields', self.DEFAULT_ID_FIELDS))
+        label = get_first_value(result, provider_config.get('label_fields', self.DEFAULT_LABEL_FIELDS))
 
         if not identifier or not label:
             return None
@@ -147,33 +143,30 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
         help_text = self.build_help_html(result, provider_config)
 
         option = {
-            "id": identifier,
-            "text": label,
+            'id': identifier,
+            'text': label,
         }
 
         if help_text:
-            option["help"] = help_text
+            option['help'] = help_text
 
         return option
 
     def build_help_html(self, result, provider_config):
-        source = provider_config.get("source") or {}
-        source_name = (
-            source.get("label")
-            or get_first_value(result, ("source_name", "sourceName"))
-        )
-        source_url = source.get("url") or get_first_value(result, ("source",))
+        source = provider_config.get('source') or {}
+        source_name = source.get('label') or get_first_value(result, ('source_name', 'sourceName'))
+        source_url = source.get('url') or get_first_value(result, ('source',))
         ontology_name = get_first_value(
             result,
-            provider_config.get("ontology_fields", ("ontology_name", "ontology")),
+            provider_config.get('ontology_fields', ('ontology_name', 'ontology')),
         )
         short_form = get_first_value(
             result,
-            provider_config.get("short_form_fields", ("short_form", "obo_id")),
+            provider_config.get('short_form_fields', ('short_form', 'obo_id')),
         )
         description = get_first_value(
             result,
-            provider_config.get("help_fields", self.DEFAULT_HELP_FIELDS),
+            provider_config.get('help_fields', self.DEFAULT_HELP_FIELDS),
         )
 
         parts = []
@@ -181,19 +174,19 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
         if source_name or ontology_name or short_form:
             badges = []
             if source_name:
-                badges.append(option_badge(source_name, "source", title=source_url))
+                badges.append(option_badge(source_name, 'source', title=source_url))
             if ontology_name:
                 if badges:
                     badges.append(option_separator())
-                badges.append(option_badge(ontology_name, "ontology"))
+                badges.append(option_badge(ontology_name, 'ontology'))
             if short_form:
                 if badges:
                     badges.append(option_separator())
-                badges.append(option_badge(short_form, "term"))
+                badges.append(option_badge(short_form, 'term'))
             parts.append(option_breadcrumb(badges))
 
         description_html = option_description([description])
         if description_html:
             parts.append(description_html)
 
-        return "".join(parts) or None
+        return ''.join(parts) or None

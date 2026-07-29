@@ -14,7 +14,7 @@ def ts4nfdi_frontend_config():
     try:
         return load_frontend_config()
     except RuntimeError:
-        logger.exception("Could not load TS4NFDI frontend config.")
+        logger.exception('Could not load TS4NFDI frontend config.')
         return {}
 
 

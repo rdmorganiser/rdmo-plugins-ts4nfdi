@@ -74,11 +74,10 @@ question_uri = "https://rdmo.fairagro.net/terms/questions/dmp4nfdi/v1-0-0/DMP/Da
 attribute_uri = "https://rdmorganiser.github.io/terms/domain/project/dataset/format"
 optionset_uri = "https://rdmo.fairagro.net/terms/options/ts4nfdi/file_format_grouped"
 resource_type = "entity"
-widget_type = "entity_info"
 badge_label = "EDAM"
 ontology_id = "edam"
-entity_type = "class"
 source_key = "ebi"
+presentation = { adapter = "tss", component = "entity-info", entity_type = "class" }
 
 # EDAM formats selected in the plugin's example catalog.
 [[frontend.annotations.matchers]]
@@ -87,11 +86,10 @@ question_uri = "https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-e
 attribute_uri = "https://rdmorganiser.github.io/terms/domain/project/dataset/format"
 optionset_uri = "https://rdmo.fairagro.net/terms/options/file_format_ts4nfdi"
 resource_type = "entity"
-widget_type = "entity_info"
 badge_label = "EDAM"
 ontology_id = "edam"
-entity_type = "class"
 source_key = "ebi"
+presentation = { adapter = "tss", component = "entity-info", entity_type = "class" }
 
 # Terminologies selected from the FAIRagro TS4NFDI collection.
 [[frontend.annotations.matchers]]
@@ -102,6 +100,7 @@ optionset_uri = "https://rdmo.fairagro.net/terms/options/ts4nfdi/collection_term
 resource_type = "ontology"
 provider_key = "ts4nfdi_fairagro_collection_terminologies"
 badge_label = "FAIRAgro"
+presentation = { adapter = "tss", component = "ontology-info" }
 
 [frontend.annotations.matchers.gateway_params]
 collectionId = "ff5491d1-d0a9-481e-ac90-0fad065fa097"
@@ -114,9 +113,8 @@ collectionId = "ff5491d1-d0a9-481e-ac90-0fad065fa097"
 # resource_type = "entity"
 # badge_label = "EDAM"
 # ontology_id = "edam"
-# entity_type = "class"
 # source_key = "ebi"
-# tabs = ["synonyms", "hierarchy", "ontology", "crossref"]
+# presentation = { adapter = "tss", component = "metadata", entity_type = "class", tabs = ["synonyms", "hierarchy", "ontology", "crossref"] }
 #
 # Ontology annotations additionally use their provider to resolve the selected
 # resource:
@@ -128,3 +126,4 @@ collectionId = "ff5491d1-d0a9-481e-ac90-0fad065fa097"
 # resource_type = "ontology"
 # provider_key = "ts4nfdi_fairagro_collection_terminologies"
 # badge_label = "FAIRAgro"
+# presentation = { adapter = "tss", component = "ontology-info" }
