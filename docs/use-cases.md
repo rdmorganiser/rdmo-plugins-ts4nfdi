@@ -105,7 +105,7 @@ information widget for selected values.
 | --- | --- | --- | --- |
 | Data-format selection | Technical Data Description | EDAM formats | Implemented |
 | Metadata-standard selection | Data Documentation | FAIRagro TS collection | Implemented |
-| Dataset topics and keywords | Project Data Description / Data Documentation | FAIRagro collection or keyword entity set | Catalog extension |
+| Dataset topics and keywords | Project Data Description / Data Documentation | AGROVOC | Implemented in example catalog |
 | Environmental and sample context | Project Data Description | ENVO and MIxS | Catalog extension |
 | Plant traits and observed variables | Project Data Description | Plant Trait Ontology | Catalog extension |
 | Experiment and data-creation methods | Project Data Description | PPEO and AGROVOC | Provider/catalog extension |
@@ -292,6 +292,47 @@ to deliver the core benefit.
 Controlled keywords complement the project description; they do not replace
 it. The plugin should not automatically extract or assign terms from free
 text without explicit user confirmation.
+
+### Prototype implementation
+
+The example catalog now contains the page “Dataset topics and discovery
+keywords” and the repeatable question:
+
+`https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/dataset-keywords`
+
+It stores controlled concepts and free-text fallbacks under the dedicated
+collection-valued attribute:
+
+`https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/dataset-keywords`
+
+The `ts4nfdi_agrovoc_keywords` provider restricts the Gateway `/search`
+endpoint to `database=agrovoc`, the AGROVOC terminology, and AGROVOC IRIs.
+Search results expose the source, terminology, short form, and description.
+A selected controlled result stores its AGROVOC IRI and receives an
+annotation; a manually created value remains valid but has no semantic
+annotation.
+
+AGROVOC is currently exposed by the Gateway through a Skosmos backend. The
+prototype therefore resolves details through the Gateway's source-neutral
+artefact concept-detail route and renders the normalized metadata with the
+plugin's native drawer. Gateway search is used only if the detail request
+fails. It does not send this source through the OLS-oriented TSS
+entity-information component or call the AGROVOC Skosmos API directly. The
+matcher remains configuration-driven, so its presentation adapter can be
+changed to a compatible upstream TSS widget without changing the catalog or
+annotation service once that path supports the source.
+
+The current Gateway Skosmos mapping returns no definition for some AGROVOC
+concepts even when the source vocabulary has one. The prototype reports that
+absence explicitly instead of adding a source-specific workaround. A
+copy-ready upstream report is available in
+[TS4NFDI Gateway issue: Skosmos concept details omit AGROVOC definitions](ts4nfdi-gateway-skosmos-concept-details.md).
+
+The compact example page is intentionally unconditional. When this question
+is transferred into the FAIRagro catalog, it should be a conditional
+follow-up to the existing yes/no keyword question. Deployments must register
+`ts4nfdi_agrovoc_keywords` in RDMO's `OPTIONSET_PROVIDERS` before importing
+or using the updated example catalog.
 
 ## UC-4: Environmental material and sample context
 
@@ -485,8 +526,9 @@ terminology set without rewriting the interview integration.
 
 1. Stabilize the existing EDAM data-format and FAIRagro
    metadata-standard annotations.
-2. Add an example controlled-keyword question using AGROVOC or a curated
-   FAIRagro keyword entity set.
+2. Evaluate the implemented AGROVOC keyword prototype with interview users
+   and decide whether a curated FAIRagro keyword entity set would be more
+   useful.
 3. Add environmental/sample-context and plant-trait questions using the
    current FAIRagro collection.
 4. Evaluate PPEO for a specific experiment-method follow-up question.

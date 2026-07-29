@@ -588,10 +588,150 @@ def test_entity_metadata_normalizes_gateway_fields(provider_modules):
     )
 
 
+def make_skosmos_annotation_context(provider_modules):
+    concept_iri = 'http://aims.fao.org/aos/agrovoc/c_7156'
+    matcher = provider_modules.domain.AnnotationMatcher(
+        id='agrovoc-keyword',
+        question_uri='https://example.test/question',
+        attribute_uri='https://example.test/attribute',
+        optionset_uri='https://example.test/optionset',
+        resource_type='entity',
+        presentation=provider_modules.domain.PresentationPolicy(adapter='native'),
+        badge_label='AGROVOC',
+        ontology_id='agrovoc',
+        source=provider_modules.domain.ResourceReference(
+            id='agrovoc',
+            label='FAO AGROVOC service',
+            database='agrovoc',
+            backend_type='skosmos',
+            url='https://agrovoc.fao.org/browse/rest/v1',
+        ),
+        gateway_params=(('database', 'agrovoc'),),
+    )
+    candidate = provider_modules.domain.AnnotationCandidate(
+        question=provider_modules.domain.QuestionContext(
+            question_id=1,
+            question_uri=matcher.question_uri,
+            attribute_id=2,
+            attribute_uri=matcher.attribute_uri,
+            optionset_uris=(matcher.optionset_uri,),
+        ),
+        value_id=3,
+        label='soil',
+        iri=concept_iri,
+        set_prefix='',
+        set_index=0,
+        collection_index=0,
+    )
+    return matcher, candidate
+
+
+def test_skosmos_entity_metadata_uses_gateway_artefact_concept_details(provider_modules):
+    matcher, candidate = make_skosmos_annotation_context(provider_modules)
+
+    class Gateway:
+        def __init__(self):
+            self.calls = []
+
+        def get(self, path, query=None):
+            self.calls.append((path, query))
+            return (
+                {
+                    'iri': candidate.iri,
+                    'label': 'soil',
+                    'descriptions': ['The unconsolidated material on the immediate surface of the earth.'],
+                    'synonyms': ['earth'],
+                    'short_form': 'c_7156',
+                    'ontology': 'agrovoc',
+                    'ontology_iri': 'http://aims.fao.org/aos/agrovoc',
+                    'source': 'https://agrovoc.fao.org/browse/rest/v1',
+                    'source_name': 'agrovoc',
+                    'backend_type': 'skosmos',
+                    'type': 'skos:Concept',
+                },
+                False,
+            )
+
+    gateway = Gateway()
+    metadata = provider_modules.annotation_metadata.GatewayMetadataResolver(gateway).resolve(
+        candidate,
+        matcher,
+    )
+
+    assert gateway.calls[0][0] == (
+        'artefacts/agrovoc/resources/concepts/http%3A%2F%2Faims.fao.org%2Faos%2Fagrovoc%2Fc_7156'
+    )
+    query = dict(gateway.calls[0][1])
+    assert query['database'] == 'agrovoc'
+    assert metadata.label == 'soil'
+    assert metadata.description.startswith('The unconsolidated material')
+    assert metadata.synonyms == ('earth',)
+    assert metadata.short_form == 'c_7156'
+    assert metadata.ontology_id == 'agrovoc'
+    assert metadata.source.label == 'FAO AGROVOC service'
+    assert metadata.source.backend_type == 'skosmos'
+    assert metadata.terminology == provider_modules.domain.ResourceReference(
+        id='agrovoc',
+        label='AGROVOC',
+        iri='http://aims.fao.org/aos/agrovoc',
+    )
+
+
+def test_skosmos_entity_metadata_falls_back_to_gateway_search(provider_modules):
+    matcher, candidate = make_skosmos_annotation_context(provider_modules)
+
+    class Gateway:
+        def __init__(self):
+            self.calls = []
+
+        def get(self, path, query=None):
+            self.calls.append((path, query))
+            if path.startswith('artefacts/'):
+                raise provider_modules.gateway.GatewayError('Concept details unavailable.')
+            return (
+                [
+                    {
+                        'iri': candidate.iri,
+                        'label': 'soil',
+                        'descriptions': [],
+                        'synonyms': [],
+                        'short_form': 'c_7156',
+                        'ontology': 'agrovoc',
+                        'source': 'https://agrovoc.fao.org/browse/rest/v1',
+                        'source_name': 'agrovoc',
+                        'backend_type': 'skosmos',
+                        'type': 'skos:Concept',
+                    },
+                ],
+                False,
+            )
+
+    gateway = Gateway()
+    metadata = provider_modules.annotation_metadata.GatewayMetadataResolver(gateway).resolve(
+        candidate,
+        matcher,
+    )
+
+    assert [call[0] for call in gateway.calls] == [
+        ('artefacts/agrovoc/resources/concepts/http%3A%2F%2Faims.fao.org%2Faos%2Fagrovoc%2Fc_7156'),
+        'search',
+    ]
+    fallback_query = dict(gateway.calls[1][1])
+    assert fallback_query['query'] == 'soil'
+    assert fallback_query['database'] == 'agrovoc'
+    assert 'descriptions' in fallback_query['display']
+    assert 'synonyms' in fallback_query['display']
+    assert metadata.label == 'soil'
+    assert metadata.description is None
+    assert metadata.synonyms == ()
+
+
 def test_gateway_path_and_query_allowlists(provider_modules):
     gateway = provider_modules.gateway
 
     assert gateway.validate_gateway_path('ols4/api/v2/entities') == 'ols4/api/v2/entities'
+    concept_path = 'artefacts/agrovoc/resources/concepts/http%3A%2F%2Faims.fao.org%2Faos%2Fagrovoc%2Fc_7156'
+    assert gateway.validate_gateway_path(concept_path) == concept_path
 
     with pytest.raises(gateway.GatewayRequestError):
         gateway.validate_gateway_path('ols4/api/../../auth/me')
@@ -601,6 +741,18 @@ def test_gateway_path_and_query_allowlists(provider_modules):
 
     with pytest.raises(gateway.GatewayRequestError):
         gateway.validate_gateway_path('ols4/api/v2/ontologies/%252e%252e/auth')
+
+    with pytest.raises(gateway.GatewayRequestError):
+        gateway.validate_gateway_path('artefacts/agrovoc/resources/concepts')
+
+    with pytest.raises(gateway.GatewayRequestError):
+        gateway.validate_gateway_path('artefacts/agrovoc/resources/properties/example')
+
+    with pytest.raises(gateway.GatewayRequestError):
+        gateway.validate_gateway_path('artefacts/%252e%252e/resources/concepts/example')
+
+    with pytest.raises(gateway.GatewayRequestError):
+        gateway.validate_gateway_path('artefacts/agrovoc/resources/concepts/example?token=secret')
 
     class QueryParams(dict):
         def getlist(self, key):
@@ -667,6 +819,33 @@ def test_example_catalog_contains_data_format_annotation_question():
     )
 
 
+def test_example_catalog_contains_controlled_agrovoc_keyword_question():
+    catalog_path = ROOT / 'xml/rdmo-plugins-ts4nfdi-example-catalog.xml'
+    root = ElementTree.parse(catalog_path).getroot()
+    uri_attribute = '{http://purl.org/dc/elements/1.1/}uri'
+    base_uri = 'https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog'
+    attribute_uri = 'https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/dataset-keywords'
+    optionset_uri = 'https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/agrovoc-keywords'
+
+    elements = {element.get(uri_attribute): element for element in root if element.get(uri_attribute)}
+    section = elements[f'{base_uri}/section']
+    page = elements[f'{base_uri}/dataset-topics-and-keywords']
+    question = elements[f'{base_uri}/dataset-keywords']
+    attribute = elements[attribute_uri]
+    optionset = elements[optionset_uri]
+
+    assert section.find("pages/page[@order='3']").get(uri_attribute) == (f'{base_uri}/dataset-topics-and-keywords')
+    assert page.find('questions/question').get(uri_attribute) == f'{base_uri}/dataset-keywords'
+    assert question.findtext('is_collection') == 'True'
+    assert question.findtext('is_optional') == 'True'
+    assert question.findtext('widget_type') == 'select_creatable'
+    assert question.findtext('value_type') == 'option'
+    assert question.find('attribute').get(uri_attribute) == attribute_uri
+    assert question.find('optionsets/optionset').get(uri_attribute) == optionset_uri
+    assert attribute.findtext('key') == 'dataset-keywords'
+    assert optionset.findtext('provider_key') == 'ts4nfdi_agrovoc_keywords'
+
+
 def test_example_catalog_explains_first_page_resource_levels():
     catalog_path = ROOT / 'xml/rdmo-plugins-ts4nfdi-example-catalog.xml'
     root = ElementTree.parse(catalog_path).getroot()
@@ -725,3 +904,28 @@ def test_example_catalog_first_page_has_annotation_matchers():
     assert terminology['badge_label'] == 'FAIRagro TS collection'
     assert terminology['gateway_params']['collectionId'] == ('ff5491d1-d0a9-481e-ac90-0fad065fa097')
     assert terminology['presentation']['component'] == 'ontology-info'
+
+
+def test_example_catalog_agrovoc_provider_and_annotation_matcher():
+    try:
+        import tomllib
+    except ModuleNotFoundError:
+        pytest.skip('tomllib is part of Python 3.11 and newer')
+
+    config_path = ROOT / 'ts4nfdi_provider.toml'
+    config = tomllib.loads(config_path.read_text(encoding='utf-8'))
+    provider = config['providers']['ts4nfdi_agrovoc_keywords']
+    source = config['sources']['agrovoc']
+    matchers = {matcher['id']: matcher for matcher in config['frontend']['annotations']['matchers']}
+    matcher = matchers['example-agrovoc-keyword']
+
+    assert provider['endpoint'] == 'search'
+    assert provider['source_key'] == 'agrovoc'
+    assert provider['ontologies'] == ['agrovoc']
+    assert provider['iri_prefixes'] == ['http://aims.fao.org/aos/agrovoc/']
+    assert source['database'] == 'agrovoc'
+    assert source['backend_type'] == 'skosmos'
+    assert matcher['resource_type'] == 'entity'
+    assert matcher['source_key'] == 'agrovoc'
+    assert matcher['ontology_id'] == 'agrovoc'
+    assert matcher['presentation']['adapter'] == 'native'

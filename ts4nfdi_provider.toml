@@ -25,6 +25,12 @@ database = "ebi"
 backend_type = "ols2"
 url = "https://www.ebi.ac.uk/ols4/api/v2"
 
+[sources.agrovoc]
+label = "FAO AGROVOC service"
+database = "agrovoc"
+backend_type = "skosmos"
+url = "https://agrovoc.fao.org/browse/rest/v1"
+
 [providers.ts4nfdi_ontologies]
 endpoint = "search"
 source_key = "ebi"
@@ -34,6 +40,14 @@ display = ["iri", "label", "descriptions", "ontology", "ontology_iri", "short_fo
 # Dataset question sets can legitimately select the same format in different
 # set_prefix/set_index contexts. Do not exclude options selected elsewhere in
 # the project.
+
+[providers.ts4nfdi_agrovoc_keywords]
+endpoint = "search"
+source_key = "agrovoc"
+ontologies = ["agrovoc"]
+iri_prefixes = ["http://aims.fao.org/aos/agrovoc/"]
+display = ["iri", "label", "descriptions", "ontology", "ontology_iri", "short_form", "source", "source_name", "backend_type", "type"]
+limit = 30
 
 [providers.ts4nfdi_collections]
 endpoint = "collections/"
@@ -135,6 +149,21 @@ badge_label = "EDAM"
 ontology_id = "edam"
 source_key = "ebi"
 presentation = { adapter = "tss", component = "entity-info", entity_type = "class" }
+
+# Controlled agricultural keywords selected on the example catalog's keyword
+# page. AGROVOC is exposed through a Skosmos backend, so the plugin resolves
+# metadata through the Gateway's source-neutral concept-detail contract and
+# uses its native drawer rather than an incompatible OLS/TSS entity component.
+[[frontend.annotations.matchers]]
+id = "example-agrovoc-keyword"
+question_uri = "https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/dataset-keywords"
+attribute_uri = "https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/dataset-keywords"
+optionset_uri = "https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/agrovoc-keywords"
+resource_type = "entity"
+badge_label = "AGROVOC"
+ontology_id = "agrovoc"
+source_key = "agrovoc"
+presentation = { adapter = "native" }
 
 # Terminologies selected from the FAIRagro TS4NFDI collection.
 [[frontend.annotations.matchers]]

@@ -48,6 +48,14 @@ function annotationFingerprint(annotations) {
     ].join(":")).join("|");
 }
 
+export function hasSemanticConceptMetadata(detail) {
+    return Boolean(
+        detail?.description
+        || detail?.definitions?.some(Boolean)
+        || detail?.synonyms?.some(Boolean)
+    );
+}
+
 export class NativeInlineAnnotationRenderer {
     render(slot, occurrence, onOpen) {
         const annotations = occurrence?.annotations || [];
@@ -186,6 +194,16 @@ export class NativeAnnotationDrawer {
                 : (detail.description ? [detail.description] : [])
         );
         this.renderSynonyms(detail.synonyms || []);
+        if (
+            detail.metadata_status === "available"
+            && !hasSemanticConceptMetadata(detail)
+        ) {
+            this.renderNotice(
+                translate(
+                    "The TS4NFDI Gateway did not return a definition or synonyms for this concept."
+                )
+            );
+        }
         this.renderProperties([
             [translate("Source"), source.label],
             [translate("Database"), source.database || source.id],
@@ -206,12 +224,9 @@ export class NativeAnnotationDrawer {
         this.renderActions(detail, source);
 
         if (detail.metadata_status !== "available") {
-            const notice = document.createElement("p");
-            notice.className = "ts4nfdi-annotation-notice";
-            notice.textContent = translate(
-                "Additional terminology metadata is currently unavailable."
+            this.renderNotice(
+                translate("Additional terminology metadata is currently unavailable.")
             );
-            this.summary().appendChild(notice);
         } else {
             this.presentations.render(
                 this.widget(),
@@ -321,7 +336,7 @@ export class NativeAnnotationDrawer {
         if (!available.length) {
             return;
         }
-        const section = this.createSection(translate("Concept information"));
+        const section = this.createSection(translate("Technical metadata"));
         const list = document.createElement("dl");
         list.className = "ts4nfdi-annotation-properties";
         available.forEach(([name, value]) => {
@@ -334,6 +349,13 @@ export class NativeAnnotationDrawer {
         });
         section.appendChild(list);
         this.summary().appendChild(section);
+    }
+
+    renderNotice(message) {
+        const notice = document.createElement("p");
+        notice.className = "ts4nfdi-annotation-notice";
+        notice.textContent = message;
+        this.summary().appendChild(notice);
     }
 
     renderActions(detail, source) {

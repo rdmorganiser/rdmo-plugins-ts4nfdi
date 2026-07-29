@@ -1,3 +1,4 @@
+import logging
 from urllib.parse import quote
 
 from rdmo_ts4nfdi.config import load_config
@@ -9,8 +10,25 @@ from rdmo_ts4nfdi.domain import (
 )
 from rdmo_ts4nfdi.utils import is_http_iri
 
-from .gateway import GatewayClient
+from .gateway import GatewayClient, GatewayError
 from .payload import extract_results, get_first_value, get_value, get_values
+
+logger = logging.getLogger(__name__)
+
+OLS_BACKEND_TYPES = frozenset({'ols2', 'ols4'})
+ENTITY_SEARCH_DISPLAY = (
+    'iri',
+    'label',
+    'descriptions',
+    'synonyms',
+    'ontology',
+    'ontology_iri',
+    'short_form',
+    'source',
+    'source_name',
+    'backend_type',
+    'type',
+)
 
 
 class GatewayMetadataResolver:
@@ -29,6 +47,13 @@ class GatewayMetadataResolver:
         candidate: AnnotationCandidate,
         matcher: AnnotationMatcher,
     ) -> ResolvedMetadata:
+        if (
+            matcher.source
+            and matcher.source.backend_type
+            and matcher.source.backend_type.lower() not in OLS_BACKEND_TYPES
+        ):
+            return self._resolve_non_ols_entity(candidate, matcher)
+
         query = [
             ('iri', candidate.iri),
             *((key, value) for key, value in matcher.gateway_query if key != 'iri'),
@@ -43,6 +68,73 @@ class GatewayMetadataResolver:
         if not results:
             raise LookupError(f'No Gateway entity metadata was returned for {candidate.iri}.')
         return normalize_entity_metadata(results[0], matcher)
+
+    def _resolve_non_ols_entity(
+        self,
+        candidate: AnnotationCandidate,
+        matcher: AnnotationMatcher,
+    ) -> ResolvedMetadata:
+        try:
+            return self._resolve_entity_from_artefact(candidate, matcher)
+        except (GatewayError, LookupError) as exc:
+            logger.warning(
+                'TS4NFDI Gateway concept-detail lookup failed for matcher=%r iri=%r; '
+                'falling back to Gateway search: %s',
+                matcher.id,
+                candidate.iri,
+                exc,
+            )
+            return self._resolve_entity_from_search(candidate, matcher)
+
+    def _resolve_entity_from_artefact(
+        self,
+        candidate: AnnotationCandidate,
+        matcher: AnnotationMatcher,
+    ) -> ResolvedMetadata:
+        if not matcher.ontology_id:
+            raise LookupError('The Gateway artefact concept-detail route requires an ontology identifier.')
+
+        endpoint = f'artefacts/{quote(matcher.ontology_id, safe="")}/resources/concepts/{quote(candidate.iri, safe="")}'
+        query = [(key, value) for key, value in matcher.gateway_query if key not in {'iri', 'q', 'query', 'search'}]
+        payload, _ = self.gateway.get(endpoint, query)
+        result = next(
+            (
+                item
+                for item in extract_entity_results(payload)
+                if get_first_value(item, ('iri', '@id', 'uri', 'id')) == candidate.iri
+            ),
+            None,
+        )
+        if result is None:
+            raise LookupError(f'No Gateway concept metadata was returned for {candidate.iri}.')
+        return normalize_entity_metadata(result, matcher)
+
+    def _resolve_entity_from_search(
+        self,
+        candidate: AnnotationCandidate,
+        matcher: AnnotationMatcher,
+    ) -> ResolvedMetadata:
+        query = [
+            ('query', candidate.label),
+            *(
+                (key, value)
+                for key, value in matcher.gateway_query
+                if key not in {'iri', 'q', 'query', 'search', 'display'}
+            ),
+            ('display', ','.join(ENTITY_SEARCH_DISPLAY)),
+        ]
+        payload, _ = self.gateway.get('search', query)
+        result = next(
+            (
+                item
+                for item in extract_results(payload)
+                if get_first_value(item, ('iri', '@id', 'uri', 'id')) == candidate.iri
+            ),
+            None,
+        )
+        if result is None:
+            raise LookupError(f'No Gateway search metadata was returned for {candidate.iri}.')
+        return normalize_entity_metadata(result, matcher)
 
     def _resolve_provider_resource(
         self,
@@ -162,7 +254,9 @@ def normalize_entity_metadata(result: dict, matcher: AnnotationMatcher) -> Resol
         short_form=get_first_value(result, ('shortForm', 'short_form', 'obo_id')),
         entity_types=tuple(get_values(result, ('type',))),
         obsolete=normalize_boolean(obsolete_value),
-        ontology_id=(get_first_value(result, ('ontologyId', 'ontology_name', 'ontology_id')) or matcher.ontology_id),
+        ontology_id=(
+            get_first_value(result, ('ontologyId', 'ontology_name', 'ontology_id', 'ontology')) or matcher.ontology_id
+        ),
         source=build_source_reference(matcher, result),
         terminology=build_terminology_reference(matcher, result),
     )
@@ -182,6 +276,8 @@ def normalize_boolean(value):
 
 def extract_entity_results(payload):
     if isinstance(payload, dict):
+        if get_first_value(payload, ('iri', '@id', 'uri', 'id')):
+            return [payload]
         elements = payload.get('elements')
         if isinstance(elements, list):
             return elements

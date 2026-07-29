@@ -28,8 +28,9 @@ INSTALLED_APPS = [
 
 OPTIONSET_PROVIDERS += [
     ("ts4nfdi_ontologies", _("TS4NFDI Ontologies"), "rdmo_ts4nfdi.providers.ontologies.TS4NFDIOntologiesProvider"),
+    ("ts4nfdi_agrovoc_keywords", _("TS4NFDI AGROVOC Keywords"), "rdmo_ts4nfdi.providers.ontologies.TS4NFDIOntologiesProvider"),
     ("ts4nfdi_collections", _("TS4NFDI Collections"), "rdmo_ts4nfdi.providers.collections.TS4NFDICollectionsProvider"),
-    ("ts4nfdi_collection_terminologies_fairagro", _("TS4NFDI Collection Terminologies: FAIRAgro"), "rdmo_ts4nfdi.providers.collection_terminologies.TS4NFDICollectionTerminologiesProvider"),
+    ("ts4nfdi_fairagro_collection_terminologies", _("TS4NFDI Collection Terminologies: FAIRAgro"), "rdmo_ts4nfdi.providers.collection_terminologies.TS4NFDICollectionTerminologiesProvider"),
 ]
 ```
 

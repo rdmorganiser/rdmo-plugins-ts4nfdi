@@ -24,6 +24,18 @@ ALLOWED_GATEWAY_PATH_PREFIXES = (
 )
 
 
+def is_allowed_artefact_concept_path(path: str) -> bool:
+    parts = path.split('/')
+    return (
+        len(parts) == 5
+        and parts[0] == 'artefacts'
+        and bool(parts[1])
+        and parts[2] == 'resources'
+        and parts[3] in {'classes', 'concepts'}
+        and bool(parts[4])
+    )
+
+
 class GatewayError(RuntimeError):
     status_code = 502
 
@@ -38,11 +50,15 @@ class GatewayRequestError(GatewayError):
 
 def validate_gateway_path(path: str) -> str:
     normalized = str(path or '').lstrip('/')
-    decoded_path = unquote(unquote(urlparse(f'/{normalized}').path))
+    parsed_path = urlparse(f'/{normalized}')
+    decoded_path = unquote(unquote(parsed_path.path))
 
-    if not normalized or '..' in decoded_path.split('/'):
+    if not normalized or parsed_path.query or parsed_path.fragment or '..' in decoded_path.split('/'):
         raise GatewayRequestError('Invalid Gateway path.')
-    if not any(normalized == prefix or normalized.startswith(f'{prefix}/') for prefix in ALLOWED_GATEWAY_PATH_PREFIXES):
+    allowed_prefix = any(
+        normalized == prefix or normalized.startswith(f'{prefix}/') for prefix in ALLOWED_GATEWAY_PATH_PREFIXES
+    )
+    if not allowed_prefix and not is_allowed_artefact_concept_path(normalized):
         raise GatewayRequestError('Gateway path is not allowed.')
     return normalized
 
