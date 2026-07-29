@@ -32,11 +32,11 @@
 		<dc:comment/>
 		<attribute/>
 		<is_collection>False</is_collection>
-		<title lang="en">Page</title>
+		<title lang="en">Terminology providers and annotations</title>
 		<short_title lang="en"/>
 		<help lang="en"/>
 		<verbose_name lang="en"/>
-		<title lang="de">Page</title>
+		<title lang="de">Terminologie-Provider und Annotationen</title>
 		<short_title lang="de"/>
 		<help lang="de"/>
 		<verbose_name lang="de"/>
@@ -57,12 +57,12 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/ontologies"/>
 		<is_collection>False</is_collection>
 		<is_optional>False</is_optional>
-		<help lang="en"/>
-		<text lang="en">Ontologies</text>
+		<help lang="en">This example searches for entities in the EDAM terminology. The current provider configuration is restricted to EDAM data-format concepts, so each selected value represents a concept such as an XML format rather than a complete ontology.</help>
+		<text lang="en">EDAM terminology concepts</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en"/>
-		<help lang="de"/>
-		<text lang="de">Ontologies</text>
+		<help lang="de">Dieses Beispiel sucht nach Entitäten in der EDAM-Terminologie. Die aktuelle Provider-Konfiguration ist auf EDAM-Datenformatkonzepte beschränkt. Jeder ausgewählte Wert repräsentiert daher ein Konzept, beispielsweise ein XML-Format, und keine vollständige Ontologie.</help>
+		<text lang="de">Konzepte aus der EDAM-Terminologie</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de"/>
 		<default_option/>
@@ -110,12 +110,12 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/collections"/>
 		<is_collection>True</is_collection>
 		<is_optional>False</is_optional>
-		<help lang="en"/>
-		<text lang="en">Collections</text>
+		<help lang="en">A terminology collection groups complete terminologies for a purpose or community. Select one or more public TS4NFDI collections. The terminology details annotation shows the collection description, stable identifier, and link.</help>
+		<text lang="en">Terminology collections</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en"/>
-		<help lang="de"/>
-		<text lang="de">Collections</text>
+		<help lang="de">Eine Terminologiesammlung gruppiert vollständige Terminologien für einen Zweck oder eine Community. Wählen Sie eine oder mehrere öffentliche TS4NFDI-Sammlungen aus. Die Annotation zeigt Beschreibung, stabilen Identifikator und Link der Sammlung.</help>
+		<text lang="de">Terminologiesammlungen</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de"/>
 		<default_option/>
@@ -156,12 +156,12 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/collection-terminologies"/>
 		<is_collection>True</is_collection>
 		<is_optional>False</is_optional>
-		<help lang="en"/>
-		<text lang="en">Collection Terminologies</text>
+		<help lang="en">This search is restricted by the provider configuration to the preselected &lt;a href=&quot;https://w3id.org/ts4nfdi/collection/ff5491d1-d0a9-481e-ac90-0fad065fa097&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;FAIRagro TS collection&lt;/a&gt;. The collection is fixed for this example; selections in the “Terminology collections” question above do not change this search scope.</help>
+		<text lang="en">Terminologies from the preselected FAIRagro TS collection</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en"/>
-		<help lang="de"/>
-		<text lang="de">Collection Terminologies</text>
+		<help lang="de">Diese Suche ist durch die Provider-Konfiguration auf die vorausgewählte &lt;a href=&quot;https://w3id.org/ts4nfdi/collection/ff5491d1-d0a9-481e-ac90-0fad065fa097&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;FAIRAgro-TS-Sammlung&lt;/a&gt; beschränkt. Die Sammlung ist für dieses Beispiel festgelegt; Auswahlen in der Frage „Terminologiesammlungen“ ändern diesen Suchbereich nicht.</help>
+		<text lang="de">Terminologien aus der vorausgewählten FAIRAgro-TS-Sammlung</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de"/>
 		<default_option/>

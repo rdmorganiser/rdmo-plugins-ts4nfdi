@@ -665,3 +665,63 @@ def test_example_catalog_contains_data_format_annotation_question():
     assert question.find('optionsets/optionset').get(uri_attribute) == (
         'https://rdmo.fairagro.net/terms/options/file_format_ts4nfdi'
     )
+
+
+def test_example_catalog_explains_first_page_resource_levels():
+    catalog_path = ROOT / 'xml/rdmo-plugins-ts4nfdi-example-catalog.xml'
+    root = ElementTree.parse(catalog_path).getroot()
+    uri_attribute = '{http://purl.org/dc/elements/1.1/}uri'
+    base_uri = 'https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog'
+    elements = {element.get(uri_attribute): element for element in root if element.get(uri_attribute)}
+
+    page = elements[f'{base_uri}/page']
+    concept_question = elements[f'{base_uri}/ontologies']
+    collection_question = elements[f'{base_uri}/collections']
+    terminology_question = elements[f'{base_uri}/collection-terminologies']
+    question_references = page.findall('questions/question')
+
+    assert page.findtext("title[@lang='en']") == 'Terminology providers and annotations'
+    assert page.find('questionsets') is not None
+    assert len(page.find('questionsets')) == 0
+    assert [reference.get(uri_attribute) for reference in question_references] == [
+        f'{base_uri}/ontologies',
+        f'{base_uri}/collections',
+        f'{base_uri}/collection-terminologies',
+    ]
+    assert concept_question.findtext("text[@lang='en']") == 'EDAM terminology concepts'
+    assert 'concept' in concept_question.findtext("help[@lang='en']")
+    assert collection_question.findtext("text[@lang='en']") == 'Terminology collections'
+    assert terminology_question.findtext("text[@lang='en']") == (
+        'Terminologies from the preselected FAIRagro TS collection'
+    )
+    terminology_help = terminology_question.findtext("help[@lang='en']")
+    assert 'ff5491d1-d0a9-481e-ac90-0fad065fa097' in terminology_help
+    assert 'do not change this search scope' in terminology_help
+
+
+def test_example_catalog_first_page_has_annotation_matchers():
+    try:
+        import tomllib
+    except ModuleNotFoundError:
+        pytest.skip('tomllib is part of Python 3.11 and newer')
+
+    config_path = ROOT / 'ts4nfdi_provider.toml'
+    config = tomllib.loads(config_path.read_text(encoding='utf-8'))
+    matchers = {matcher['id']: matcher for matcher in config['frontend']['annotations']['matchers']}
+
+    concept = matchers['example-edam-concept']
+    assert concept['resource_type'] == 'entity'
+    assert concept['presentation']['adapter'] == 'tss'
+    assert concept['presentation']['component'] == 'entity-info'
+
+    collection = matchers['example-collection']
+    assert collection['resource_type'] == 'collection'
+    assert collection['provider_key'] == 'ts4nfdi_collections'
+    assert collection['presentation']['adapter'] == 'native'
+
+    terminology = matchers['example-fairagro-collection-terminology']
+    assert terminology['resource_type'] == 'ontology'
+    assert terminology['provider_key'] == 'ts4nfdi_fairagro_collection_terminologies'
+    assert terminology['badge_label'] == 'FAIRagro TS collection'
+    assert terminology['gateway_params']['collectionId'] == ('ff5491d1-d0a9-481e-ac90-0fad065fa097')
+    assert terminology['presentation']['component'] == 'ontology-info'

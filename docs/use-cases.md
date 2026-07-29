@@ -4,7 +4,7 @@
 
 This document describes potential uses of the TS4NFDI API Gateway and
 Terminology Service Suite (TSS) in an RDMO interview. The primary reference is
-the [NFDI DMP Template for FAIRagro](../../xml/dmp4nfdi_v1-0-0%20%281%29-fairagro.xml),
+the [NFDI DMP Template for FAIRagro](../xml/dmp4nfdi_v1-0-0%20%281%29-fairagro.xml),
 but the same integration patterns can be configured for other catalogs.
 
 The goal is not to turn the interview into a general ontology browser. The
@@ -112,6 +112,47 @@ information widget for selected values.
 | Processing methods and operations | Technical Data Description | EDAM operations or domain terminology | Provider/catalog extension |
 | Software, tools, and instruments | Data Documentation | SWO, OBI, CHMO, or a curated collection | Optional |
 | Licenses and terms of use | Sharing | SPDX or another license vocabulary | Optional; static options may be preferable |
+
+## Prototype catalog: provider and annotation levels
+
+The first page of the
+[plugin example catalog](../xml/rdmo-plugins-ts4nfdi-example-catalog.xml)
+demonstrates three related but different resource levels:
+
+| Example question | Selected resource | Annotation |
+| --- | --- | --- |
+| EDAM terminology concepts | One entity/concept from EDAM | Native details plus optional TSS entity information |
+| Terminology collections | A collection of complete terminologies | Native collection description, stable identifier, and link |
+| Terminologies from the FAIRagro TS collection | One complete terminology from a fixed collection | Native details plus optional TSS ontology information |
+
+The first question retains its established `/ontologies` URI and uses the
+`TS4NFDIOntologiesProvider` class, but the configured Gateway `/search`
+endpoint returns entities. Restricting that provider to EDAM format IRIs means
+that a saved value such as “XML” is a concept in EDAM, not the EDAM ontology
+itself. The visible question text explains this distinction.
+
+The collection-terminology provider has a deliberately fixed
+`collection_id`: the FAIRagro TS collection
+`ff5491d1-d0a9-481e-ac90-0fad065fa097`. The example communicates this context
+in two places:
+
+- the question help names and links the preselected collection before the user
+  searches;
+- each saved terminology annotation carries a `FAIRagro TS collection` badge.
+
+The independent “Terminology collections” answer does not control this fixed
+filter. Making both questions members of an RDMO `QuestionSet` would visually
+suggest such a dependency without implementing it. More importantly, the
+current RDMO option-provider invocation supplies the project and search text
+but not the active question occurrence or `set_prefix`, so a provider cannot
+reliably determine which sibling collection belongs to the current repeated
+set.
+
+For the prototype, explicit question help is therefore the accurate model. A
+future dynamic collection-to-terminology use case should introduce a
+QuestionSet only after an RDMO provider/extension interface can pass the
+current occurrence context. At that point, the selected collection value can
+replace the configured `collection_id` without ambiguity.
 
 ## UC-1: Data-format selection and explanation
 

@@ -67,6 +67,51 @@ help_fields = ["config.description", "description", "definition", "summary"]
 [frontend.annotations]
 enabled = true
 
+# EDAM concepts selected on the first page of the example catalog. The
+# historical provider class name says "ontologies", but the Gateway search
+# returns entities/concepts and the current config restricts them to EDAM
+# formats.
+[[frontend.annotations.matchers]]
+id = "example-edam-concept"
+question_uri = "https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/ontologies"
+attribute_uri = "https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/ontologies"
+optionset_uri = "https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/ontologies"
+resource_type = "entity"
+badge_label = "EDAM"
+ontology_id = "edam"
+source_key = "ebi"
+presentation = { adapter = "tss", component = "entity-info", entity_type = "class" }
+
+# Public TS4NFDI collections selected on the first page of the example
+# catalog. TSS currently has no collection component, so the normalized native
+# detail view is used.
+[[frontend.annotations.matchers]]
+id = "example-collection"
+question_uri = "https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/collections"
+attribute_uri = "https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/collections"
+optionset_uri = "https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/collections"
+resource_type = "collection"
+provider_key = "ts4nfdi_collections"
+badge_label = "TS4NFDI collection"
+presentation = { adapter = "native" }
+
+# Complete terminologies selected from the provider's fixed FAIRAgro
+# collection. The badge makes that preselected context visible in each
+# annotation; the catalog question help explains that it is not controlled by
+# the preceding collections answer.
+[[frontend.annotations.matchers]]
+id = "example-fairagro-collection-terminology"
+question_uri = "https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/collection-terminologies"
+attribute_uri = "https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/collection-terminologies"
+optionset_uri = "https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/collection-terminologies"
+resource_type = "ontology"
+provider_key = "ts4nfdi_fairagro_collection_terminologies"
+badge_label = "FAIRagro TS collection"
+presentation = { adapter = "tss", component = "ontology-info" }
+
+[frontend.annotations.matchers.gateway_params]
+collectionId = "ff5491d1-d0a9-481e-ac90-0fad065fa097"
+
 # EDAM formats selected in the dataset distribution question.
 [[frontend.annotations.matchers]]
 id = "fairagro-dataset-format"
