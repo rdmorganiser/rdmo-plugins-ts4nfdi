@@ -31,6 +31,18 @@ database = "agrovoc"
 backend_type = "skosmos"
 url = "https://agrovoc.fao.org/browse/rest/v1"
 
+[sources.agroportal]
+label = "AgroPortal"
+database = "agroportal"
+backend_type = "ontoportal"
+url = "https://data.agroportal.eu"
+
+[sources.tib]
+label = "TIB Terminology Service"
+database = "tib"
+backend_type = "ols2"
+url = "https://api.terminology.tib.eu/api/v2"
+
 [providers.ts4nfdi_ontologies]
 endpoint = "search"
 source_key = "ebi"
@@ -163,6 +175,21 @@ resource_type = "entity"
 badge_label = "AGROVOC"
 ontology_id = "agrovoc"
 source_key = "agrovoc"
+presentation = { adapter = "native" }
+
+# FAIRagro data-generation classifications selected from the plugin's
+# versioned semantic option-set manifest. Each selected FAIRagro option can
+# resolve to zero, one, or several terminology concepts from different
+# Gateway sources, so source and terminology context come from the mapping
+# target rather than this question-level matcher.
+[[frontend.annotations.matchers]]
+id = "example-fairagro-data-generation"
+question_uri = "https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/data-generation-methods"
+attribute_uri = "https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods"
+optionset_uri = "https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/fairagro-data-generation"
+resource_type = "entity"
+mapping_set_id = "fairagro-data-generation"
+badge_label = "FAIRAgro mapping"
 presentation = { adapter = "native" }
 
 # Terminologies selected from the FAIRagro TS4NFDI collection.

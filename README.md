@@ -31,6 +31,7 @@ OPTIONSET_PROVIDERS += [
     ("ts4nfdi_agrovoc_keywords", _("TS4NFDI AGROVOC Keywords"), "rdmo_ts4nfdi.providers.ontologies.TS4NFDIOntologiesProvider"),
     ("ts4nfdi_collections", _("TS4NFDI Collections"), "rdmo_ts4nfdi.providers.collections.TS4NFDICollectionsProvider"),
     ("ts4nfdi_fairagro_collection_terminologies", _("TS4NFDI Collection Terminologies: FAIRAgro"), "rdmo_ts4nfdi.providers.collection_terminologies.TS4NFDICollectionTerminologiesProvider"),
+    ("fairagro_data_generation", _("FAIRagro Data Generation Methods"), "rdmo_ts4nfdi.providers.semantic_options.FAIRAgroDataGenerationOptionSetProvider"),
 ]
 ```
 
@@ -201,6 +202,7 @@ TS4NFDI_ADAPTERS = {
     "gateway": "rdmo_ts4nfdi.integrations.ts4nfdi.GatewayClient",
     "metadata_resolver": "rdmo_ts4nfdi.integrations.ts4nfdi.GatewayMetadataResolver",
     "presentation": "rdmo_ts4nfdi.presentation.AnnotationPresentationRegistry",
+    "semantic_options": "rdmo_ts4nfdi.semantic_options.PackageSemanticOptionRegistry",
 }
 ```
 

@@ -61,6 +61,7 @@ class AnnotationDetailView(ProjectAPIView):
                 project,
                 value,
                 matcher_id=request.query_params.get('matcher'),
+                target_id=request.query_params.get('target'),
             )
         except LookupError as exc:
             raise Http404 from exc

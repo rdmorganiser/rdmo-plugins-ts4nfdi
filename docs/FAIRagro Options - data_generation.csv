@@ -1,0 +1,21 @@
+"How does your project generate new data? Which tools, software, technologies or processes are used to generate or collect them?",,,,,
+TermDE,TermEN,TerminologyConceptURI,TerminologyLabel,TerminologyProvider,Comment
+,field experiment,http://opendata.inrae.fr/thesaurusINRAE/c_17625,INRAE Thesaurus,Agroportal,originally: Field trials
+Feldbewertung / Bonitur,Field scoring,/,/,/,/
+In-situ-Messungen,In situ measurements,http://opendata.inrae.fr/thesaurusINRAE/c_17114,INRAE Thesaurus,Agroportal,/
+,greenhouse experiment,http://opendata.inrae.fr/thesaurusINRAE/c_17552,INRAE Thesaurus,Agroportal,originally: experiments in the greenhouse
+,laboratory experimentation,http://opendata.inrae.fr/thesaurusINRAE/c_17520,INRAE Thesaurus,Agroportal,originally:  lab experiments
+Fernerkundung (Remote-Sensing),Remote sensing,https://lod.nal.usda.gov/nalt/35112,National Agricultural Library Thesaurus,Agroportal,/
+Abundanzdaten,Abundance data,/,/,/,/
+Sensordaten (z. B. von Drohnen oder Feldrobotern),Sensor data (e.g. from drones or field robots),/,/,/,/
+Roboter und UAVs (unbemannte Luftfahrzeuge),Robots and UAVs (unmanned-aerial-vehicles),/,/,/,/
+Bildverarbeitung,Image data processing,http://aims.fao.org/aos/agrovoc/c_37359,AGROVOC,AGROVOC,/
+,machine learning,http://www.yso.fi/onto/yso/p21846,Agriculture and Forestry Ontology,Agroportal,
+Simulation,Simulation,http://aims.fao.org/aos/agrovoc/c_5209,AGROVOC,AGROVOC,/
+Algorithmen,Algorithms,http://aims.fao.org/aos/agrovoc/c_295ae038,AGROVOC,AGROVOC,/
+Synthetische Datengenerierung,Synthetic data generation,/,/,/,/
+"Analyse, Ableitung oder Zusammenstellung aus anderen Datenquellen","Analysis, derivation or compilation from other data sources",/,/,/,/
+Bewertung von Daten aus der Literatur,Scoring data from literature,/,/,/,/
+Erhebungen,Surveys,http://aims.fao.org/aos/agrovoc/c_7537,AGROVOC,AGROVOC,/
+Workshop,Workshop,http://purl.obolibrary.org/obo/NCIT_C180602,ncit,tib,there are alternatives
+,agricultural policies,http://aims.fao.org/aos/agrovoc/c_201,AGROVOC,AGROVOC,originally: Development of policies and guidelines for agricultural practices

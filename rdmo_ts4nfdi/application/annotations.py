@@ -1,6 +1,7 @@
 import logging
 from collections import OrderedDict
 from collections.abc import Iterable, Sequence
+from dataclasses import replace
 from typing import Any, Protocol
 
 from rdmo_ts4nfdi.domain import (
@@ -9,6 +10,7 @@ from rdmo_ts4nfdi.domain import (
     AnnotationMatcher,
     AnnotationOccurrence,
     AnnotationSummary,
+    InterviewAnswer,
     PageAnnotations,
     PresentationDescriptor,
     QuestionContext,
@@ -24,13 +26,21 @@ class InterviewHost(Protocol):
 
     def page_id(self, page: Any) -> int: ...
 
-    def page_candidates(self, project: Any, page: Any) -> Iterable[AnnotationCandidate]: ...
+    def page_answers(self, project: Any, page: Any) -> Iterable[InterviewAnswer]: ...
 
-    def value_candidates(self, project: Any, value: Any) -> Iterable[AnnotationCandidate]: ...
+    def value_answers(self, project: Any, value: Any) -> Iterable[InterviewAnswer]: ...
 
 
 class MetadataResolver(Protocol):
     def resolve(self, candidate: AnnotationCandidate, matcher: AnnotationMatcher) -> ResolvedMetadata: ...
+
+
+class TargetResolver(Protocol):
+    def resolve(
+        self,
+        answer: InterviewAnswer,
+        matcher: AnnotationMatcher,
+    ) -> Iterable[AnnotationCandidate]: ...
 
 
 class PresentationAdapter(Protocol):
@@ -69,11 +79,13 @@ class AnnotationService:
         self,
         *,
         host: InterviewHost,
+        targets: TargetResolver,
         metadata: MetadataResolver,
         presentation: PresentationAdapter,
         matchers: Sequence[AnnotationMatcher],
     ):
         self.host = host
+        self.targets = targets
         self.metadata = metadata
         self.presentation = presentation
         self.matchers = MatcherRegistry(matchers)
@@ -84,19 +96,20 @@ class AnnotationService:
             tuple[QuestionContext, list[AnnotationSummary]],
         ] = OrderedDict()
 
-        for candidate in self.host.page_candidates(project, page):
-            matcher = self.matchers.match(candidate.question)
+        for answer in self.host.page_answers(project, page):
+            matcher = self.matchers.match(answer.question)
             if matcher is None:
                 continue
 
-            key = (
-                candidate.question.question_id,
-                candidate.set_prefix,
-                candidate.set_index,
-            )
-            if key not in grouped:
-                grouped[key] = (candidate.question, [])
-            grouped[key][1].append(self._summarize(candidate, matcher))
+            for candidate in self.targets.resolve(answer, matcher):
+                key = (
+                    candidate.question.question_id,
+                    candidate.set_prefix,
+                    candidate.set_index,
+                )
+                if key not in grouped:
+                    grouped[key] = (candidate.question, [])
+                grouped[key][1].append(self._summarize(candidate, matcher))
 
         occurrences = tuple(
             AnnotationOccurrence(
@@ -113,12 +126,20 @@ class AnnotationService:
             occurrences=occurrences,
         )
 
-    def detail(self, project: Any, value: Any, matcher_id: str | None = None) -> AnnotationDetail:
+    def detail(
+        self,
+        project: Any,
+        value: Any,
+        matcher_id: str | None = None,
+        target_id: str | None = None,
+    ) -> AnnotationDetail:
         candidate_and_matcher = next(
             (
                 (candidate, matcher)
-                for candidate in self.host.value_candidates(project, value)
-                if (matcher := self.matchers.match(candidate.question, matcher_id)) is not None
+                for answer in self.host.value_answers(project, value)
+                if (matcher := self.matchers.match(answer.question, matcher_id)) is not None
+                for candidate in self.targets.resolve(answer, matcher)
+                if target_id is None or candidate.target_id == target_id
             ),
             None,
         )
@@ -126,6 +147,7 @@ class AnnotationService:
             raise LookupError('No TS4NFDI annotation matcher applies to this value.')
 
         candidate, matcher = candidate_and_matcher
+        matcher = self._contextualize_matcher(candidate, matcher)
         annotation = self._summarize(candidate, matcher)
         status = 'available'
         try:
@@ -154,8 +176,8 @@ class AnnotationService:
 
     @staticmethod
     def _summarize(candidate: AnnotationCandidate, matcher: AnnotationMatcher) -> AnnotationSummary:
-        terminology = None
-        if matcher.ontology_id or matcher.badge_label:
+        terminology = candidate.terminology
+        if terminology is None and (matcher.ontology_id or matcher.badge_label):
             terminology = ResourceReference(
                 id=matcher.ontology_id,
                 label=matcher.badge_label or matcher.ontology_id,
@@ -166,10 +188,40 @@ class AnnotationService:
             collection_index=candidate.collection_index,
             matcher_id=matcher.id,
             kind=matcher.resource_type,
-            label=candidate.label,
+            label=candidate.answer_label or candidate.label,
             iri=candidate.iri,
             badge_label=matcher.badge_label,
-            source=matcher.source,
+            source=candidate.source or matcher.source,
             terminology=terminology,
+            answer_id=candidate.answer_id,
+            target_id=candidate.target_id,
+            target_label=candidate.target_label,
+            mapping_relation=candidate.mapping_relation,
+            curation_status=candidate.curation_status,
             question_id=candidate.question.question_id,
+        )
+
+    @staticmethod
+    def _contextualize_matcher(
+        candidate: AnnotationCandidate,
+        matcher: AnnotationMatcher,
+    ) -> AnnotationMatcher:
+        if not candidate.source and not candidate.terminology:
+            return matcher
+
+        gateway_params = dict(matcher.gateway_query)
+        if candidate.source and candidate.source.database:
+            gateway_params['database'] = candidate.source.database
+        return replace(
+            matcher,
+            source=candidate.source or matcher.source,
+            ontology_id=(
+                candidate.terminology.id if candidate.terminology and candidate.terminology.id else matcher.ontology_id
+            ),
+            badge_label=(
+                candidate.terminology.label
+                if candidate.terminology and candidate.terminology.label
+                else matcher.badge_label
+            ),
+            gateway_params=tuple(gateway_params.items()),
         )

@@ -18,6 +18,8 @@ def install_rdmo_stubs(monkeypatch):
     django_template = types.ModuleType('django.template')
     django_templatetags = types.ModuleType('django.templatetags')
     django_templatetags_static = types.ModuleType('django.templatetags.static')
+    django_utils = types.ModuleType('django.utils')
+    django_utils_translation = types.ModuleType('django.utils.translation')
     rdmo = types.ModuleType('rdmo')
     rdmo_options = types.ModuleType('rdmo.options')
     rdmo_options_providers = types.ModuleType('rdmo.options.providers')
@@ -47,10 +49,13 @@ def install_rdmo_stubs(monkeypatch):
     django_core.cache = django_core_cache
     django.template = django_template
     django.templatetags = django_templatetags
+    django.utils = django_utils
     django_core_cache.cache = Cache()
     django_template.Library = Library
     django_templatetags.static = django_templatetags_static
     django_templatetags_static.static = lambda path: f'/static/{path}'
+    django_utils.translation = django_utils_translation
+    django_utils_translation.get_language = lambda: 'en'
     rdmo.options = rdmo_options
     rdmo_options.providers = rdmo_options_providers
     rdmo_options_providers.Provider = Provider
@@ -62,6 +67,8 @@ def install_rdmo_stubs(monkeypatch):
     monkeypatch.setitem(sys.modules, 'django.template', django_template)
     monkeypatch.setitem(sys.modules, 'django.templatetags', django_templatetags)
     monkeypatch.setitem(sys.modules, 'django.templatetags.static', django_templatetags_static)
+    monkeypatch.setitem(sys.modules, 'django.utils', django_utils)
+    monkeypatch.setitem(sys.modules, 'django.utils.translation', django_utils_translation)
     monkeypatch.setitem(sys.modules, 'rdmo', rdmo)
     monkeypatch.setitem(sys.modules, 'rdmo.options', rdmo_options)
     monkeypatch.setitem(sys.modules, 'rdmo.options.providers', rdmo_options_providers)
@@ -99,6 +106,7 @@ def provider_modules():
             template_tags=template_tags,
             collection_terminologies_provider=providers.TS4NFDICollectionTerminologiesProvider,
             collections_provider=providers.TS4NFDICollectionsProvider,
+            fairagro_data_generation_provider=providers.FAIRAgroDataGenerationOptionSetProvider,
             ontologies_provider=providers.TS4NFDIOntologiesProvider,
         )
     finally:
@@ -276,6 +284,48 @@ def test_collections_provider_get_options_returns_mapped_collection_options(prov
     assert 'Relevant metadata standards' in options[0]['help']
 
 
+def test_fairagro_data_generation_provider_uses_stable_option_ids_and_mapping_help(provider_modules):
+    configure_provider(
+        provider_modules,
+        'fairagro_data_generation',
+        {},
+        sources={
+            'agroportal': {
+                'label': 'AgroPortal',
+                'database': 'agroportal',
+                'backend_type': 'ontoportal',
+                'url': 'https://data.agroportal.eu',
+            },
+            'agrovoc': {
+                'label': 'FAO AGROVOC service',
+                'database': 'agrovoc',
+                'backend_type': 'skosmos',
+                'url': 'https://agrovoc.fao.org/browse/rest/v1',
+            },
+            'tib': {
+                'label': 'TIB Terminology Service',
+                'database': 'tib',
+                'backend_type': 'ols2',
+                'url': 'https://api.terminology.tib.eu/api/v2',
+            },
+        },
+    )
+
+    provider = provider_modules.fairagro_data_generation_provider()
+    provider.key = 'fairagro_data_generation'
+    options = provider.get_options(project=None)
+
+    assert provider.search is False
+    assert len(options) == 22
+    assert options[0]['id'] == 'https://rdmo.fairagro.net/terms/options/data_creation/experiment_data'
+    assert options[0]['text'] == 'Field trials'
+    assert 'AgroPortal' in options[0]['help']
+    assert 'INRAE Thesaurus' in options[0]['help']
+    assert 'field experiment' in options[0]['help']
+    unmapped = next(option for option in options if option['id'].endswith('/field_sampling'))
+    assert 'No curated terminology mapping is available yet.' in unmapped['help']
+
+
 def test_collection_terminologies_provider_get_options_returns_collection_terms(provider_modules):
     key = 'ts4nfdi_collection_terminologies'
     configure_provider(
@@ -345,6 +395,7 @@ def test_annotation_config_is_validated_and_sanitized(provider_modules):
                         'attribute_uri': 'https://example.test/attribute',
                         'optionset_uri': 'https://example.test/optionset',
                         'resource_type': 'entity',
+                        'mapping_set_id': 'example-mappings',
                         'presentation': {
                             'adapter': 'tss',
                             'component': 'entity-info',
@@ -374,6 +425,7 @@ def test_annotation_config_is_validated_and_sanitized(provider_modules):
     assert matchers[0].id == 'valid'
     assert matchers[0].presentation.adapter == 'tss'
     assert matchers[0].presentation.component == 'entity-info'
+    assert matchers[0].mapping_set_id == 'example-mappings'
     assert matchers[0].gateway_query == (('database', 'ols'),)
     assert frontend_config == {
         'annotations': {
@@ -929,3 +981,57 @@ def test_example_catalog_agrovoc_provider_and_annotation_matcher():
     assert matcher['source_key'] == 'agrovoc'
     assert matcher['ontology_id'] == 'agrovoc'
     assert matcher['presentation']['adapter'] == 'native'
+
+
+def test_example_catalog_contains_provider_backed_fairagro_data_generation_question_set():
+    catalog_path = ROOT / 'xml/rdmo-plugins-ts4nfdi-example-catalog.xml'
+    root = ElementTree.parse(catalog_path).getroot()
+    uri_attribute = '{http://purl.org/dc/elements/1.1/}uri'
+    base_uri = 'https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog'
+    optionset_uri = 'https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/fairagro-data-generation'
+    elements = {element.get(uri_attribute): element for element in root if element.get(uri_attribute)}
+
+    section = elements[f'{base_uri}/section']
+    page = elements[f'{base_uri}/data-generation']
+    questionset = elements[f'{base_uri}/data-generation/questions']
+    methods = elements[f'{base_uri}/data-generation-methods']
+    details = elements[f'{base_uri}/data-generation-details']
+    optionset = elements[optionset_uri]
+
+    assert section.find("pages/page[@order='4']").get(uri_attribute) == f'{base_uri}/data-generation'
+    assert page.find('questionsets/questionset').get(uri_attribute) == f'{base_uri}/data-generation/questions'
+    assert questionset.findtext('is_collection') == 'False'
+    assert [question.get(uri_attribute) for question in questionset.findall('questions/question')] == [
+        f'{base_uri}/data-generation-methods',
+        f'{base_uri}/data-generation-details',
+    ]
+    assert methods.findtext('is_collection') == 'True'
+    assert methods.findtext('widget_type') == 'checkbox'
+    assert methods.find('attribute').get(uri_attribute) == (
+        'https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods'
+    )
+    assert methods.find('optionsets/optionset').get(uri_attribute) == optionset_uri
+    assert details.findtext('widget_type') == 'textarea'
+    assert details.findtext('is_optional') == 'True'
+    assert optionset.findtext('provider_key') == 'fairagro_data_generation'
+
+
+def test_fairagro_data_generation_annotation_matcher_uses_semantic_mapping_set():
+    try:
+        import tomllib
+    except ModuleNotFoundError:
+        pytest.skip('tomllib is part of Python 3.11 and newer')
+
+    config_path = ROOT / 'ts4nfdi_provider.toml'
+    config = tomllib.loads(config_path.read_text(encoding='utf-8'))
+    matchers = {matcher['id']: matcher for matcher in config['frontend']['annotations']['matchers']}
+    matcher = matchers['example-fairagro-data-generation']
+
+    assert matcher['mapping_set_id'] == 'fairagro-data-generation'
+    assert matcher['resource_type'] == 'entity'
+    assert matcher['presentation']['adapter'] == 'native'
+    assert matcher['optionset_uri'] == (
+        'https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/fairagro-data-generation'
+    )
+    assert config['sources']['agroportal']['database'] == 'agroportal'
+    assert config['sources']['tib']['database'] == 'tib'

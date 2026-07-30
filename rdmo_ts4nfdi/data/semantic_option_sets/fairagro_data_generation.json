@@ -1,0 +1,272 @@
+{
+  "schema_version": "1",
+  "id": "fairagro-data-generation",
+  "version": "2026-07-30-draft.1",
+  "source_name": "FAIRagro Options - data_generation.csv",
+  "options": [
+    {
+      "id": "experiment_data",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/experiment_data",
+      "labels": {"en": "Field trials", "de": "Feldversuche"},
+      "targets": [
+        {
+          "id": "inrae-field-experiment",
+          "iri": "http://opendata.inrae.fr/thesaurusINRAE/c_17625",
+          "label": "field experiment",
+          "relation": "close",
+          "source_key": "agroportal",
+          "terminology": {"id": "INRAETHES", "label": "INRAE Thesaurus"},
+          "curation_status": "draft"
+        }
+      ]
+    },
+    {
+      "id": "field_sampling",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/field_sampling",
+      "labels": {"en": "Field sampling", "de": "Feldprobenahme"},
+      "targets": []
+    },
+    {
+      "id": "field_scoring",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/field_scoring",
+      "labels": {"en": "Field scoring", "de": "Feldbewertung / Bonitur"},
+      "targets": []
+    },
+    {
+      "id": "insitu",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/insitu",
+      "labels": {"en": "In situ measurements", "de": "In-situ-Messungen"},
+      "targets": [
+        {
+          "id": "inrae-in-situ-measurement",
+          "iri": "http://opendata.inrae.fr/thesaurusINRAE/c_17114",
+          "label": "In situ measurements",
+          "relation": "close",
+          "source_key": "agroportal",
+          "terminology": {"id": "INRAETHES", "label": "INRAE Thesaurus"},
+          "curation_status": "draft"
+        }
+      ]
+    },
+    {
+      "id": "exp_climate_chamber",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/exp_climate_chamber",
+      "labels": {"en": "Experiments in the climate chamber", "de": "Experimente in der Klimakammer"},
+      "targets": []
+    },
+    {
+      "id": "greenhouse",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/greenhouse",
+      "labels": {"en": "Experiments in the greenhouse", "de": "Experimente im Gewächshaus"},
+      "targets": [
+        {
+          "id": "inrae-greenhouse-experiment",
+          "iri": "http://opendata.inrae.fr/thesaurusINRAE/c_17552",
+          "label": "greenhouse experiment",
+          "relation": "close",
+          "source_key": "agroportal",
+          "terminology": {"id": "INRAETHES", "label": "INRAE Thesaurus"},
+          "curation_status": "draft"
+        }
+      ]
+    },
+    {
+      "id": "lab",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/lab",
+      "labels": {"en": "Lab experiments", "de": "Laborversuche"},
+      "targets": [
+        {
+          "id": "inrae-laboratory-experiment",
+          "iri": "http://opendata.inrae.fr/thesaurusINRAE/c_17520",
+          "label": "laboratory experimentation",
+          "relation": "close",
+          "source_key": "agroportal",
+          "terminology": {"id": "INRAETHES", "label": "INRAE Thesaurus"},
+          "curation_status": "draft"
+        }
+      ]
+    },
+    {
+      "id": "remote_sensing",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/remote_sensing",
+      "labels": {"en": "Remote sensing", "de": "Fernerkundung (Remote-Sensing)"},
+      "targets": [
+        {
+          "id": "nalt-remote-sensing",
+          "iri": "https://lod.nal.usda.gov/nalt/35112",
+          "label": "Remote sensing",
+          "relation": "close",
+          "source_key": "agroportal",
+          "terminology": {"id": "NALT", "label": "National Agricultural Library Thesaurus"},
+          "curation_status": "draft"
+        }
+      ]
+    },
+    {
+      "id": "abundance",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/abundance",
+      "labels": {"en": "Abundance data", "de": "Abundanzdaten"},
+      "targets": []
+    },
+    {
+      "id": "sensor_data",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/sensor_data",
+      "labels": {
+        "en": "Sensor data (e.g. from drones or field robots)",
+        "de": "Sensordaten (z. B. von Drohnen oder Feldrobotern)"
+      },
+      "targets": []
+    },
+    {
+      "id": "Robots",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/Robots",
+      "labels": {
+        "en": "Robots and UAVs (unmanned-aerial-vehicles)",
+        "de": "Roboter und UAVs (unbemannte Luftfahrzeuge)"
+      },
+      "targets": []
+    },
+    {
+      "id": "image_data_processing",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/image_data_processing",
+      "labels": {"en": "Image data processing", "de": "Bildverarbeitung"},
+      "targets": [
+        {
+          "id": "agrovoc-image-processing",
+          "iri": "http://aims.fao.org/aos/agrovoc/c_37359",
+          "label": "Image data processing",
+          "relation": "close",
+          "source_key": "agrovoc",
+          "terminology": {"id": "agrovoc", "label": "AGROVOC"},
+          "curation_status": "draft"
+        }
+      ]
+    },
+    {
+      "id": "ml_models",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/ml_models",
+      "labels": {"en": "Machine learning models", "de": "Machine Learning Modelle"},
+      "targets": [
+        {
+          "id": "afo-machine-learning",
+          "iri": "http://www.yso.fi/onto/yso/p21846",
+          "label": "machine learning",
+          "relation": "close",
+          "source_key": "agroportal",
+          "terminology": {"id": "AFO", "label": "Agriculture and Forestry Ontology"},
+          "curation_status": "draft"
+        }
+      ]
+    },
+    {
+      "id": "simulations",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/simulations",
+      "labels": {"en": "Simulations (e.g. via crop models)", "de": "Simulationen (z. B. über Erntemodelle)"},
+      "targets": [
+        {
+          "id": "agrovoc-simulation",
+          "iri": "http://aims.fao.org/aos/agrovoc/c_5209",
+          "label": "Simulation",
+          "relation": "close",
+          "source_key": "agrovoc",
+          "terminology": {"id": "agrovoc", "label": "AGROVOC"},
+          "curation_status": "draft"
+        }
+      ]
+    },
+    {
+      "id": "software_data",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/software_data",
+      "labels": {"en": "Algorithms", "de": "Algorithmen"},
+      "targets": [
+        {
+          "id": "agrovoc-algorithms",
+          "iri": "http://aims.fao.org/aos/agrovoc/c_295ae038",
+          "label": "Algorithms",
+          "relation": "close",
+          "source_key": "agrovoc",
+          "terminology": {"id": "agrovoc", "label": "AGROVOC"},
+          "curation_status": "draft"
+        }
+      ]
+    },
+    {
+      "id": "synthetic_data",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/synthetic_data",
+      "labels": {"en": "Synthetic data generation", "de": "Synthetische Datengenerierung"},
+      "targets": []
+    },
+    {
+      "id": "analysis_other_sources",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/analysis_other_sources",
+      "labels": {
+        "en": "Analysis, derivation or compilation from other data sources",
+        "de": "Analyse, Ableitung oder Zusammenstellung aus anderen Datenquellen"
+      },
+      "targets": []
+    },
+    {
+      "id": "scoring_data_literature",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/scoring_data_literature",
+      "labels": {"en": "Scoring data from literature", "de": "Bewertung von Daten aus der Literatur"},
+      "targets": []
+    },
+    {
+      "id": "survey_data",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/survey_data",
+      "labels": {"en": "Surveys", "de": "Erhebungen"},
+      "targets": [
+        {
+          "id": "agrovoc-surveys",
+          "iri": "http://aims.fao.org/aos/agrovoc/c_7537",
+          "label": "Surveys",
+          "relation": "close",
+          "source_key": "agrovoc",
+          "terminology": {"id": "agrovoc", "label": "AGROVOC"},
+          "curation_status": "draft"
+        }
+      ]
+    },
+    {
+      "id": "workshops",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/workshops",
+      "labels": {"en": "Workshops", "de": "Workshops"},
+      "targets": [
+        {
+          "id": "ncit-workshop",
+          "iri": "http://purl.obolibrary.org/obo/NCIT_C180602",
+          "label": "Workshop",
+          "relation": "close",
+          "source_key": "tib",
+          "terminology": {"id": "ncit", "label": "NCI Thesaurus"},
+          "curation_status": "draft"
+        }
+      ]
+    },
+    {
+      "id": "policies",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/policies",
+      "labels": {
+        "en": "Development of policies and guidelines for agricultural practices",
+        "de": "Entwicklung von Strategien und Leitlinien für landwirtschaftliche Praktiken"
+      },
+      "targets": [
+        {
+          "id": "agrovoc-agricultural-policies",
+          "iri": "http://aims.fao.org/aos/agrovoc/c_201",
+          "label": "agricultural policies",
+          "relation": "related",
+          "source_key": "agrovoc",
+          "terminology": {"id": "agrovoc", "label": "AGROVOC"},
+          "curation_status": "draft"
+        }
+      ]
+    },
+    {
+      "id": "other_data",
+      "uri": "https://rdmo.fairagro.net/terms/options/data_creation/other_data",
+      "labels": {"en": "Other", "de": "Andere"},
+      "targets": []
+    }
+  ]
+}

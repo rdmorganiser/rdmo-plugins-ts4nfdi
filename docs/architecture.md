@@ -11,12 +11,14 @@ RDMO API views
       |
       v
 AnnotationService  <--- plugin-owned domain models
-   /       \
-  v         v
-RDMO host  metadata resolver
-adapter        |
-               v
-        TS4NFDI Gateway
+   /       |        \
+  v        v         v
+RDMO     semantic   metadata resolver
+host     target         |
+adapter  resolver       v
+          |       TS4NFDI Gateway
+          v
+   semantic option registry
 
 AnnotationService
       |
@@ -32,8 +34,8 @@ request.
 
 Deployments can replace the production classes with the `TS4NFDI_ADAPTERS`
 Django setting. It accepts dotted paths for `interview_host`, `gateway`,
-`metadata_resolver`, and `presentation`. Unknown keys fail fast. The default
-classes remain explicit in the composition root.
+`metadata_resolver`, `presentation`, and `semantic_options`. Unknown keys fail
+fast. The default classes remain explicit in the composition root.
 
 ## Backend boundaries
 
@@ -50,21 +52,35 @@ code.
 - list annotations for the visible interview page;
 - resolve one selected value and choose its presentation.
 
-It communicates through three small protocols:
+It communicates through four small protocols:
 
 - `InterviewHost`;
+- `TargetResolver`;
 - `MetadataResolver`;
 - `PresentationAdapter`.
+
+The target resolver distinguishes the stored RDMO answer identity from the
+external terminology resource which annotates it. Direct provider selections
+resolve to themselves. A curated option can instead expand through a semantic
+option set to zero, one, or several terminology targets.
 
 ### RDMO adapter
 
 `RDMOInterviewHost` is the only backend annotation component that traverses
 RDMO projects, catalog questions, question sets, conditions, and values. It
-turns those models into occurrence-aware `AnnotationCandidate` instances.
+turns those models into occurrence-aware `InterviewAnswer` instances. It does
+not decide whether a selected RDMO option URI is itself a terminology
+resource.
 
 The public dynamic option-provider class paths remain unchanged because RDMO
 deployments persist them in settings. Their external HTTP operation is
 delegated to `GatewayProviderClient`.
+
+`PackageSemanticOptionRegistry` loads versioned, normalized mapping manifests.
+The FAIRagro data-generation provider projects one such manifest into RDMO
+options, while annotations use the same manifest to resolve selected option
+URIs into target concepts. This keeps CSV/import concerns out of both the RDMO
+adapter and the Gateway adapter.
 
 ### TS4NFDI adapters
 

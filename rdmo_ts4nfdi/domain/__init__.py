@@ -6,6 +6,7 @@ from .annotations import (
     AnnotationMatcher,
     AnnotationOccurrence,
     AnnotationSummary,
+    InterviewAnswer,
     PageAnnotations,
     PresentationDescriptor,
     PresentationPolicy,
@@ -13,6 +14,7 @@ from .annotations import (
     ResolvedMetadata,
     ResourceReference,
 )
+from .semantic_options import SemanticOption, SemanticOptionRegistry, SemanticOptionSet, SemanticTarget
 
 __all__ = [
     'AnnotationCandidate',
@@ -20,10 +22,15 @@ __all__ = [
     'AnnotationMatcher',
     'AnnotationOccurrence',
     'AnnotationSummary',
+    'InterviewAnswer',
     'PageAnnotations',
     'PresentationDescriptor',
     'PresentationPolicy',
     'QuestionContext',
     'ResolvedMetadata',
     'ResourceReference',
+    'SemanticOption',
+    'SemanticOptionRegistry',
+    'SemanticOptionSet',
+    'SemanticTarget',
 ]

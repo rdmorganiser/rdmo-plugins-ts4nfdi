@@ -3,7 +3,7 @@
 from django.conf import settings
 from django.utils.module_loading import import_string
 
-from rdmo_ts4nfdi.application import AnnotationService
+from rdmo_ts4nfdi.application import AnnotationService, SemanticAnnotationTargetResolver
 from rdmo_ts4nfdi.config import load_annotation_matchers
 
 DEFAULT_ADAPTERS = {
@@ -11,6 +11,7 @@ DEFAULT_ADAPTERS = {
     'gateway': 'rdmo_ts4nfdi.integrations.ts4nfdi.GatewayClient',
     'metadata_resolver': 'rdmo_ts4nfdi.integrations.ts4nfdi.GatewayMetadataResolver',
     'presentation': 'rdmo_ts4nfdi.presentation.AnnotationPresentationRegistry',
+    'semantic_options': 'rdmo_ts4nfdi.semantic_options.PackageSemanticOptionRegistry',
 }
 
 
@@ -28,8 +29,10 @@ def load_adapter_classes() -> dict:
 def build_annotation_service() -> AnnotationService:
     adapters = load_adapter_classes()
     gateway = adapters['gateway']()
+    semantic_options = adapters['semantic_options']()
     return AnnotationService(
         host=adapters['interview_host'](),
+        targets=SemanticAnnotationTargetResolver(semantic_options),
         metadata=adapters['metadata_resolver'](gateway),
         presentation=adapters['presentation'](),
         matchers=load_annotation_matchers(),

@@ -3,7 +3,7 @@ from collections.abc import Iterable
 from rdmo.projects.utils import check_conditions
 from rdmo.questions.models import Question, QuestionSet
 
-from rdmo_ts4nfdi.domain import AnnotationCandidate, QuestionContext
+from rdmo_ts4nfdi.domain import InterviewAnswer, QuestionContext
 from rdmo_ts4nfdi.utils import is_http_iri
 
 
@@ -18,7 +18,7 @@ class RDMOInterviewHost:
     def page_id(page) -> int:
         return page.id
 
-    def page_candidates(self, project, page) -> Iterable[AnnotationCandidate]:
+    def page_answers(self, project, page) -> Iterable[InterviewAnswer]:
         values = self._project_values(project)
 
         for question in self._flatten_questions(page.elements):
@@ -27,7 +27,10 @@ class RDMOInterviewHost:
 
             question_context = self._question_context(question)
             for value in values:
-                if value.attribute_id != question.attribute_id or not is_http_iri(value.external_id):
+                if value.attribute_id != question.attribute_id:
+                    continue
+                identifier = self._value_identifier(value)
+                if not identifier:
                     continue
                 if not check_conditions(
                     question.conditions.all(),
@@ -36,11 +39,12 @@ class RDMOInterviewHost:
                     value.set_index,
                 ):
                     continue
-                yield self._candidate(question_context, value)
+                yield self._answer(question_context, value, identifier)
 
-    def value_candidates(self, project, value) -> Iterable[AnnotationCandidate]:
-        if not is_http_iri(value.external_id):
-            raise LookupError('The selected value does not contain an HTTP IRI.')
+    def value_answers(self, project, value) -> Iterable[InterviewAnswer]:
+        identifier = self._value_identifier(value)
+        if not identifier:
+            raise LookupError('The selected value does not contain an option or HTTP IRI.')
 
         project.catalog.prefetch_elements()
         values = self._project_values(project)
@@ -54,7 +58,7 @@ class RDMOInterviewHost:
                 value.set_index,
             ):
                 continue
-            yield self._candidate(self._question_context(question), value)
+            yield self._answer(self._question_context(question), value, identifier)
 
     @staticmethod
     def _project_values(project):
@@ -75,16 +79,24 @@ class RDMOInterviewHost:
         )
 
     @staticmethod
-    def _candidate(question: QuestionContext, value) -> AnnotationCandidate:
-        return AnnotationCandidate(
+    def _answer(question: QuestionContext, value, identifier: str) -> InterviewAnswer:
+        return InterviewAnswer(
             question=question,
             value_id=value.id,
-            label=value.text,
-            iri=value.external_id,
+            label=value.label or value.text,
+            identifier=identifier,
             set_prefix=value.set_prefix,
             set_index=value.set_index,
             collection_index=value.collection_index,
         )
+
+    @staticmethod
+    def _value_identifier(value) -> str | None:
+        if value.option and is_http_iri(value.option.uri):
+            return value.option.uri
+        if is_http_iri(value.external_id):
+            return value.external_id
+        return None
 
     @classmethod
     def _flatten_questions(cls, elements):

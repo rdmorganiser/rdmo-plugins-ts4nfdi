@@ -25,6 +25,7 @@
 			<page dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/page" order="1"/>
 			<page dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/technical-data-description" order="2"/>
 			<page dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/dataset-topics-and-keywords" order="3"/>
+			<page dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/data-generation" order="4"/>
 		</pages>
 	</section>
 	<page dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/page">
@@ -340,6 +341,123 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<uri_path>rdmo-plugins-ts4nfdi/agrovoc-keywords</uri_path>
 		<dc:comment>AGROVOC concepts via the TS4NFDI API Gateway.</dc:comment>
 		<provider_key>ts4nfdi_agrovoc_keywords</provider_key>
+		<options/>
+		<conditions/>
+	</optionset>
+	<page dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/data-generation">
+		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
+		<uri_path>rdmo-plugins-ts4nfdi-example-catalog/data-generation</uri_path>
+		<dc:comment>Prototype for the FAIRagro data-generation question and its evolving terminology mappings.</dc:comment>
+		<attribute/>
+		<is_collection>False</is_collection>
+		<title lang="en">Data generation methods</title>
+		<short_title lang="en"/>
+		<help lang="en">This page separates controlled data-generation classifications from the project-specific description of instruments, software, technologies, and procedures.</help>
+		<verbose_name lang="en"/>
+		<title lang="de">Methoden der Datenerzeugung</title>
+		<short_title lang="de"/>
+		<help lang="de">Diese Seite trennt kontrollierte Klassifikationen der Datenerzeugung von der projektspezifischen Beschreibung der Instrumente, Software, Technologien und Verfahren.</help>
+		<verbose_name lang="de"/>
+		<questionsets>
+			<questionset dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/data-generation/questions" order="0"/>
+		</questionsets>
+		<questions/>
+		<conditions/>
+	</page>
+	<questionset dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/data-generation/questions">
+		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
+		<uri_path>rdmo-plugins-ts4nfdi-example-catalog/data-generation/questions</uri_path>
+		<dc:comment>The question set groups a controlled classification with a separate narrative; it is intentionally not repeatable.</dc:comment>
+		<attribute/>
+		<is_collection>False</is_collection>
+		<title lang="en">How the project generates new data</title>
+		<help lang="en">The available classifications are loaded from a versioned FAIRagro semantic option set. Draft terminology mappings are shown as option help and selected mapped options receive terminology annotations.</help>
+		<verbose_name lang="en"/>
+		<title lang="de">Wie das Projekt neue Daten erzeugt</title>
+		<help lang="de">Die verfügbaren Klassifikationen werden aus einem versionierten semantischen FAIRagro-Optionssatz geladen. Vorläufige Terminologiezuordnungen werden als Optionshilfe angezeigt; ausgewählte zugeordnete Optionen erhalten Terminologie-Annotationen.</help>
+		<verbose_name lang="de"/>
+		<questionsets/>
+		<questions>
+			<question dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/data-generation-methods" order="0"/>
+			<question dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/data-generation-details" order="1"/>
+		</questions>
+		<conditions/>
+	</questionset>
+	<question dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/data-generation-methods">
+		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
+		<uri_path>rdmo-plugins-ts4nfdi-example-catalog/data-generation-methods</uri_path>
+		<dc:comment>Prototype based on the FAIRagro data-generation question https://rdmo.fairagro.net/terms/questions/dmp4nfdi/v1-0-0/DMP/Dataset/Distribution/rdadmp_title.</dc:comment>
+		<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods"/>
+		<is_collection>True</is_collection>
+		<is_optional>False</is_optional>
+		<help lang="en">Select all methods that apply. Each stored answer keeps the stable FAIRagro option URI. Terminology mappings are curated separately and may still be incomplete; mapped selections show terminology details below the question.</help>
+		<text lang="en">Which methods, technologies, or processes are used to generate or collect new data?</text>
+		<default_text lang="en"/>
+		<verbose_name lang="en">Data generation method</verbose_name>
+		<help lang="de">Wählen Sie alle zutreffenden Methoden aus. Jede gespeicherte Antwort behält die stabile FAIRagro-Options-URI. Terminologiezuordnungen werden separat kuratiert und können noch unvollständig sein; für zugeordnete Auswahlen werden Terminologiedetails unter der Frage angezeigt.</help>
+		<text lang="de">Welche Methoden, Technologien oder Verfahren werden zur Erzeugung oder Erfassung neuer Daten eingesetzt?</text>
+		<default_text lang="de"/>
+		<verbose_name lang="de">Methode der Datenerzeugung</verbose_name>
+		<default_option/>
+		<default_external_id/>
+		<widget_type>checkbox</widget_type>
+		<value_type>option</value_type>
+		<maximum/>
+		<minimum/>
+		<step/>
+		<unit/>
+		<width/>
+		<optionsets>
+			<optionset dc:uri="https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/fairagro-data-generation"/>
+		</optionsets>
+		<conditions/>
+	</question>
+	<question dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/data-generation-details">
+		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
+		<uri_path>rdmo-plugins-ts4nfdi-example-catalog/data-generation-details</uri_path>
+		<dc:comment>Project-specific details intentionally remain separate from the controlled classifications.</dc:comment>
+		<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/data-generation-details"/>
+		<is_collection>False</is_collection>
+		<is_optional>True</is_optional>
+		<help lang="en">Include the devices, software and versions, protocols, technologies, or other procedural information needed to understand and, where applicable, reproduce the data generation.</help>
+		<text lang="en">Please describe the instruments, software, technologies, and procedures used.</text>
+		<default_text lang="en"/>
+		<verbose_name lang="en"/>
+		<help lang="de">Nennen Sie Geräte, Software und Versionen, Protokolle, Technologien oder andere Verfahrensinformationen, die zum Verständnis und gegebenenfalls zur Reproduktion der Datenerzeugung erforderlich sind.</help>
+		<text lang="de">Bitte beschreiben Sie die verwendeten Instrumente, Software, Technologien und Verfahren.</text>
+		<default_text lang="de"/>
+		<verbose_name lang="de"/>
+		<default_option/>
+		<default_external_id/>
+		<widget_type>textarea</widget_type>
+		<value_type>text</value_type>
+		<maximum/>
+		<minimum/>
+		<step/>
+		<unit/>
+		<width/>
+		<optionsets/>
+		<conditions/>
+	</question>
+	<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods">
+		<uri_prefix>https://rdmorganiser.github.io/terms</uri_prefix>
+		<key>creation_methods</key>
+		<path>project/dataset/creation_methods</path>
+		<dc:comment/>
+		<parent dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset"/>
+	</attribute>
+	<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/data-generation-details">
+		<uri_prefix>https://ts4nfdi.github.io</uri_prefix>
+		<key>data-generation-details</key>
+		<path>rdmo-plugins-ts4nfdi/data-generation-details</path>
+		<dc:comment>Project-specific narrative complementing controlled FAIRagro data-generation classifications.</dc:comment>
+		<parent dc:uri="https://ts4nfdi.github.io/terms/domain/rdmo-plugins-ts4nfdi"/>
+	</attribute>
+	<optionset dc:uri="https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/fairagro-data-generation">
+		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
+		<uri_path>rdmo-plugins-ts4nfdi/fairagro-data-generation</uri_path>
+		<dc:comment>Versioned FAIRagro classifications and draft terminology mappings provided by rdmo-plugins-ts4nfdi.</dc:comment>
+		<provider_key>fairagro_data_generation</provider_key>
 		<options/>
 		<conditions/>
 	</optionset>

@@ -11,9 +11,15 @@ export class PluginAnnotationApi {
     }
 
     detail(projectId, annotation, signal) {
+        const query = new URLSearchParams({
+            matcher: annotation.matcher_id
+        });
+        if (annotation.target_id) {
+            query.set("target", annotation.target_id);
+        }
         return this.request(
             `projects/${projectId}/annotations/${annotation.value_id}/` +
-            `?matcher=${encodeURIComponent(annotation.matcher_id)}`,
+            `?${query.toString()}`,
             signal
         );
     }

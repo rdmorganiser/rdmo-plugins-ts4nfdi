@@ -273,6 +273,7 @@ def normalize_annotation_matcher(
         source=ResourceReference(**source) if source else None,
         badge_label=normalize_optional_string(raw_matcher.get('badge_label')),
         ontology_id=normalize_optional_string(raw_matcher.get('ontology_id')),
+        mapping_set_id=normalize_optional_string(raw_matcher.get('mapping_set_id')),
         gateway_params=tuple(gateway_params.items()),
     )
 

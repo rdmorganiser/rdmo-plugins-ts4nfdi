@@ -47,6 +47,7 @@ class AnnotationMatcher:
     source: ResourceReference | None = None
     badge_label: str | None = None
     ontology_id: str | None = None
+    mapping_set_id: str | None = None
     gateway_params: tuple[tuple[str, Any], ...] = ()
 
     def matches(self, question: 'QuestionContext') -> bool:
@@ -71,6 +72,17 @@ class QuestionContext:
 
 
 @dataclass(frozen=True, slots=True)
+class InterviewAnswer:
+    question: QuestionContext
+    value_id: int
+    label: str
+    identifier: str
+    set_prefix: str
+    set_index: int
+    collection_index: int
+
+
+@dataclass(frozen=True, slots=True)
 class AnnotationCandidate:
     question: QuestionContext
     value_id: int
@@ -79,6 +91,14 @@ class AnnotationCandidate:
     set_prefix: str
     set_index: int
     collection_index: int
+    answer_id: str | None = None
+    answer_label: str | None = None
+    target_id: str | None = None
+    target_label: str | None = None
+    mapping_relation: str | None = None
+    curation_status: str | None = None
+    source: ResourceReference | None = None
+    terminology: ResourceReference | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -93,6 +113,11 @@ class AnnotationSummary:
     badge_label: str | None = None
     source: ResourceReference | None = None
     terminology: ResourceReference | None = None
+    answer_id: str | None = None
+    target_id: str | None = None
+    target_label: str | None = None
+    mapping_relation: str | None = None
+    curation_status: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -105,6 +130,11 @@ class AnnotationSummary:
             'badge_label': self.badge_label,
             'source': self.source.to_dict() if self.source else None,
             'terminology': self.terminology.to_dict() if self.terminology else None,
+            'answer_id': self.answer_id,
+            'target_id': self.target_id,
+            'target_label': self.target_label,
+            'mapping_relation': self.mapping_relation,
+            'curation_status': self.curation_status,
             'question_id': self.question_id,
         }
 

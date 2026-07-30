@@ -39,6 +39,7 @@ function appendBreadcrumb(parent, segments) {
 function annotationFingerprint(annotations) {
     return annotations.map((annotation) => [
         annotation.value_id,
+        annotation.target_id,
         annotation.kind,
         annotation.label,
         annotation.iri,
@@ -95,7 +96,7 @@ export class NativeInlineAnnotationRenderer {
                     title: terminology.iri
                 },
                 {
-                    text: annotation.label || annotation.kind,
+                    text: annotation.target_label || annotation.label || annotation.kind,
                     modifier: "term",
                     title: annotation.iri
                 }
@@ -211,6 +212,8 @@ export class NativeAnnotationDrawer {
             [translate("Terminology"), terminology.label || detail.ontology_id],
             [translate("Short form"), detail.short_form],
             [translate("Type"), (detail.entity_types || []).join(", ")],
+            [translate("Mapping relation"), detail.mapping_relation],
+            [translate("Curation status"), detail.curation_status],
             [
                 translate("Status"),
                 detail.obsolete === true

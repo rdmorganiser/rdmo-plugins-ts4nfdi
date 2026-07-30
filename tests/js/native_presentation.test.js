@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+https://github.com/rdmorganiser/rdmo/pull/1693import assert from "node:assert/strict";
 import {test} from "node:test";
 
 import {

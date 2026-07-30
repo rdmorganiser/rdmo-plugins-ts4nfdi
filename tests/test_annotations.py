@@ -1,15 +1,18 @@
 from dataclasses import replace
 from types import SimpleNamespace
 
-from rdmo_ts4nfdi.application import AnnotationService
+from rdmo_ts4nfdi.application import AnnotationService, SemanticAnnotationTargetResolver
 from rdmo_ts4nfdi.domain import (
-    AnnotationCandidate,
     AnnotationMatcher,
+    InterviewAnswer,
     PresentationDescriptor,
     PresentationPolicy,
     QuestionContext,
     ResolvedMetadata,
     ResourceReference,
+    SemanticOption,
+    SemanticOptionSet,
+    SemanticTarget,
 )
 from rdmo_ts4nfdi.presentation import AnnotationPresentationRegistry
 
@@ -24,12 +27,12 @@ def make_question(question_id=7):
     )
 
 
-def make_candidate(value_id=1, set_prefix='0', set_index=0):
-    return AnnotationCandidate(
+def make_answer(value_id=1, set_prefix='0', set_index=0):
+    return InterviewAnswer(
         question=make_question(),
         value_id=value_id,
         label='XML',
-        iri='http://edamontology.org/format_2332',
+        identifier='http://edamontology.org/format_2332',
         set_prefix=set_prefix,
         set_index=set_index,
         collection_index=value_id - 1,
@@ -52,8 +55,8 @@ def make_matcher():
 
 
 class Host:
-    def __init__(self, candidates):
-        self.candidates = candidates
+    def __init__(self, answers):
+        self.answers = answers
 
     def project_id(self, project):
         return project.id
@@ -61,11 +64,19 @@ class Host:
     def page_id(self, page):
         return page.id
 
-    def page_candidates(self, project, page):
-        return iter(self.candidates)
+    def page_answers(self, project, page):
+        return iter(self.answers)
 
-    def value_candidates(self, project, value):
-        return (candidate for candidate in self.candidates if candidate.value_id == value.id)
+    def value_answers(self, project, value):
+        return (answer for answer in self.answers if answer.value_id == value.id)
+
+
+class Registry:
+    def __init__(self, mapping_sets=()):
+        self.mapping_sets = {mapping_set.id: mapping_set for mapping_set in mapping_sets}
+
+    def get(self, mapping_set_id):
+        return self.mapping_sets[mapping_set_id]
 
 
 class Metadata:
@@ -86,21 +97,22 @@ class Presentation:
         )
 
 
-def make_service(candidates):
+def make_service(answers, mapping_sets=(), matcher=None):
     return AnnotationService(
-        host=Host(candidates),
+        host=Host(answers),
+        targets=SemanticAnnotationTargetResolver(Registry(mapping_sets)),
         metadata=Metadata(),
         presentation=Presentation(),
-        matchers=(make_matcher(),),
+        matchers=(matcher or make_matcher(),),
     )
 
 
 def test_page_annotations_group_candidates_by_question_occurrence():
     service = make_service(
         (
-            make_candidate(value_id=1, set_prefix='0', set_index=0),
-            make_candidate(value_id=2, set_prefix='0', set_index=0),
-            make_candidate(value_id=3, set_prefix='0', set_index=1),
+            make_answer(value_id=1, set_prefix='0', set_index=0),
+            make_answer(value_id=2, set_prefix='0', set_index=0),
+            make_answer(value_id=3, set_prefix='0', set_index=1),
         )
     )
 
@@ -121,7 +133,7 @@ def test_page_annotations_group_candidates_by_question_occurrence():
 
 
 def test_annotation_detail_is_composed_from_independent_adapters():
-    service = make_service((make_candidate(),))
+    service = make_service((make_answer(),))
 
     payload = service.detail(
         SimpleNamespace(id=24),
@@ -148,7 +160,8 @@ def test_annotation_detail_falls_back_when_metadata_adapter_fails():
             raise RuntimeError('Gateway unavailable')
 
     service = AnnotationService(
-        host=Host((make_candidate(),)),
+        host=Host((make_answer(),)),
+        targets=SemanticAnnotationTargetResolver(Registry()),
         metadata=BrokenMetadata(),
         presentation=Presentation(),
         matchers=(make_matcher(),),
@@ -164,6 +177,71 @@ def test_annotation_detail_falls_back_when_metadata_adapter_fails():
     assert payload['ontology_id'] == 'edam'
 
 
+def test_semantic_option_mapping_expands_answer_identity_into_annotation_target():
+    source = ResourceReference(
+        id='agroportal',
+        label='AgroPortal',
+        database='agroportal',
+        backend_type='ontoportal',
+    )
+    terminology = ResourceReference(id='INRAETHES', label='INRAE Thesaurus')
+    mapping_set = SemanticOptionSet(
+        id='fairagro-data-generation',
+        version='draft.1',
+        options=(
+            SemanticOption(
+                id='experiment_data',
+                uri='https://example.test/options/experiment_data',
+                labels=(('en', 'Field trials'),),
+                targets=(
+                    SemanticTarget(
+                        id='inrae-field-experiment',
+                        iri='http://opendata.inrae.fr/thesaurusINRAE/c_17625',
+                        label='field experiment',
+                        relation='close',
+                        source=source,
+                        terminology=terminology,
+                    ),
+                ),
+            ),
+        ),
+    )
+    matcher = replace(
+        make_matcher(),
+        mapping_set_id='fairagro-data-generation',
+        presentation=PresentationPolicy(adapter='native'),
+        source=None,
+        ontology_id=None,
+        gateway_params=(),
+    )
+    answer = replace(
+        make_answer(),
+        label='Field trials',
+        identifier='https://example.test/options/experiment_data',
+    )
+    service = make_service((answer,), (mapping_set,), matcher)
+
+    summary = service.list_page(SimpleNamespace(id=24), SimpleNamespace(id=341)).to_dict()['occurrences'][0][
+        'annotations'
+    ][0]
+    detail = service.detail(
+        SimpleNamespace(id=24),
+        SimpleNamespace(id=1),
+        matcher_id='formats',
+        target_id='inrae-field-experiment',
+    ).to_dict()
+
+    assert summary['label'] == 'Field trials'
+    assert summary['iri'] == 'http://opendata.inrae.fr/thesaurusINRAE/c_17625'
+    assert summary['target_id'] == 'inrae-field-experiment'
+    assert summary['target_label'] == 'field experiment'
+    assert summary['mapping_relation'] == 'close'
+    assert summary['source']['database'] == 'agroportal'
+    assert summary['terminology']['id'] == 'INRAETHES'
+    assert detail['label'] == 'field experiment'
+    assert detail['ontology_id'] == 'INRAETHES'
+
+
 def test_tss_presentation_descriptor_keeps_gateway_source_parameters():
     matcher = replace(
         make_matcher(),
@@ -174,7 +252,7 @@ def test_tss_presentation_descriptor_keeps_gateway_source_parameters():
         ),
     )
     annotation = (
-        make_service((make_candidate(),))
+        make_service((make_answer(),))
         .list_page(
             SimpleNamespace(id=24),
             SimpleNamespace(id=341),
@@ -214,7 +292,7 @@ def test_custom_presentation_descriptor_passes_matcher_options_to_browser():
         ),
     )
     annotation = (
-        make_service((make_candidate(),))
+        make_service((make_answer(),))
         .list_page(
             SimpleNamespace(id=24),
             SimpleNamespace(id=341),

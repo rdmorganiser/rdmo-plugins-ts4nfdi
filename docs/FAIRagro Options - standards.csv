@@ -1,0 +1,15 @@
+"What standards, ontologies, classifications, etc. are used to describe the data and contextual information?",,,
+TerminologyName,available in Standards Inventory,ID in Standards Inventory (https://github.com/fairagro/inkgraph/blob/main/data/standards.ttl),comment
+ICASA,yes,http://www.fairagro.net/inventory/769e0664-a578-47d4-b83c-306568bfba38,/
+MIAPPE,yes ,http://www.fairagro.net/inventory/d1cd050f-4e3b-449f-a447-49d6d04afd0d,/
+OGC SensorThings API,no,/,not really a terminology but a collection of Schemas / APIs
+MCPD,no,/,"not really a terminology but a data format. It is available as a term in the EDAM ontology, maybe we could use it as a concept, not as a terminology itself (http://edamontology.org/format_3777). EDAM is not available in the Standardy Inventory"
+EPPO Codes,yes,http://www.fairagro.net/inventory/1dcdb02a-b0b3-4aae-9b06-4bb0cca5f93a,/
+DataCite Metadata Schema,yes,http://www.fairagro.net/inventory/5b35d4a2-c7fb-44f7-ad33-acb,/
+Dublin Core Terms,yes,http://www.fairagro.net/inventory/5bf11bd8-7c5a-4c61-9289-fc66e2865591,/
+Schema.org,yes,http://www.fairagro.net/inventory/83af2910-4fda-476b-bf9f-dc7c2dccea72,/
+SOSA/SSN Ontolog,yes,http://www.fairagro.net/inventory/bc8ec0dc-f531-4576-a188-cf8281a16ff9,/
+Crop Ontology,yes,http://www.fairagro.net/inventory/60c7a060-f99f-4a84-8970-6e60b6f97667,/
+Plant trait Ontology,yes,http://www.fairagro.net/inventory/0a9ddfc9-1e35-4f89-9641-717f5d532ec1,/
+PPEO Ontology,no,/,/
+AGROVOC,yes,http://www.fairagro.net/inventory/547d925d-ee4a-44b6-a811-5673aafe83ac,/
