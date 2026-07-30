@@ -3,6 +3,7 @@
   "id": "fairagro-data-generation",
   "version": "2026-07-30-draft.1",
   "source_name": "FAIRagro Options - data_generation.csv",
+  "source_sha256": "c7bee61e2173f7613c8892b75f131582b8115a19e648b5be069a394ea9c35b8c",
   "options": [
     {
       "id": "experiment_data",

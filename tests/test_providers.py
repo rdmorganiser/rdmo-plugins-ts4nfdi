@@ -1,4 +1,7 @@
+import csv
+import hashlib
 import importlib
+import json
 import sys
 import types
 import xml.etree.ElementTree as ElementTree
@@ -324,6 +327,126 @@ def test_fairagro_data_generation_provider_uses_stable_option_ids_and_mapping_he
     assert 'field experiment' in options[0]['help']
     unmapped = next(option for option in options if option['id'].endswith('/field_sampling'))
     assert 'No curated terminology mapping is available yet.' in unmapped['help']
+
+
+def test_fairagro_data_generation_curator_csv_matches_deployed_manifest():
+    csv_path = ROOT / 'docs/FAIRagro Options - data_generation.csv'
+    manifest_path = ROOT / 'rdmo_ts4nfdi/data/semantic_option_sets/fairagro_data_generation.json'
+    original_columns = [
+        'TermDE',
+        'TermEN',
+        'TerminologyConceptURI',
+        'TerminologyLabel',
+        'TerminologyProvider',
+        'Comment',
+    ]
+    added_columns = [
+        'OptionID',
+        'OptionURI',
+        'OptionLabelDE',
+        'OptionLabelEN',
+        'Selectable',
+        'TargetID',
+        'TerminologyID',
+        'SourceKey',
+        'MappingRelation',
+        'CurationStatus',
+        'CompositionID',
+        'CompositionOperator',
+        'ComponentOrder',
+        'ComponentRole',
+    ]
+
+    csv_bytes = csv_path.read_bytes()
+    with csv_path.open(encoding='utf-8', newline='') as csv_file:
+        title_row = next(csv.reader(csv_file))
+        reader = csv.DictReader(csv_file)
+        assert title_row[0].startswith('How does your project generate new data?')
+        assert reader.fieldnames == original_columns + added_columns
+        rows = list(reader)
+
+    manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+    assert manifest['source_sha256'] == hashlib.sha256(csv_bytes).hexdigest()
+
+    manifest_options = {option['uri']: option for option in manifest['options']}
+    csv_option_uris = {row['OptionURI'] for row in rows}
+    assert csv_option_uris <= set(manifest_options)
+
+    option_columns = [
+        'OptionID',
+        'OptionURI',
+        'OptionLabelDE',
+        'OptionLabelEN',
+        'Selectable',
+    ]
+    target_columns = [
+        'TargetID',
+        'TerminologyID',
+        'SourceKey',
+        'MappingRelation',
+        'CurationStatus',
+    ]
+    composition_columns = [
+        'CompositionID',
+        'CompositionOperator',
+        'ComponentOrder',
+    ]
+
+    for option_uri in csv_option_uris:
+        option = manifest_options[option_uri]
+        option_rows = [row for row in rows if row['OptionURI'] == option_uri]
+        assert option_rows
+        for column in option_columns:
+            assert len({row[column] for row in option_rows}) == 1
+
+        first_row = option_rows[0]
+        assert first_row['OptionID'] == option['id']
+        assert first_row['OptionLabelEN'] == option['labels']['en']
+        assert first_row['OptionLabelDE'] == option['labels']['de']
+        assert (first_row['Selectable'] == 'true') == option.get('selectable', True)
+
+        csv_targets = {
+            (
+                row['TargetID'],
+                row['TerminologyConceptURI'],
+                row['TermEN'] or row['TermDE'],
+                row['TerminologyID'],
+                row['SourceKey'],
+                row['MappingRelation'],
+                row['CurationStatus'],
+            )
+            for row in option_rows
+            if row['TargetID']
+        }
+        manifest_targets = {
+            (
+                target['id'],
+                target['iri'],
+                target['label'],
+                target['terminology']['id'],
+                target['source_key'],
+                target['relation'],
+                target.get('curation_status', 'draft'),
+            )
+            for target in option['targets']
+        }
+        assert csv_targets == manifest_targets
+
+        for row in option_rows:
+            if row['TargetID']:
+                assert all(row[column] for column in target_columns)
+                assert row['TerminologyConceptURI'] not in {'', '/'}
+            else:
+                assert not any(row[column] for column in target_columns)
+                assert row['TerminologyConceptURI'] in {'', '/'}
+
+            has_composition = any(row[column] for column in composition_columns)
+            if has_composition:
+                assert row['MappingRelation'] == 'component'
+                assert all(row[column] for column in composition_columns)
+                assert int(row['ComponentOrder']) > 0
+            else:
+                assert row['MappingRelation'] != 'component'
 
 
 def test_collection_terminologies_provider_get_options_returns_collection_terms(provider_modules):
@@ -1006,7 +1129,7 @@ def test_example_catalog_contains_provider_backed_fairagro_data_generation_quest
         f'{base_uri}/data-generation-details',
     ]
     assert methods.findtext('is_collection') == 'True'
-    assert methods.findtext('widget_type') == 'checkbox'
+    assert methods.findtext('widget_type') == 'select_creatable'
     assert methods.find('attribute').get(uri_attribute) == (
         'https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods'
     )

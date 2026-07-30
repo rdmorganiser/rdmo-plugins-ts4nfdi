@@ -82,6 +82,10 @@ options, while annotations use the same manifest to resolve selected option
 URIs into target concepts. This keeps CSV/import concerns out of both the RDMO
 adapter and the Gateway adapter.
 
+The curator-facing CSV contract, compilation workflow, composition model, and
+stable-identifier rules are documented in
+[`semantic-option-workflow.md`](semantic-option-workflow.md).
+
 ### TS4NFDI adapters
 
 `GatewayClient` owns the authenticated, cached, allowlisted Gateway transport

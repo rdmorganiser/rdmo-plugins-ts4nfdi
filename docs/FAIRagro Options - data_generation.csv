@@ -1,21 +1,21 @@
 "How does your project generate new data? Which tools, software, technologies or processes are used to generate or collect them?",,,,,
-TermDE,TermEN,TerminologyConceptURI,TerminologyLabel,TerminologyProvider,Comment
-,field experiment,http://opendata.inrae.fr/thesaurusINRAE/c_17625,INRAE Thesaurus,Agroportal,originally: Field trials
-Feldbewertung / Bonitur,Field scoring,/,/,/,/
-In-situ-Messungen,In situ measurements,http://opendata.inrae.fr/thesaurusINRAE/c_17114,INRAE Thesaurus,Agroportal,/
-,greenhouse experiment,http://opendata.inrae.fr/thesaurusINRAE/c_17552,INRAE Thesaurus,Agroportal,originally: experiments in the greenhouse
-,laboratory experimentation,http://opendata.inrae.fr/thesaurusINRAE/c_17520,INRAE Thesaurus,Agroportal,originally:  lab experiments
-Fernerkundung (Remote-Sensing),Remote sensing,https://lod.nal.usda.gov/nalt/35112,National Agricultural Library Thesaurus,Agroportal,/
-Abundanzdaten,Abundance data,/,/,/,/
-Sensordaten (z. B. von Drohnen oder Feldrobotern),Sensor data (e.g. from drones or field robots),/,/,/,/
-Roboter und UAVs (unbemannte Luftfahrzeuge),Robots and UAVs (unmanned-aerial-vehicles),/,/,/,/
-Bildverarbeitung,Image data processing,http://aims.fao.org/aos/agrovoc/c_37359,AGROVOC,AGROVOC,/
-,machine learning,http://www.yso.fi/onto/yso/p21846,Agriculture and Forestry Ontology,Agroportal,
-Simulation,Simulation,http://aims.fao.org/aos/agrovoc/c_5209,AGROVOC,AGROVOC,/
-Algorithmen,Algorithms,http://aims.fao.org/aos/agrovoc/c_295ae038,AGROVOC,AGROVOC,/
-Synthetische Datengenerierung,Synthetic data generation,/,/,/,/
-"Analyse, Ableitung oder Zusammenstellung aus anderen Datenquellen","Analysis, derivation or compilation from other data sources",/,/,/,/
-Bewertung von Daten aus der Literatur,Scoring data from literature,/,/,/,/
-Erhebungen,Surveys,http://aims.fao.org/aos/agrovoc/c_7537,AGROVOC,AGROVOC,/
-Workshop,Workshop,http://purl.obolibrary.org/obo/NCIT_C180602,ncit,tib,there are alternatives
-,agricultural policies,http://aims.fao.org/aos/agrovoc/c_201,AGROVOC,AGROVOC,originally: Development of policies and guidelines for agricultural practices
+TermDE,TermEN,TerminologyConceptURI,TerminologyLabel,TerminologyProvider,Comment,OptionID,OptionURI,OptionLabelDE,OptionLabelEN,Selectable,TargetID,TerminologyID,SourceKey,MappingRelation,CurationStatus,CompositionID,CompositionOperator,ComponentOrder,ComponentRole
+,field experiment,http://opendata.inrae.fr/thesaurusINRAE/c_17625,INRAE Thesaurus,Agroportal,originally: Field trials,experiment_data,https://rdmo.fairagro.net/terms/options/data_creation/experiment_data,Feldversuche,Field trials,true,inrae-field-experiment,INRAETHES,agroportal,close,draft,,,,
+Feldbewertung / Bonitur,Field scoring,/,/,/,/,field_scoring,https://rdmo.fairagro.net/terms/options/data_creation/field_scoring,Feldbewertung / Bonitur,Field scoring,true,,,,,,,,,
+In-situ-Messungen,In situ measurements,http://opendata.inrae.fr/thesaurusINRAE/c_17114,INRAE Thesaurus,Agroportal,/,insitu,https://rdmo.fairagro.net/terms/options/data_creation/insitu,In-situ-Messungen,In situ measurements,true,inrae-in-situ-measurement,INRAETHES,agroportal,close,draft,,,,
+,greenhouse experiment,http://opendata.inrae.fr/thesaurusINRAE/c_17552,INRAE Thesaurus,Agroportal,originally: experiments in the greenhouse,greenhouse,https://rdmo.fairagro.net/terms/options/data_creation/greenhouse,Experimente im Gewächshaus,Experiments in the greenhouse,true,inrae-greenhouse-experiment,INRAETHES,agroportal,close,draft,,,,
+,laboratory experimentation,http://opendata.inrae.fr/thesaurusINRAE/c_17520,INRAE Thesaurus,Agroportal,originally:  lab experiments,lab,https://rdmo.fairagro.net/terms/options/data_creation/lab,Laborversuche,Lab experiments,true,inrae-laboratory-experiment,INRAETHES,agroportal,close,draft,,,,
+Fernerkundung (Remote-Sensing),Remote sensing,https://lod.nal.usda.gov/nalt/35112,National Agricultural Library Thesaurus,Agroportal,/,remote_sensing,https://rdmo.fairagro.net/terms/options/data_creation/remote_sensing,Fernerkundung (Remote-Sensing),Remote sensing,true,nalt-remote-sensing,NALT,agroportal,close,draft,,,,
+Abundanzdaten,Abundance data,/,/,/,/,abundance,https://rdmo.fairagro.net/terms/options/data_creation/abundance,Abundanzdaten,Abundance data,true,,,,,,,,,
+Sensordaten (z. B. von Drohnen oder Feldrobotern),Sensor data (e.g. from drones or field robots),/,/,/,/,sensor_data,https://rdmo.fairagro.net/terms/options/data_creation/sensor_data,Sensordaten (z. B. von Drohnen oder Feldrobotern),Sensor data (e.g. from drones or field robots),true,,,,,,,,,
+Roboter und UAVs (unbemannte Luftfahrzeuge),Robots and UAVs (unmanned-aerial-vehicles),/,/,/,/,Robots,https://rdmo.fairagro.net/terms/options/data_creation/Robots,Roboter und UAVs (unbemannte Luftfahrzeuge),Robots and UAVs (unmanned-aerial-vehicles),true,,,,,,,,,
+Bildverarbeitung,Image data processing,http://aims.fao.org/aos/agrovoc/c_37359,AGROVOC,AGROVOC,/,image_data_processing,https://rdmo.fairagro.net/terms/options/data_creation/image_data_processing,Bildverarbeitung,Image data processing,true,agrovoc-image-processing,agrovoc,agrovoc,close,draft,,,,
+,machine learning,http://www.yso.fi/onto/yso/p21846,Agriculture and Forestry Ontology,Agroportal,,ml_models,https://rdmo.fairagro.net/terms/options/data_creation/ml_models,Machine Learning Modelle,Machine learning models,true,afo-machine-learning,AFO,agroportal,close,draft,,,,
+Simulation,Simulation,http://aims.fao.org/aos/agrovoc/c_5209,AGROVOC,AGROVOC,/,simulations,https://rdmo.fairagro.net/terms/options/data_creation/simulations,Simulationen (z. B. über Erntemodelle),Simulations (e.g. via crop models),true,agrovoc-simulation,agrovoc,agrovoc,close,draft,,,,
+Algorithmen,Algorithms,http://aims.fao.org/aos/agrovoc/c_295ae038,AGROVOC,AGROVOC,/,software_data,https://rdmo.fairagro.net/terms/options/data_creation/software_data,Algorithmen,Algorithms,true,agrovoc-algorithms,agrovoc,agrovoc,close,draft,,,,
+Synthetische Datengenerierung,Synthetic data generation,/,/,/,/,synthetic_data,https://rdmo.fairagro.net/terms/options/data_creation/synthetic_data,Synthetische Datengenerierung,Synthetic data generation,true,,,,,,,,,
+"Analyse, Ableitung oder Zusammenstellung aus anderen Datenquellen","Analysis, derivation or compilation from other data sources",/,/,/,/,analysis_other_sources,https://rdmo.fairagro.net/terms/options/data_creation/analysis_other_sources,"Analyse, Ableitung oder Zusammenstellung aus anderen Datenquellen","Analysis, derivation or compilation from other data sources",true,,,,,,,,,
+Bewertung von Daten aus der Literatur,Scoring data from literature,/,/,/,/,scoring_data_literature,https://rdmo.fairagro.net/terms/options/data_creation/scoring_data_literature,Bewertung von Daten aus der Literatur,Scoring data from literature,true,,,,,,,,,
+Erhebungen,Surveys,http://aims.fao.org/aos/agrovoc/c_7537,AGROVOC,AGROVOC,/,survey_data,https://rdmo.fairagro.net/terms/options/data_creation/survey_data,Erhebungen,Surveys,true,agrovoc-surveys,agrovoc,agrovoc,close,draft,,,,
+Workshop,Workshop,http://purl.obolibrary.org/obo/NCIT_C180602,ncit,tib,there are alternatives,workshops,https://rdmo.fairagro.net/terms/options/data_creation/workshops,Workshops,Workshops,true,ncit-workshop,ncit,tib,close,draft,,,,
+,agricultural policies,http://aims.fao.org/aos/agrovoc/c_201,AGROVOC,AGROVOC,originally: Development of policies and guidelines for agricultural practices,policies,https://rdmo.fairagro.net/terms/options/data_creation/policies,Entwicklung von Strategien und Leitlinien für landwirtschaftliche Praktiken,Development of policies and guidelines for agricultural practices,true,agrovoc-agricultural-policies,agrovoc,agrovoc,related,draft,,,,
