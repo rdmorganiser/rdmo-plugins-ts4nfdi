@@ -215,6 +215,27 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		</questions>
 		<conditions/>
 	</page>
+	<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/id">
+		<uri_prefix>https://rdmorganiser.github.io/terms</uri_prefix>
+		<key>id</key>
+		<path>project/dataset/id</path>
+		<dc:comment>Short ID for a dataset, used as questionset attribute for dataset related questionsets.</dc:comment>
+		<parent dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset"/>
+	</attribute>
+	<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset">
+		<uri_prefix>https://rdmorganiser.github.io/terms</uri_prefix>
+		<key>dataset</key>
+		<path>project/dataset</path>
+		<dc:comment/>
+		<parent dc:uri="https://rdmorganiser.github.io/terms/domain/project"/>
+	</attribute>
+	<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project">
+		<uri_prefix>https://rdmorganiser.github.io/terms</uri_prefix>
+		<key>project</key>
+		<path>project</path>
+		<dc:comment/>
+		<parent/>
+	</attribute>
 	<question dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/data-formats">
 		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
 		<uri_path>rdmo-plugins-ts4nfdi-example-catalog/data-formats</uri_path>
@@ -244,33 +265,12 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		</optionsets>
 		<conditions/>
 	</question>
-	<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/id">
-		<uri_prefix>https://rdmorganiser.github.io/terms</uri_prefix>
-		<key>id</key>
-		<path>project/dataset/id</path>
-		<dc:comment>Short ID for a dataset, used as questionset attribute for dataset related questionsets.</dc:comment>
-		<parent dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset"/>
-	</attribute>
 	<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/format">
 		<uri_prefix>https://rdmorganiser.github.io/terms</uri_prefix>
 		<key>format</key>
 		<path>project/dataset/format</path>
 		<dc:comment/>
 		<parent dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset"/>
-	</attribute>
-	<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset">
-		<uri_prefix>https://rdmorganiser.github.io/terms</uri_prefix>
-		<key>dataset</key>
-		<path>project/dataset</path>
-		<dc:comment/>
-		<parent dc:uri="https://rdmorganiser.github.io/terms/domain/project"/>
-	</attribute>
-	<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project">
-		<uri_prefix>https://rdmorganiser.github.io/terms</uri_prefix>
-		<key>project</key>
-		<path>project</path>
-		<dc:comment/>
-		<parent/>
 	</attribute>
 	<optionset dc:uri="https://rdmo.fairagro.net/terms/options/file_format_ts4nfdi">
 		<uri_prefix>https://rdmo.fairagro.net/terms</uri_prefix>
@@ -286,11 +286,11 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<dc:comment>Prototype for controlled discovery keywords described in docs/use-cases.md.</dc:comment>
 		<attribute/>
 		<is_collection>False</is_collection>
-		<title lang="en">Dataset topics and discovery keywords</title>
+		<title lang="en">Dataset topics &amp; discovery keywords</title>
 		<short_title lang="en"/>
 		<help lang="en">This page demonstrates controlled agricultural keywords with optional terminology annotations.</help>
 		<verbose_name lang="en"/>
-		<title lang="de">Datensatzthemen und Suchbegriffe</title>
+		<title lang="de">Datensatzthemen &amp; Suchbegriffe</title>
 		<short_title lang="de"/>
 		<help lang="de">Diese Seite demonstriert kontrollierte landwirtschaftliche Suchbegriffe mit optionalen Terminologie-Annotationen.</help>
 		<verbose_name lang="de"/>
@@ -400,7 +400,7 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<verbose_name lang="de">Methode der Datenerzeugung</verbose_name>
 		<default_option/>
 		<default_external_id/>
-		<widget_type>checkbox</widget_type>
+		<widget_type>select_creatable</widget_type>
 		<value_type>option</value_type>
 		<maximum/>
 		<minimum/>
@@ -412,6 +412,21 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		</optionsets>
 		<conditions/>
 	</question>
+	<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods">
+		<uri_prefix>https://rdmorganiser.github.io/terms</uri_prefix>
+		<key>creation_methods</key>
+		<path>project/dataset/creation_methods</path>
+		<dc:comment/>
+		<parent dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset"/>
+	</attribute>
+	<optionset dc:uri="https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/fairagro-data-generation">
+		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
+		<uri_path>rdmo-plugins-ts4nfdi/fairagro-data-generation</uri_path>
+		<dc:comment>Versioned FAIRagro classifications and draft terminology mappings provided by rdmo-plugins-ts4nfdi.</dc:comment>
+		<provider_key>fairagro_data_generation</provider_key>
+		<options/>
+		<conditions/>
+	</optionset>
 	<question dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/data-generation-details">
 		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
 		<uri_path>rdmo-plugins-ts4nfdi-example-catalog/data-generation-details</uri_path>
@@ -439,13 +454,6 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<optionsets/>
 		<conditions/>
 	</question>
-	<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods">
-		<uri_prefix>https://rdmorganiser.github.io/terms</uri_prefix>
-		<key>creation_methods</key>
-		<path>project/dataset/creation_methods</path>
-		<dc:comment/>
-		<parent dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset"/>
-	</attribute>
 	<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/data-generation-details">
 		<uri_prefix>https://ts4nfdi.github.io</uri_prefix>
 		<key>data-generation-details</key>
@@ -453,12 +461,4 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<dc:comment>Project-specific narrative complementing controlled FAIRagro data-generation classifications.</dc:comment>
 		<parent dc:uri="https://ts4nfdi.github.io/terms/domain/rdmo-plugins-ts4nfdi"/>
 	</attribute>
-	<optionset dc:uri="https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/fairagro-data-generation">
-		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
-		<uri_path>rdmo-plugins-ts4nfdi/fairagro-data-generation</uri_path>
-		<dc:comment>Versioned FAIRagro classifications and draft terminology mappings provided by rdmo-plugins-ts4nfdi.</dc:comment>
-		<provider_key>fairagro_data_generation</provider_key>
-		<options/>
-		<conditions/>
-	</optionset>
 </rdmo>
