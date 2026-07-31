@@ -296,55 +296,11 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<verbose_name lang="de"/>
 		<questionsets/>
 		<questions>
-			<question dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/dataset-keywords-agrovoc" order="0"/>
 			<question dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/dataset-keywords" order="1"/>
+			<question dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/dataset-keywords-agrovoc" order="2"/>
 		</questions>
 		<conditions/>
 	</page>
-	<question dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/dataset-keywords-agrovoc">
-		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
-		<uri_path>rdmo-plugins-ts4nfdi-example-catalog/dataset-keywords-agrovoc</uri_path>
-		<dc:comment>Prototype follow-up for https://rdmo.fairagro.net/terms/questions/horizon-europe/fair_data/findable_data/metadata_keywords</dc:comment>
-		<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/dataset-keywords-agrovoc"/>
-		<is_collection>True</is_collection>
-		<is_optional>True</is_optional>
-		<help lang="en">Search AGROVOC for agricultural topics, crops, practices, materials, or processes. Select a controlled concept when a suitable result exists; its stable IRI enables the terminology annotation. You can also create a free-text keyword, but it will not have terminology details.</help>
-		<text lang="en">Which keywords will be included in the dataset metadata?</text>
-		<default_text lang="en"/>
-		<verbose_name lang="en">Keyword</verbose_name>
-		<help lang="de">Durchsuchen Sie AGROVOC nach landwirtschaftlichen Themen, Kulturpflanzen, Praktiken, Materialien oder Prozessen. Wählen Sie nach Möglichkeit ein kontrolliertes Konzept; seine stabile IRI ermöglicht die Terminologie-Annotation. Sie können auch einen freien Suchbegriff erstellen, für diesen stehen jedoch keine Terminologie-Details zur Verfügung.</help>
-		<text lang="de">Welche Suchbegriffe werden in die Metadaten des Datensatzes aufgenommen?</text>
-		<default_text lang="de"/>
-		<verbose_name lang="de">Suchbegriff</verbose_name>
-		<default_option/>
-		<default_external_id/>
-		<widget_type>select_creatable</widget_type>
-		<value_type>option</value_type>
-		<maximum/>
-		<minimum/>
-		<step/>
-		<unit/>
-		<width/>
-		<optionsets>
-			<optionset dc:uri="https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/agrovoc-keywords"/>
-		</optionsets>
-		<conditions/>
-	</question>
-	<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/dataset-keywords-agrovoc">
-		<uri_prefix>https://ts4nfdi.github.io</uri_prefix>
-		<key>dataset-keywords-agrovoc</key>
-		<path>rdmo-plugins-ts4nfdi/dataset-keywords-agrovoc</path>
-		<dc:comment>Controlled AGROVOC concepts or unmatched free-text discovery keywords.</dc:comment>
-		<parent dc:uri="https://ts4nfdi.github.io/terms/domain/rdmo-plugins-ts4nfdi"/>
-	</attribute>
-	<optionset dc:uri="https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/agrovoc-keywords">
-		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
-		<uri_path>rdmo-plugins-ts4nfdi/agrovoc-keywords</uri_path>
-		<dc:comment>AGROVOC concepts via the TS4NFDI API Gateway.</dc:comment>
-		<provider_key>ts4nfdi_agrovoc_keywords</provider_key>
-		<options/>
-		<conditions/>
-	</optionset>
 	<question dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/dataset-keywords">
 		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
 		<uri_path>rdmo-plugins-ts4nfdi-example-catalog/dataset-keywords</uri_path>
@@ -386,6 +342,50 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<uri_path>rdmo-plugins-ts4nfdi/keywords</uri_path>
 		<dc:comment/>
 		<provider_key>ts4nfdi_keywords</provider_key>
+		<options/>
+		<conditions/>
+	</optionset>
+	<question dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/dataset-keywords-agrovoc">
+		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
+		<uri_path>rdmo-plugins-ts4nfdi-example-catalog/dataset-keywords-agrovoc</uri_path>
+		<dc:comment>Prototype follow-up for https://rdmo.fairagro.net/terms/questions/horizon-europe/fair_data/findable_data/metadata_keywords</dc:comment>
+		<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/dataset-keywords-agrovoc"/>
+		<is_collection>True</is_collection>
+		<is_optional>True</is_optional>
+		<help lang="en">Search AGROVOC for agricultural topics, crops, practices, materials, or processes. Select a controlled concept when a suitable result exists; its stable IRI enables the terminology annotation. You can also create a free-text keyword, but it will not have terminology details.</help>
+		<text lang="en">Which keywords will be included in the dataset metadata?</text>
+		<default_text lang="en"/>
+		<verbose_name lang="en">Keyword</verbose_name>
+		<help lang="de">Durchsuchen Sie AGROVOC nach landwirtschaftlichen Themen, Kulturpflanzen, Praktiken, Materialien oder Prozessen. Wählen Sie nach Möglichkeit ein kontrolliertes Konzept; seine stabile IRI ermöglicht die Terminologie-Annotation. Sie können auch einen freien Suchbegriff erstellen, für diesen stehen jedoch keine Terminologie-Details zur Verfügung.</help>
+		<text lang="de">Welche Suchbegriffe werden in die Metadaten des Datensatzes aufgenommen?</text>
+		<default_text lang="de"/>
+		<verbose_name lang="de">Suchbegriff</verbose_name>
+		<default_option/>
+		<default_external_id/>
+		<widget_type>select_creatable</widget_type>
+		<value_type>option</value_type>
+		<maximum/>
+		<minimum/>
+		<step/>
+		<unit/>
+		<width/>
+		<optionsets>
+			<optionset dc:uri="https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/agrovoc-keywords"/>
+		</optionsets>
+		<conditions/>
+	</question>
+	<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/dataset-keywords-agrovoc">
+		<uri_prefix>https://ts4nfdi.github.io</uri_prefix>
+		<key>dataset-keywords-agrovoc</key>
+		<path>rdmo-plugins-ts4nfdi/dataset-keywords-agrovoc</path>
+		<dc:comment>Controlled AGROVOC concepts or unmatched free-text discovery keywords.</dc:comment>
+		<parent dc:uri="https://ts4nfdi.github.io/terms/domain/rdmo-plugins-ts4nfdi"/>
+	</attribute>
+	<optionset dc:uri="https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/agrovoc-keywords">
+		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
+		<uri_path>rdmo-plugins-ts4nfdi/agrovoc-keywords</uri_path>
+		<dc:comment>AGROVOC concepts via the TS4NFDI API Gateway.</dc:comment>
+		<provider_key>ts4nfdi_agrovoc_keywords</provider_key>
 		<options/>
 		<conditions/>
 	</optionset>

@@ -196,8 +196,8 @@ presentation = { adapter = "native" }
 [[frontend.annotations.matchers]]
 id = "example-keyword"
 question_uri = "https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/dataset-keywords"
-attribute_uri = "https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/dataset-keywords"
-optionset_uri = "https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/keywords"
+attribute_uri = "https://rdmo.fairagro.net/terms/domain/rdmo-plugins-ts4nfdi/dataset-keywords"
+optionset_uri = "https://rdmo.fairagro.net/terms/options/rdmo-plugins-ts4nfdi/keywords"
 resource_type = "entity"
 badge_label = "Terminology"
 presentation = { adapter = "native" }

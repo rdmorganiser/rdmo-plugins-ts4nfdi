@@ -1008,9 +1008,8 @@ def test_example_catalog_contains_controlled_agrovoc_keyword_question():
     question = elements[f'{base_uri}/dataset-keywords-agrovoc']
     attribute = elements[attribute_uri]
     optionset = elements[optionset_uri]
-
     assert section.find("pages/page[@order='3']").get(uri_attribute) == (f'{base_uri}/dataset-topics-and-keywords')
-    assert page.find('questions/question').get(uri_attribute) == f'{base_uri}/dataset-keywords-agrovoc'
+    assert f'{base_uri}/dataset-keywords-agrovoc' in  [i.get(uri_attribute) for i in page.findall('questions/question')]
     assert question.findtext('is_collection') == 'True'
     assert question.findtext('is_optional') == 'True'
     assert question.findtext('widget_type') == 'select_creatable'
