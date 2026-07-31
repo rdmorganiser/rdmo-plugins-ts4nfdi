@@ -999,25 +999,25 @@ def test_example_catalog_contains_controlled_agrovoc_keyword_question():
     root = ElementTree.parse(catalog_path).getroot()
     uri_attribute = '{http://purl.org/dc/elements/1.1/}uri'
     base_uri = 'https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog'
-    attribute_uri = 'https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/dataset-keywords'
+    attribute_uri = 'https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/dataset-keywords-agrovoc'
     optionset_uri = 'https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/agrovoc-keywords'
 
     elements = {element.get(uri_attribute): element for element in root if element.get(uri_attribute)}
     section = elements[f'{base_uri}/section']
     page = elements[f'{base_uri}/dataset-topics-and-keywords']
-    question = elements[f'{base_uri}/dataset-keywords']
+    question = elements[f'{base_uri}/dataset-keywords-agrovoc']
     attribute = elements[attribute_uri]
     optionset = elements[optionset_uri]
 
     assert section.find("pages/page[@order='3']").get(uri_attribute) == (f'{base_uri}/dataset-topics-and-keywords')
-    assert page.find('questions/question').get(uri_attribute) == f'{base_uri}/dataset-keywords'
+    assert page.find('questions/question').get(uri_attribute) == f'{base_uri}/dataset-keywords-agrovoc'
     assert question.findtext('is_collection') == 'True'
     assert question.findtext('is_optional') == 'True'
     assert question.findtext('widget_type') == 'select_creatable'
     assert question.findtext('value_type') == 'option'
     assert question.find('attribute').get(uri_attribute) == attribute_uri
     assert question.find('optionsets/optionset').get(uri_attribute) == optionset_uri
-    assert attribute.findtext('key') == 'dataset-keywords'
+    assert attribute.findtext('key') == 'dataset-keywords-agrovoc'
     assert optionset.findtext('provider_key') == 'ts4nfdi_agrovoc_keywords'
 
 

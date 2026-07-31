@@ -61,6 +61,22 @@ iri_prefixes = ["http://aims.fao.org/aos/agrovoc/"]
 display = ["iri", "label", "descriptions", "ontology", "ontology_iri", "short_form", "source", "source_name", "backend_type", "type"]
 limit = 30
 
+[providers.ts4nfdi_keywords]
+endpoint = "search"
+display = [
+    "iri",
+    "label",
+    "descriptions",
+    "ontology",
+    "ontology_iri",
+    "short_form",
+    "source",
+    "source_name",
+    "backend_type",
+    "type",
+]
+limit = 30
+
 [providers.ts4nfdi_collections]
 endpoint = "collections/"
 id_fields = ["id"]
@@ -163,18 +179,27 @@ source_key = "ebi"
 presentation = { adapter = "tss", component = "entity-info", entity_type = "class" }
 
 # Controlled agricultural keywords selected on the example catalog's keyword
-# page. AGROVOC is exposed through a Skosmos backend, so the plugin resolves
-# metadata through the Gateway's source-neutral concept-detail contract and
+## page. AGROVOC is exposed through a Skosmos backend, so the plugin resolves
+## metadata through the Gateway's source-neutral concept-detail contract and
 # uses its native drawer rather than an incompatible OLS/TSS entity component.
 [[frontend.annotations.matchers]]
 id = "example-agrovoc-keyword"
-question_uri = "https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/dataset-keywords"
-attribute_uri = "https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/dataset-keywords"
+question_uri = "https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/dataset-keywords-agrovoc"
+attribute_uri = "https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/dataset-keywords-agrovoc"
 optionset_uri = "https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/agrovoc-keywords"
 resource_type = "entity"
 badge_label = "AGROVOC"
 ontology_id = "agrovoc"
 source_key = "agrovoc"
+presentation = { adapter = "native" }
+
+[[frontend.annotations.matchers]]
+id = "example-keyword"
+question_uri = "https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/dataset-keywords"
+attribute_uri = "https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/dataset-keywords"
+optionset_uri = "https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/keywords"
+resource_type = "entity"
+badge_label = "Terminology"
 presentation = { adapter = "native" }
 
 # FAIRagro data-generation classifications selected from the plugin's
