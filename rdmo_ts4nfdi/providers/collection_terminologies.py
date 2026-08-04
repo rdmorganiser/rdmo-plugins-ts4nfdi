@@ -10,7 +10,11 @@ logger = logging.getLogger(__name__)
 
 
 class TS4NFDICollectionTerminologiesProvider(TS4NFDIBaseProvider):
-    search = True
+    # A terminology collection is a bounded browse list. Loading it once lets
+    # RDMO show the available terminologies as soon as the select is opened;
+    # react-select still filters the loaded options locally while the user
+    # types. Search-backed concept providers remain asynchronous.
+    search = False
     refresh = False
 
     def get_options(self, project, search=None, user=None, site=None):
@@ -238,6 +242,8 @@ class TS4NFDICollectionTerminologiesProvider(TS4NFDIBaseProvider):
         details = []
         if description:
             details.append(description)
+        else:
+            details.append('No description is available from the TS4NFDI Gateway.')
         if uri:
             details.append(f'uri: {uri}')
         if version:

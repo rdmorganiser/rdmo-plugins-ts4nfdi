@@ -14,6 +14,7 @@ from rdmo_ts4nfdi.integrations.ts4nfdi.gateway import (
     GatewayClient,
     GatewayError,
     GatewayRequestError,
+    GatewayTimeout,
     filter_gateway_query,
 )
 
@@ -23,6 +24,7 @@ from .serializers import (
 )
 
 logger = logging.getLogger(__name__)
+
 
 class ProjectAPIView(GenericAPIView):
     permission_classes = (CanViewProject,)
@@ -116,6 +118,28 @@ class GatewayProxyView(ProjectAPIView):
                 {'detail': str(exc)},
                 status=exc.status_code,
             )
+        except GatewayTimeout as exc:
+            logger.warning(
+                'TS4NFDI Gateway proxy timed out '
+                'path=%s upstream_status=%s response_status=%s project=%s user=%s',
+                path,
+                exc.status_code,
+                exc.proxy_status_code,
+                project_id,
+                request.user.pk,
+            )
+            response = Response(
+                {
+                    'detail': str(exc),
+                    'code': 'gateway_timeout',
+                    'upstream_status': exc.status_code,
+                    'retryable': True,
+                },
+                status=exc.proxy_status_code,
+            )
+            response['Cache-Control'] = 'no-store'
+            response['X-TS4NFDI-Upstream-Status'] = str(exc.status_code)
+            return response
         except GatewayError as exc:
             logger.warning(
                 'TS4NFDI Gateway proxy failed '

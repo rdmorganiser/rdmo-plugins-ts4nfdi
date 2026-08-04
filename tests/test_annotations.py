@@ -14,6 +14,7 @@ from rdmo_ts4nfdi.domain import (
     SemanticOptionSet,
     SemanticTarget,
 )
+from rdmo_ts4nfdi.export_renderers import render_semantic_xml
 from rdmo_ts4nfdi.presentation import AnnotationPresentationRegistry
 
 
@@ -63,6 +64,15 @@ class Host:
 
     def page_id(self, page):
         return page.id
+
+    def project_title(self, project):
+        return project.title
+
+    def project_catalog_uri(self, project):
+        return project.catalog_uri
+
+    def project_pages(self, project):
+        return iter(project.pages)
 
     def page_answers(self, project, page):
         return iter(self.answers)
@@ -130,6 +140,65 @@ def test_page_annotations_group_candidates_by_question_occurrence():
         1,
         2,
     ]
+
+
+def test_project_annotation_export_keeps_selected_and_semantic_identifiers():
+    mapping_set = SemanticOptionSet(
+        id='fairagro-data-generation',
+        version='draft.1',
+        options=(
+            SemanticOption(
+                id='experiment_data',
+                uri='https://example.test/options/experiment_data',
+                labels=(('en', 'Field trials'),),
+                targets=(
+                    SemanticTarget(
+                        id='field-experiment',
+                        iri='https://example.test/concepts/field-experiment',
+                        label='field experiment',
+                        relation='close',
+                        source=ResourceReference(id='example', label='Example source'),
+                        terminology=ResourceReference(id='example-terms', label='Example terminology'),
+                    ),
+                ),
+            ),
+        ),
+    )
+    matcher = replace(
+        make_matcher(),
+        mapping_set_id=mapping_set.id,
+        presentation=PresentationPolicy(adapter='native'),
+        source=None,
+        ontology_id=None,
+        gateway_params=(),
+    )
+    answer = replace(
+        make_answer(),
+        label='Field trials',
+        identifier='https://example.test/options/experiment_data',
+    )
+    service = make_service((answer,), (mapping_set,), matcher)
+    project = SimpleNamespace(
+        id=24,
+        title='Semantic project',
+        catalog_uri='https://example.test/catalog',
+        pages=(SimpleNamespace(id=341),),
+    )
+
+    payload = service.export_project(project).to_dict()
+    annotation = payload['pages'][0]['occurrences'][0]['annotations'][0]
+
+    assert payload['title'] == 'Semantic project'
+    assert payload['catalog_uri'] == 'https://example.test/catalog'
+    assert annotation['answer_id'] == 'https://example.test/options/experiment_data'
+    assert annotation['iri'] == 'https://example.test/concepts/field-experiment'
+    assert annotation['mapping_set_id'] == 'fairagro-data-generation'
+    assert annotation['mapping_set_version'] == 'draft.1'
+
+    xml = render_semantic_xml(payload).decode()
+    assert '<answer_id>https://example.test/options/experiment_data</answer_id>' in xml
+    assert '<iri>https://example.test/concepts/field-experiment</iri>' in xml
+    assert '<mapping_set_version>draft.1</mapping_set_version>' in xml
 
 
 def test_annotation_detail_is_composed_from_independent_adapters():
@@ -236,6 +305,8 @@ def test_semantic_option_mapping_expands_answer_identity_into_annotation_target(
     assert summary['target_id'] == 'inrae-field-experiment'
     assert summary['target_label'] == 'field experiment'
     assert summary['mapping_relation'] == 'close'
+    assert summary['mapping_set_id'] == 'fairagro-data-generation'
+    assert summary['mapping_set_version'] == 'draft.1'
     assert summary['source']['database'] == 'agroportal'
     assert summary['terminology']['id'] == 'INRAETHES'
     assert detail['label'] == 'field experiment'

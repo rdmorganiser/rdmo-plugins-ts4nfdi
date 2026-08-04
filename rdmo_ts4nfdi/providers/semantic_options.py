@@ -35,10 +35,7 @@ class SemanticOptionSetProvider(Provider):
     def build_help_html(option: SemanticOption, mapping_version: str) -> str:
         if not option.targets:
             return option_description(
-                [
-                    'No curated terminology mapping is available yet.',
-                    f'Mapping set {mapping_version}.',
-                ]
+                ['No related terminology concept is available for this option yet.']
             )
 
         parts = []
@@ -56,12 +53,12 @@ class SemanticOptionSetProvider(Provider):
             ]
             parts.append(option_breadcrumb(badges))
 
-        relation_labels = ', '.join(dict.fromkeys(target.relation for target in option.targets))
         parts.append(
             option_description(
                 [
-                    f'Draft semantic mapping ({relation_labels}).',
-                    f'Mapping set {mapping_version}.',
+                    'Related terminology concept.'
+                    if len(option.targets) == 1
+                    else 'Related terminology concepts.'
                 ]
             )
         )

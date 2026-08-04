@@ -1,5 +1,23 @@
 const HOOK_SELECTOR = '[data-ts4nfdi-slot="question-annotations"]';
 
+function normalizeDisplayedValue(value) {
+    return String(value || "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLocaleLowerCase();
+}
+
+function annotationFingerprint(occurrence) {
+    return (occurrence.annotations || []).map((annotation) => [
+        annotation.label,
+        annotation.iri,
+        annotation.matcher_id,
+        annotation.target_id
+    ].map(normalizeDisplayedValue).join(":"))
+        .sort()
+        .join("|");
+}
+
 export class RDMOTemplateInterviewHost {
     /**
      * Adapter for the current RDMO template and React-generated DOM.
@@ -142,15 +160,46 @@ export class RDMOTemplateInterviewHost {
             return null;
         }
 
-        const displayedValues = Array.from(
+        const displayedValues = new Set(Array.from(
             questionElement.querySelectorAll(
-                ".react-select__single-value, .text-input input, .textarea-input textarea"
+                ".react-select__single-value, .react-select__multi-value__label, " +
+                ".text-input input, .textarea-input textarea"
             )
-        ).map((element) => (
-            String("value" in element ? element.value : element.textContent).trim()
-        )).filter(Boolean);
-        return unused.find((candidate) => (
-            candidate.annotations.some((annotation) => displayedValues.includes(annotation.label))
-        )) || unused[0];
+        ).map((element) => normalizeDisplayedValue(
+            "value" in element ? element.value : element.textContent
+        )).filter(Boolean));
+        if (!displayedValues.size) {
+            return null;
+        }
+
+        const matches = unused.map((candidate) => {
+            const labels = new Set(
+                (candidate.annotations || [])
+                    .map((annotation) => normalizeDisplayedValue(annotation.label))
+                    .filter(Boolean)
+            );
+            return {candidate, labels};
+        }).filter(({labels}) => (
+            labels.size > 0
+            && Array.from(labels).every((label) => displayedValues.has(label))
+        ));
+        if (!matches.length) {
+            return null;
+        }
+
+        const largestMatch = Math.max(...matches.map(({labels}) => labels.size));
+        const bestMatches = matches.filter(({labels}) => labels.size === largestMatch);
+        if (bestMatches.length === 1) {
+            return bestMatches[0].candidate;
+        }
+
+        // The current RDMO DOM does not expose set_prefix/set_index. Multiple
+        // matching occurrences are safe only when they would render exactly
+        // the same annotations. Otherwise fail closed instead of showing a
+        // different dataset's semantic information.
+        const fingerprints = new Set(
+            bestMatches.map(({candidate}) => annotationFingerprint(candidate))
+        );
+        return fingerprints.size === 1 ? bestMatches[0].candidate : null;
     }
 }

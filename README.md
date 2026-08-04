@@ -45,6 +45,36 @@ urlpatterns += [
 ]
 ```
 
+Add the semantic JSON export as a separate project export. It does not replace
+RDMO's archival XML or human-readable JSON exports:
+
+```python
+PROJECT_EXPORTS += [
+    (
+        "ts-for-nfdi-json",
+        _("TS4NFDI semantic JSON"),
+        "rdmo_ts4nfdi.exports.SemanticJSONExport",
+    ),
+    (
+        "ts-for-nfdi-xml",
+        _("TS4NFDI semantic XML"),
+        "rdmo_ts4nfdi.exports.SemanticXMLExport",
+    ),
+]
+```
+
+RDMO 2.5.x restricts the export key used in its URL to lowercase ASCII letters
+and hyphens (`[a-z-]+`). Keep `ts-for-nfdi-json` and `ts-for-nfdi-xml` as the
+internal keys; in particular, a key such as `ts4nfdi-json` is invalid because it
+contains a digit. The translated labels shown to users can still contain
+`TS4NFDI`.
+
+The export retains the selected answer identity in `answer_id` and lists each
+semantic concept separately in `iri`. For a mapped FAIRagro classification,
+it therefore contains both the stable FAIRagro option URI and all mapped
+concept IRIs, together with mapping-set provenance. Direct terminology
+selections normally have the same URI in both fields.
+
 The gateway base URL is configured through `TS4NFDI_PROVIDER`. See
 `ts4nfdi_provider.toml` for example provider keys using
 `https://terminology.services.base4nfdi.de/api-gateway`.
@@ -79,7 +109,19 @@ Provider results are intentionally not deduplicated. This preserves distinct
 Gateway results and allows the same concept to remain selectable in separate
 RDMO collection/set contexts.
 
-`TS4NFDICollectionTerminologiesProvider` lists the terminologies for one configured collection. Configure `collection_id` and use the `ols4/api/ontologies` endpoint with `collectionId`; `fallback_endpoint = "collections/"` can be used to read the embedded `terminologies` list from the collections overview when the ontology endpoint is unavailable or empty.
+`TS4NFDICollectionTerminologiesProvider` lists the terminologies for one
+configured, bounded collection. It is a browse provider: RDMO loads the list
+once, displays the available terminologies when the select is opened, and
+filters them locally while the user types. Configure `collection_id` and use
+the `ols4/api/ontologies` endpoint with `collectionId`; `fallback_endpoint =
+"collections/"` can be used to read the embedded `terminologies` list from the
+collections overview when the ontology endpoint is unavailable or empty.
+
+The bundled `/search` providers omit the optional Gateway `display` query
+parameter. The Gateway's default response already contains the identifiers,
+labels, descriptions, terminology, and source metadata used by the plugin, and
+avoiding field projection prevents a currently observed slow/timeout path in
+the federated search endpoint.
 
 If a provider request fails, the plugin can return a disabled diagnostic option by setting `show_request_errors = true` (default). The text can be customized with `request_error_text` and `request_error_help`.
 
@@ -142,6 +184,14 @@ official Terminology Service Suite widget is an optional collapsed enhancement
 and is loaded only when the user expands it. Consequently, the useful detail
 view remains available if a widget cannot interpret an upstream response, and
 the widget does not issue background requests while collapsed.
+
+On repeated RDMO pages, the current RDMO 2.5.1 DOM does not expose
+`set_prefix` and `set_index`. The compatibility host therefore matches an
+annotation occurrence against all visible selected labels, including
+multi-value selects, and deliberately renders nothing when two occurrences
+cannot be distinguished. It never falls back to an annotation from another
+dataset. An official occurrence context remains the preferred upstream
+solution; see `docs/rdmo-upstream-feature-requests.md`.
 
 Template composition
 --------------------
@@ -258,8 +308,15 @@ The Gateway itself is not vendored. The authenticated browser proxy forwards
 official JSON responses without translating their shape and is limited to known
 hosts, paths, and query parameters. This keeps the TSS widget on the upstream
 Gateway response contract. The separate server-side metadata adapter maps
-Gateway fields into the plugin's native annotation model. To detect a removed
-Gateway route before deployment, run:
+Gateway fields into the plugin's native annotation model.
+
+An upstream Gateway timeout is returned by the browser proxy as `424 Failed
+Dependency`, with `code: "gateway_timeout"` and `upstream_status: 504` in the
+JSON response. It is logged as a warning and is not reported as a Django server
+error, so a temporary terminology outage does not trigger `AdminEmailHandler`.
+Other Gateway errors keep their original proxy status.
+
+To detect a removed Gateway route before deployment, run:
 
 ```shell
 python manage.py ts4nfdi_gateway_check

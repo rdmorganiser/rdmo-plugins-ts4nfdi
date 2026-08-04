@@ -57,6 +57,22 @@ export function hasSemanticConceptMetadata(detail) {
     );
 }
 
+export function missingSemanticMetadataMessage(detail) {
+    if (detail?.kind === "ontology") {
+        return translate(
+            "The TS4NFDI Gateway did not return a description for this terminology."
+        );
+    }
+    if (detail?.kind === "collection") {
+        return translate(
+            "The TS4NFDI Gateway did not return a description for this collection."
+        );
+    }
+    return translate(
+        "The TS4NFDI Gateway did not return a definition or synonyms for this concept."
+    );
+}
+
 export class NativeInlineAnnotationRenderer {
     render(slot, occurrence, onOpen) {
         const annotations = occurrence?.annotations || [];
@@ -199,11 +215,7 @@ export class NativeAnnotationDrawer {
             detail.metadata_status === "available"
             && !hasSemanticConceptMetadata(detail)
         ) {
-            this.renderNotice(
-                translate(
-                    "The TS4NFDI Gateway did not return a definition or synonyms for this concept."
-                )
-            );
+            this.renderNotice(missingSemanticMetadataMessage(detail));
         }
         this.renderProperties([
             [translate("Source"), source.label],
@@ -212,8 +224,6 @@ export class NativeAnnotationDrawer {
             [translate("Terminology"), terminology.label || detail.ontology_id],
             [translate("Short form"), detail.short_form],
             [translate("Type"), (detail.entity_types || []).join(", ")],
-            [translate("Mapping relation"), detail.mapping_relation],
-            [translate("Curation status"), detail.curation_status],
             [
                 translate("Status"),
                 detail.obsolete === true

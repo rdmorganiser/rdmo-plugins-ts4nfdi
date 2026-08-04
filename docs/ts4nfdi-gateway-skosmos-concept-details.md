@@ -64,7 +64,6 @@ Observed on 29 July 2026:
 curl --get \
   --data-urlencode 'query=milk' \
   --data-urlencode 'database=agrovoc' \
-  --data-urlencode 'display=iri,label,descriptions,synonyms,ontology,ontology_iri,short_form,source,source_name,backend_type,type' \
   'https://terminology.services.base4nfdi.de/api-gateway/search'
 ```
 

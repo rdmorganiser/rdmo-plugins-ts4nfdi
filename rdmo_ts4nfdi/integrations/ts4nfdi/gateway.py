@@ -42,6 +42,12 @@ class GatewayError(RuntimeError):
 
 class GatewayTimeout(GatewayError):
     status_code = 504
+    # A Gateway timeout is an expected failure of an external dependency. The
+    # browser proxy must not return a 5xx response for it: Django logs every
+    # 5xx response through ``django.request`` and deployments commonly attach
+    # ``AdminEmailHandler`` to that logger. Keep ``status_code`` as the actual
+    # upstream classification and expose a separate, non-5xx proxy status.
+    proxy_status_code = 424
 
 
 class GatewayRequestError(GatewayError):

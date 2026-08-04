@@ -13,6 +13,7 @@ from rdmo_ts4nfdi.domain import (
     InterviewAnswer,
     PageAnnotations,
     PresentationDescriptor,
+    ProjectAnnotations,
     QuestionContext,
     ResolvedMetadata,
     ResourceReference,
@@ -25,6 +26,12 @@ class InterviewHost(Protocol):
     def project_id(self, project: Any) -> int: ...
 
     def page_id(self, page: Any) -> int: ...
+
+    def project_title(self, project: Any) -> str: ...
+
+    def project_catalog_uri(self, project: Any) -> str | None: ...
+
+    def project_pages(self, project: Any) -> Iterable[Any]: ...
 
     def page_answers(self, project: Any, page: Any) -> Iterable[InterviewAnswer]: ...
 
@@ -126,6 +133,19 @@ class AnnotationService:
             occurrences=occurrences,
         )
 
+    def export_project(self, project: Any) -> ProjectAnnotations:
+        pages = tuple(
+            page_annotations
+            for page in self.host.project_pages(project)
+            if (page_annotations := self.list_page(project, page)).occurrences
+        )
+        return ProjectAnnotations(
+            project_id=self.host.project_id(project),
+            title=self.host.project_title(project),
+            catalog_uri=self.host.project_catalog_uri(project),
+            pages=pages,
+        )
+
     def detail(
         self,
         project: Any,
@@ -198,6 +218,8 @@ class AnnotationService:
             target_label=candidate.target_label,
             mapping_relation=candidate.mapping_relation,
             curation_status=candidate.curation_status,
+            mapping_set_id=candidate.mapping_set_id,
+            mapping_set_version=candidate.mapping_set_version,
             question_id=candidate.question.question_id,
         )
 

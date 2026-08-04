@@ -48,7 +48,6 @@ endpoint = "search"
 source_key = "ebi"
 ontologies = ["edam"]
 iri_prefixes = ["http://edamontology.org/format_"]
-display = ["iri", "label", "descriptions", "ontology", "ontology_iri", "short_form", "source", "source_name", "backend_type", "type"]
 # Dataset question sets can legitimately select the same format in different
 # set_prefix/set_index contexts. Do not exclude options selected elsewhere in
 # the project.
@@ -58,23 +57,10 @@ endpoint = "search"
 source_key = "agrovoc"
 ontologies = ["agrovoc"]
 iri_prefixes = ["http://aims.fao.org/aos/agrovoc/"]
-display = ["iri", "label", "descriptions", "ontology", "ontology_iri", "short_form", "source", "source_name", "backend_type", "type"]
 limit = 30
 
 [providers.ts4nfdi_keywords]
 endpoint = "search"
-display = [
-    "iri",
-    "label",
-    "descriptions",
-    "ontology",
-    "ontology_iri",
-    "short_form",
-    "source",
-    "source_name",
-    "backend_type",
-    "type",
-]
 limit = 30
 
 [providers.ts4nfdi_collections]
@@ -98,7 +84,9 @@ collection_id_param = "collectionId"
 size = 500
 page = 0
 fallback_endpoint = "collections/"
-limit = 100
+# Keep the complete bounded collection available for RDMO's locally filtered
+# browse select, including previously selected values.
+limit = 500
 id_fields = ["URI", "config.id", "uri", "ontologyId", "id"]
 label_fields = ["config.title", "label", "ontologyId", "name", "title"]
 help_fields = ["config.description", "description", "definition", "summary"]
@@ -140,7 +128,10 @@ presentation = { adapter = "native" }
 # Complete terminologies selected from the provider's fixed FAIRAgro
 # collection. The badge makes that preselected context visible in each
 # annotation; the catalog question help explains that it is not controlled by
-# the preceding collections answer.
+# the preceding collections answer. The native adapter is the reliable
+# prototype default for Gateway terminology responses. Switch this matcher to
+# `presentation = { adapter = "tss", component = "ontology-info" }` after the
+# deployed Gateway response has been verified against the vendored TSS release.
 [[frontend.annotations.matchers]]
 id = "example-fairagro-collection-terminology"
 question_uri = "https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/collection-terminologies"
@@ -149,7 +140,7 @@ optionset_uri = "https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/co
 resource_type = "ontology"
 provider_key = "ts4nfdi_fairagro_collection_terminologies"
 badge_label = "FAIRagro TS collection"
-presentation = { adapter = "tss", component = "ontology-info" }
+presentation = { adapter = "native" }
 
 [frontend.annotations.matchers.gateway_params]
 collectionId = "ff5491d1-d0a9-481e-ac90-0fad065fa097"
@@ -226,7 +217,7 @@ optionset_uri = "https://rdmo.fairagro.net/terms/options/ts4nfdi/collection_term
 resource_type = "ontology"
 provider_key = "ts4nfdi_fairagro_collection_terminologies"
 badge_label = "FAIRAgro"
-presentation = { adapter = "tss", component = "ontology-info" }
+presentation = { adapter = "native" }
 
 [frontend.annotations.matchers.gateway_params]
 collectionId = "ff5491d1-d0a9-481e-ac90-0fad065fa097"

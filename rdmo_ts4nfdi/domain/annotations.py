@@ -97,6 +97,8 @@ class AnnotationCandidate:
     target_label: str | None = None
     mapping_relation: str | None = None
     curation_status: str | None = None
+    mapping_set_id: str | None = None
+    mapping_set_version: str | None = None
     source: ResourceReference | None = None
     terminology: ResourceReference | None = None
 
@@ -118,6 +120,8 @@ class AnnotationSummary:
     target_label: str | None = None
     mapping_relation: str | None = None
     curation_status: str | None = None
+    mapping_set_id: str | None = None
+    mapping_set_version: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -135,6 +139,8 @@ class AnnotationSummary:
             'target_label': self.target_label,
             'mapping_relation': self.mapping_relation,
             'curation_status': self.curation_status,
+            'mapping_set_id': self.mapping_set_id,
+            'mapping_set_version': self.mapping_set_version,
             'question_id': self.question_id,
         }
 
@@ -175,6 +181,24 @@ class PageAnnotations:
             'project_id': self.project_id,
             'page_id': self.page_id,
             'occurrences': [occurrence.to_dict() for occurrence in self.occurrences],
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ProjectAnnotations:
+    project_id: int
+    title: str
+    catalog_uri: str | None
+    pages: tuple[PageAnnotations, ...]
+    api_version: str = '1'
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            'api_version': self.api_version,
+            'project_id': self.project_id,
+            'title': self.title,
+            'catalog_uri': self.catalog_uri,
+            'pages': [page.to_dict() for page in self.pages],
         }
 
 

@@ -2,6 +2,7 @@ import csv
 import hashlib
 import importlib
 import json
+import re
 import sys
 import types
 import xml.etree.ElementTree as ElementTree
@@ -11,6 +12,17 @@ from unittest import mock
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_documented_project_export_keys_are_rdmo_route_compatible():
+    readme = (ROOT / 'README.md').read_text(encoding='utf-8')
+
+    for export_key in ('ts-for-nfdi-json', 'ts-for-nfdi-xml'):
+        assert f'"{export_key}"' in readme
+        assert re.fullmatch(r'[a-z-]+', export_key)
+
+    assert '"ts4nfdi-json"' not in readme
+    assert '"ts4nfdi-xml"' not in readme
 
 
 def install_rdmo_stubs(monkeypatch):
@@ -287,7 +299,7 @@ def test_collections_provider_get_options_returns_mapped_collection_options(prov
     assert 'Relevant metadata standards' in options[0]['help']
 
 
-def test_fairagro_data_generation_provider_uses_stable_option_ids_and_mapping_help(provider_modules):
+def test_fairagro_data_generation_provider_uses_stable_option_ids_and_concept_help(provider_modules):
     configure_provider(
         provider_modules,
         'fairagro_data_generation',
@@ -325,8 +337,10 @@ def test_fairagro_data_generation_provider_uses_stable_option_ids_and_mapping_he
     assert 'AgroPortal' in options[0]['help']
     assert 'INRAE Thesaurus' in options[0]['help']
     assert 'field experiment' in options[0]['help']
+    assert 'Related terminology concept.' in options[0]['help']
+    assert 'mapping' not in options[0]['help'].lower()
     unmapped = next(option for option in options if option['id'].endswith('/field_sampling'))
-    assert 'No curated terminology mapping is available yet.' in unmapped['help']
+    assert 'No related terminology concept is available for this option yet.' in unmapped['help']
 
 
 def test_fairagro_data_generation_curator_csv_matches_deployed_manifest():
@@ -492,6 +506,7 @@ def test_collection_terminologies_provider_get_options_returns_collection_terms(
         payload,
     ).get_options(project=None, search='datacite')
 
+    assert provider_modules.collection_terminologies_provider.search is False
     assert len(options) == 1
     assert options[0]['id'] == 'https://schema.datacite.org'
     assert options[0]['text'] == 'DataCite Metadata Schema'
@@ -499,6 +514,40 @@ def test_collection_terminologies_provider_get_options_returns_collection_terms(
     assert 'NFDI metadata standards' in options[0]['help']
     assert 'Metadata schema for research data' in options[0]['help']
     assert 'version: 4.5' in options[0]['help']
+
+
+def test_collection_terminologies_provider_marks_missing_descriptions(provider_modules):
+    key = 'ts4nfdi_collection_terminologies'
+    configure_provider(
+        provider_modules,
+        key,
+        {
+            'endpoint': 'collections/collection-1/terminologies',
+            'collection_id': 'collection-1',
+            'collection_label': 'FAIRagro TS collection',
+            'id_fields': ['URI'],
+            'label_fields': ['config.title'],
+            'help_fields': ['config.description'],
+        },
+    )
+    payload = {
+        'terminologies': [
+            {
+                'ontologyId': 'without-description',
+                'URI': 'https://example.test/without-description',
+                'config': {'title': 'Terminology without description'},
+            },
+        ],
+    }
+
+    options = make_provider(
+        provider_modules.collection_terminologies_provider,
+        key,
+        payload,
+    ).get_options(project=None)
+
+    assert len(options) == 1
+    assert 'No description is available from the TS4NFDI Gateway.' in options[0]['help']
 
 
 def test_annotation_config_is_validated_and_sanitized(provider_modules):
@@ -894,8 +943,7 @@ def test_skosmos_entity_metadata_falls_back_to_gateway_search(provider_modules):
     fallback_query = dict(gateway.calls[1][1])
     assert fallback_query['query'] == 'soil'
     assert fallback_query['database'] == 'agrovoc'
-    assert 'descriptions' in fallback_query['display']
-    assert 'synonyms' in fallback_query['display']
+    assert 'display' not in fallback_query
     assert metadata.label == 'soil'
     assert metadata.description is None
     assert metadata.synonyms == ()
@@ -947,6 +995,45 @@ def test_gateway_path_and_query_allowlists(provider_modules):
         ('iri', 'https://example.test/entity'),
         ('database', 'ols'),
     ]
+
+
+def test_gateway_timeout_has_non_server_error_proxy_status(provider_modules):
+    gateway = provider_modules.gateway
+
+    assert gateway.GatewayTimeout.status_code == 504
+    assert gateway.GatewayTimeout.proxy_status_code == 424
+
+
+def test_ontology_provider_omits_optional_display_parameter_by_default(provider_modules):
+    provider = provider_modules.ontologies_provider()
+    params = provider.build_query_params(
+        {
+            'search_param': 'query',
+            'database': 'ebi',
+        },
+        'investigation',
+    )
+
+    assert params == {
+        'query': 'investigation',
+        'database': 'ebi',
+    }
+
+
+def test_gateway_client_translates_transport_timeout(provider_modules):
+    gateway = provider_modules.gateway
+    client = gateway.GatewayClient(
+        {
+            'base_url': 'https://example.test/api-gateway',
+            'timeout': 1,
+            'cache_timeout': 60,
+            'api_token': '',
+        }
+    )
+
+    with mock.patch.object(gateway, 'urlopen', side_effect=TimeoutError):
+        with pytest.raises(gateway.GatewayTimeout):
+            client.get('ols4/api/ontologies/edam/terms', use_cache=False)
 
 
 def test_shared_string_and_iri_utilities(provider_modules):
@@ -1016,8 +1103,15 @@ def test_example_catalog_contains_controlled_agrovoc_keyword_question():
     assert question.findtext('value_type') == 'option'
     assert question.find('attribute').get(uri_attribute) == attribute_uri
     assert question.find('optionsets/optionset').get(uri_attribute) == optionset_uri
+    assert 'free-text keyword' in question.findtext("help[@lang='en']")
+    assert 'freien Suchbegriff' in question.findtext("help[@lang='de']")
     assert attribute.findtext('key') == 'dataset-keywords-agrovoc'
     assert optionset.findtext('provider_key') == 'ts4nfdi_agrovoc_keywords'
+
+    federated_question = elements[f'{base_uri}/dataset-keywords']
+    assert federated_question.findtext('widget_type') == 'select_creatable'
+    assert 'free-text keyword' in federated_question.findtext("help[@lang='en']")
+    assert 'freien Suchbegriff' in federated_question.findtext("help[@lang='de']")
 
 
 def test_example_catalog_explains_first_page_resource_levels():
@@ -1077,7 +1171,7 @@ def test_example_catalog_first_page_has_annotation_matchers():
     assert terminology['provider_key'] == 'ts4nfdi_fairagro_collection_terminologies'
     assert terminology['badge_label'] == 'FAIRagro TS collection'
     assert terminology['gateway_params']['collectionId'] == ('ff5491d1-d0a9-481e-ac90-0fad065fa097')
-    assert terminology['presentation']['component'] == 'ontology-info'
+    assert terminology['presentation'] == {'adapter': 'native'}
 
 
 def test_example_catalog_agrovoc_provider_and_annotation_matcher():
@@ -1133,6 +1227,8 @@ def test_example_catalog_contains_provider_backed_fairagro_data_generation_quest
         'https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods'
     )
     assert methods.find('optionsets/optionset').get(uri_attribute) == optionset_uri
+    assert 'definition, synonyms, terminology, source, and IRI' in methods.findtext("help[@lang='en']")
+    assert 'Terminologiezuordnungen' not in questionset.findtext("help[@lang='de']")
     assert details.findtext('widget_type') == 'textarea'
     assert details.findtext('is_optional') == 'True'
     assert optionset.findtext('provider_key') == 'fairagro_data_generation'

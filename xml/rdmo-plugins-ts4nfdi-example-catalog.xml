@@ -308,11 +308,11 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<attribute dc:uri="https://rdmo.fairagro.net/terms/domain/rdmo-plugins-ts4nfdi/dataset-keywords"/>
 		<is_collection>True</is_collection>
 		<is_optional>True</is_optional>
-		<help lang="en"/>
+		<help lang="en">&lt;strong&gt;You can select a controlled concept or enter your own free-text keyword.&lt;/strong&gt; Search the terminology services first. If no suitable concept exists, type the complete keyword and choose the create option. Free-text keywords do not have a concept IRI or terminology details.</help>
 		<text lang="en">Which keywords will be included in the dataset metadata?</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en">Keyword</verbose_name>
-		<help lang="de"/>
+		<help lang="de">&lt;strong&gt;Sie können ein kontrolliertes Konzept auswählen oder einen eigenen freien Suchbegriff eingeben.&lt;/strong&gt; Durchsuchen Sie zunächst die Terminologiedienste. Wenn kein passendes Konzept vorhanden ist, geben Sie den vollständigen Suchbegriff ein und wählen Sie die Option zum Erstellen. Freie Suchbegriffe besitzen keine Konzept-IRI und keine Terminologiedetails.</help>
 		<text lang="de">Welche Suchbegriffe werden in die Metadaten des Datensatzes aufgenommen?</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de">Suchbegriff</verbose_name>
@@ -352,11 +352,11 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/dataset-keywords-agrovoc"/>
 		<is_collection>True</is_collection>
 		<is_optional>True</is_optional>
-		<help lang="en">Search AGROVOC for agricultural topics, crops, practices, materials, or processes. Select a controlled concept when a suitable result exists; its stable IRI enables the terminology annotation. You can also create a free-text keyword, but it will not have terminology details.</help>
+		<help lang="en">&lt;strong&gt;You can select a controlled AGROVOC concept or enter your own free-text keyword.&lt;/strong&gt; Search AGROVOC for agricultural topics, crops, practices, materials, or processes. If no suitable concept exists, type the complete keyword and choose the create option. Free-text keywords do not have a concept IRI or terminology details.</help>
 		<text lang="en">Which keywords will be included in the dataset metadata?</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en">Keyword</verbose_name>
-		<help lang="de">Durchsuchen Sie AGROVOC nach landwirtschaftlichen Themen, Kulturpflanzen, Praktiken, Materialien oder Prozessen. Wählen Sie nach Möglichkeit ein kontrolliertes Konzept; seine stabile IRI ermöglicht die Terminologie-Annotation. Sie können auch einen freien Suchbegriff erstellen, für diesen stehen jedoch keine Terminologie-Details zur Verfügung.</help>
+		<help lang="de">&lt;strong&gt;Sie können ein kontrolliertes AGROVOC-Konzept auswählen oder einen eigenen freien Suchbegriff eingeben.&lt;/strong&gt; Durchsuchen Sie AGROVOC nach landwirtschaftlichen Themen, Kulturpflanzen, Praktiken, Materialien oder Prozessen. Wenn kein passendes Konzept vorhanden ist, geben Sie den vollständigen Suchbegriff ein und wählen Sie die Option zum Erstellen. Freie Suchbegriffe besitzen keine Konzept-IRI und keine Terminologiedetails.</help>
 		<text lang="de">Welche Suchbegriffe werden in die Metadaten des Datensatzes aufgenommen?</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de">Suchbegriff</verbose_name>
@@ -416,10 +416,10 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<attribute/>
 		<is_collection>False</is_collection>
 		<title lang="en">How the project generates new data</title>
-		<help lang="en">The available classifications are loaded from a versioned FAIRagro semantic option set. Draft terminology mappings are shown as option help and selected mapped options receive terminology annotations.</help>
+		<help lang="en">The available classifications are loaded from a versioned FAIRagro semantic option set. Related terminology concepts are shown with the options and, when available, their definitions and synonyms can be opened below the question.</help>
 		<verbose_name lang="en"/>
 		<title lang="de">Wie das Projekt neue Daten erzeugt</title>
-		<help lang="de">Die verfügbaren Klassifikationen werden aus einem versionierten semantischen FAIRagro-Optionssatz geladen. Vorläufige Terminologiezuordnungen werden als Optionshilfe angezeigt; ausgewählte zugeordnete Optionen erhalten Terminologie-Annotationen.</help>
+		<help lang="de">Die verfügbaren Klassifikationen werden aus einem versionierten semantischen FAIRagro-Optionssatz geladen. Zugehörige Terminologiekonzepte werden bei den Optionen angezeigt; vorhandene Definitionen und Synonyme können unterhalb der Frage geöffnet werden.</help>
 		<verbose_name lang="de"/>
 		<questionsets/>
 		<questions>
@@ -435,11 +435,11 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods"/>
 		<is_collection>True</is_collection>
 		<is_optional>False</is_optional>
-		<help lang="en">Select all methods that apply. Each stored answer keeps the stable FAIRagro option URI. Terminology mappings are curated separately and may still be incomplete; mapped selections show terminology details below the question.</help>
+		<help lang="en">Select all methods that apply. Each stored answer keeps the stable FAIRagro option URI. When a related terminology concept is available, select its annotation below the question to see its definition, synonyms, terminology, source, and IRI.</help>
 		<text lang="en">Which methods, technologies, or processes are used to generate or collect new data?</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en">Data generation method</verbose_name>
-		<help lang="de">Wählen Sie alle zutreffenden Methoden aus. Jede gespeicherte Antwort behält die stabile FAIRagro-Options-URI. Terminologiezuordnungen werden separat kuratiert und können noch unvollständig sein; für zugeordnete Auswahlen werden Terminologiedetails unter der Frage angezeigt.</help>
+		<help lang="de">Wählen Sie alle zutreffenden Methoden aus. Jede gespeicherte Antwort behält die stabile FAIRagro-Options-URI. Wenn ein zugehöriges Terminologiekonzept vorhanden ist, können Sie dessen Annotation unterhalb der Frage auswählen, um Definition, Synonyme, Terminologie, Quelle und IRI anzuzeigen.</help>
 		<text lang="de">Welche Methoden, Technologien oder Verfahren werden zur Erzeugung oder Erfassung neuer Daten eingesetzt?</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de">Methode der Datenerzeugung</verbose_name>

@@ -1,7 +1,9 @@
 export const HTTP_IRI = /^https?:\/\//i;
 
 export function translate(message) {
-    return typeof window.gettext === "function" ? window.gettext(message) : message;
+    return typeof window !== "undefined" && typeof window.gettext === "function"
+        ? window.gettext(message)
+        : message;
 }
 
 export function readJsonConfig(id) {

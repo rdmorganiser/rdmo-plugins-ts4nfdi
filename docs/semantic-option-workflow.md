@@ -327,3 +327,18 @@ selected option
 
 This preserves the original interview answer even when a draft terminology
 mapping is later corrected.
+
+The plugin implements this model as two optional RDMO project exports:
+
+- `rdmo_ts4nfdi.exports.SemanticJSONExport`;
+- `rdmo_ts4nfdi.exports.SemanticXMLExport`.
+
+Both exports use the same application-layer payload. `answer_id` is the URI
+actually selected and stored by RDMO; each annotation's `iri` is the direct or
+mapped terminology concept. Mapped annotations also include
+`mapping_set_id`, `mapping_set_version`, relation, and curation status. The
+exports contain annotation summaries and do not issue one Gateway detail
+request per concept. Registering the formats in `PROJECT_EXPORTS` is described
+in the repository README. Use the RDMO-compatible internal keys
+`ts-for-nfdi-json` and `ts-for-nfdi-xml`; RDMO 2.5.x does not accept digits in
+the format segment of an export URL.

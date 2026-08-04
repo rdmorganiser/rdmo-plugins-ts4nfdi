@@ -16,19 +16,6 @@ from .payload import extract_results, get_first_value, get_value, get_values
 logger = logging.getLogger(__name__)
 
 OLS_BACKEND_TYPES = frozenset({'ols2', 'ols4'})
-ENTITY_SEARCH_DISPLAY = (
-    'iri',
-    'label',
-    'descriptions',
-    'synonyms',
-    'ontology',
-    'ontology_iri',
-    'short_form',
-    'source',
-    'source_name',
-    'backend_type',
-    'type',
-)
 
 
 class GatewayMetadataResolver:
@@ -121,7 +108,6 @@ class GatewayMetadataResolver:
                 for key, value in matcher.gateway_query
                 if key not in {'iri', 'q', 'query', 'search', 'display'}
             ),
-            ('display', ','.join(ENTITY_SEARCH_DISPLAY)),
         ]
         payload, _ = self.gateway.get('search', query)
         result = next(

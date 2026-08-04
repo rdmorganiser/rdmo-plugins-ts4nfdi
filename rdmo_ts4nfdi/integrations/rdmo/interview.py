@@ -18,6 +18,21 @@ class RDMOInterviewHost:
     def page_id(page) -> int:
         return page.id
 
+    @staticmethod
+    def project_title(project) -> str:
+        return project.title
+
+    @staticmethod
+    def project_catalog_uri(project) -> str | None:
+        return project.catalog.uri if project.catalog else None
+
+    @staticmethod
+    def project_pages(project):
+        if project.catalog is None:
+            return ()
+        project.catalog.prefetch_elements()
+        return tuple(project.catalog.pages)
+
     def page_answers(self, project, page) -> Iterable[InterviewAnswer]:
         values = self._project_values(project)
 

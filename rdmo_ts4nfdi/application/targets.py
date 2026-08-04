@@ -36,6 +36,8 @@ class SemanticAnnotationTargetResolver:
                     target_label=target.label,
                     mapping_relation=target.relation,
                     curation_status=target.curation_status,
+                    mapping_set_id=mapping_set.id,
+                    mapping_set_version=mapping_set.version,
                     source=target.source,
                     terminology=target.terminology,
                 )
