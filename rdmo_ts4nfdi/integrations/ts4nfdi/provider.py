@@ -10,7 +10,7 @@ class GatewayProviderClient:
     """Small HTTP adapter used by RDMO dynamic option providers."""
 
     def get(self, provider_config: dict, params: dict):
-        request_url = add_query_params(self.request_url(provider_config), params)
+        request_url = self.prepare_request_url(provider_config, params)
         request = Request(
             request_url,
             headers=self.request_headers(provider_config),
@@ -26,6 +26,12 @@ class GatewayProviderClient:
             provider_config.get('base_url', API_BASE_URL_DEFAULT),
             provider_config.get('endpoint', ''),
         )
+
+    @classmethod
+    def prepare_request_url(cls, provider_config: dict, params: dict) -> str:
+        """Build the exact URL passed to urllib, including encoded parameters."""
+
+        return add_query_params(cls.request_url(provider_config), params)
 
     @staticmethod
     def request_headers(provider_config: dict) -> dict[str, str]:

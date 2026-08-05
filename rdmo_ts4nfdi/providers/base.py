@@ -28,16 +28,18 @@ class TS4NFDIBaseProvider(Provider):
             provider_config = self.get_provider_config()
 
         client = GatewayProviderClient()
-        api_url = client.request_url(provider_config)
         timeout = provider_config.get('timeout', 10)
         params = self.build_query_params(provider_config, search)
+        request_url = client.prepare_request_url(
+            provider_config,
+            redact_sensitive_params(params),
+        )
         self.last_request_error = None
 
         logger.debug(
-            "TS4NFDI provider '%s' requesting %s with params=%s timeout=%s",
+            "TS4NFDI provider '%s' requesting %s timeout=%s",
             self.key,
-            api_url,
-            redact_sensitive_params(params),
+            request_url,
             timeout,
         )
 

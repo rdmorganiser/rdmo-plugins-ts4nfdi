@@ -1,5 +1,6 @@
 import hashlib
 import json
+import logging
 from collections.abc import Iterable
 from urllib.error import HTTPError, URLError
 from urllib.parse import unquote, urlencode, urljoin, urlparse
@@ -8,6 +9,8 @@ from urllib.request import Request, urlopen
 from django.core.cache import cache
 
 from rdmo_ts4nfdi.config import GATEWAY_PARAM_NAMES, load_gateway_config
+
+logger = logging.getLogger(__name__)
 
 ALLOWED_GATEWAY_PATH_PREFIXES = (
     'collections',
@@ -112,7 +115,14 @@ class GatewayClient:
         if use_cache:
             cached_response = cache.get(cache_key)
             if cached_response is not None:
+                logger.debug('TS4NFDI Gateway cache hit for %s', request_url)
                 return cached_response, True
+
+        logger.debug(
+            'TS4NFDI Gateway requesting %s timeout=%s',
+            request_url,
+            gateway_config['timeout'],
+        )
 
         request = Request(
             request_url,

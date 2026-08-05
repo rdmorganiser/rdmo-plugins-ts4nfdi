@@ -69,11 +69,29 @@ internal keys; in particular, a key such as `ts4nfdi-json` is invalid because it
 contains a digit. The translated labels shown to users can still contain
 `TS4NFDI`.
 
-The export retains the selected answer identity in `answer_id` and lists each
-semantic concept separately in `iri`. For a mapped FAIRagro classification,
-it therefore contains both the stable FAIRagro option URI and all mapped
-concept IRIs, together with mapping-set provenance. Direct terminology
-selections normally have the same URI in both fields.
+The export retains the identifier stored by RDMO in `answer_id` and lists each
+semantic concept separately in `iri`, together with mapping-set provenance.
+For fixed options this keeps the stable option URI alongside the projected
+concept IRI. After a dynamic provider identifier is projected into
+`external_id`, the answer and concept identifiers are the same because RDMO
+has no separate `Option` row for that selection.
+
+For RDMO's standard XML export, the optional `storage.option_external_id`
+policy projects a fixed or provider-backed semantic option with exactly one
+configured target into `Value.external_id` during `pre_save`. Fixed options
+retain their `Option.uri`; provider-backed options replace their local option
+identifier with the concept IRI. Unmapped and composed options remain
+unchanged, and saving never calls the Gateway. Existing values can be inspected
+and backfilled explicitly:
+
+```shell
+python manage.py ts4nfdi_sync_external_ids --project 32 --dry-run
+python manage.py ts4nfdi_sync_external_ids --project 32
+```
+
+The projection is disabled when the configuration section is absent. Allowed
+mapping relations and curation statuses must be listed explicitly; see
+`ts4nfdi_provider.toml`.
 
 The gateway base URL is configured through `TS4NFDI_PROVIDER`. See
 `ts4nfdi_provider.toml` for example provider keys using

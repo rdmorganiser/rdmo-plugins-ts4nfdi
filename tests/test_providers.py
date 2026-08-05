@@ -103,6 +103,7 @@ def provider_modules():
         providers = importlib.import_module('rdmo_ts4nfdi.providers')
         annotation_metadata = importlib.import_module('rdmo_ts4nfdi.integrations.ts4nfdi.metadata')
         gateway = importlib.import_module('rdmo_ts4nfdi.integrations.ts4nfdi.gateway')
+        gateway_provider = importlib.import_module('rdmo_ts4nfdi.integrations.ts4nfdi.provider')
         domain = importlib.import_module('rdmo_ts4nfdi.domain')
         template_tags = importlib.import_module('rdmo_ts4nfdi.templatetags.ts4nfdi_tags')
         upstream = importlib.import_module('rdmo_ts4nfdi.upstream')
@@ -112,8 +113,10 @@ def provider_modules():
             load_source_configs=config.load_source_configs,
             load_annotation_matchers=config.load_annotation_matchers,
             load_frontend_config=config.load_frontend_config,
+            load_option_external_id_projection_policy=config.load_option_external_id_projection_policy,
             settings=settings,
             gateway=gateway,
+            gateway_provider=gateway_provider,
             upstream=upstream,
             utils=utils,
             annotation_metadata=annotation_metadata,
@@ -299,7 +302,9 @@ def test_collections_provider_get_options_returns_mapped_collection_options(prov
     assert 'Relevant metadata standards' in options[0]['help']
 
 
-def test_fairagro_data_generation_provider_uses_stable_option_ids_and_concept_help(provider_modules):
+def test_fairagro_data_generation_provider_uses_projected_option_ids_and_concept_help(
+    provider_modules,
+):
     configure_provider(
         provider_modules,
         'fairagro_data_generation',
@@ -325,6 +330,15 @@ def test_fairagro_data_generation_provider_uses_stable_option_ids_and_concept_he
             },
         },
     )
+    provider_modules.settings.TS4NFDI_PROVIDER['storage'] = {
+        'option_external_id': {
+            'enabled': True,
+            'mapping_sets': ['fairagro-data-generation'],
+            'relations': ['exact', 'close'],
+            'curation_statuses': ['draft', 'reviewed'],
+        }
+    }
+    provider_modules.load_config.cache_clear()
 
     provider = provider_modules.fairagro_data_generation_provider()
     provider.key = 'fairagro_data_generation'
@@ -332,7 +346,7 @@ def test_fairagro_data_generation_provider_uses_stable_option_ids_and_concept_he
 
     assert provider.search is False
     assert len(options) == 22
-    assert options[0]['id'] == 'https://rdmo.fairagro.net/terms/options/data_creation/experiment_data'
+    assert options[0]['id'] == 'http://opendata.inrae.fr/thesaurusINRAE/c_17625'
     assert options[0]['text'] == 'Field trials'
     assert 'AgroPortal' in options[0]['help']
     assert 'INRAE Thesaurus' in options[0]['help']
@@ -1020,6 +1034,73 @@ def test_ontology_provider_omits_optional_display_parameter_by_default(provider_
     }
 
 
+def test_gateway_provider_prepares_encoded_request_url(provider_modules):
+    request_url = provider_modules.gateway_provider.GatewayProviderClient.prepare_request_url(
+        {
+            'base_url': 'https://terminology.example/api-gateway',
+            'endpoint': 'search',
+        },
+        {
+            'query': 'milk & grain',
+            'database': 'ebi',
+        },
+    )
+
+    assert request_url == (
+        'https://terminology.example/api-gateway/search?query=milk+%26+grain&database=ebi'
+    )
+
+
+def test_provider_logs_the_prepared_gateway_url(provider_modules, caplog):
+    configure_provider(
+        provider_modules,
+        'ts4nfdi_ontologies',
+        {
+            'endpoint': 'search',
+            'search_param': 'query',
+            'database': 'ebi',
+        },
+    )
+    provider = provider_modules.ontologies_provider()
+    provider.key = 'ts4nfdi_ontologies'
+
+    with (
+        mock.patch.object(
+            provider_modules.gateway_provider.GatewayProviderClient,
+            'get',
+            return_value=[],
+        ),
+        caplog.at_level('DEBUG', logger='rdmo_ts4nfdi.providers.base'),
+    ):
+        provider.make_request('milk & grain')
+
+    assert (
+        "TS4NFDI provider 'ts4nfdi_ontologies' requesting "
+        'https://example.test/api/search?query=milk+%26+grain&database=ebi timeout=10'
+    ) in caplog.messages
+
+
+def test_option_external_id_projection_policy_is_normalized(provider_modules):
+    provider_modules.settings.TS4NFDI_PROVIDER = {
+        'storage': {
+            'option_external_id': {
+                'enabled': True,
+                'mapping_sets': ['fairagro-data-generation'],
+                'relations': ['exact', 'close'],
+                'curation_statuses': ['draft', 'reviewed'],
+            }
+        }
+    }
+    provider_modules.load_config.cache_clear()
+
+    policy = provider_modules.load_option_external_id_projection_policy()
+
+    assert policy.enabled is True
+    assert policy.mapping_set_ids == ('fairagro-data-generation',)
+    assert policy.relations == frozenset({'exact', 'close'})
+    assert policy.curation_statuses == frozenset({'draft', 'reviewed'})
+
+
 def test_gateway_client_translates_transport_timeout(provider_modules):
     gateway = provider_modules.gateway
     client = gateway.GatewayClient(
@@ -1253,3 +1334,7 @@ def test_fairagro_data_generation_annotation_matcher_uses_semantic_mapping_set()
     )
     assert config['sources']['agroportal']['database'] == 'agroportal'
     assert config['sources']['tib']['database'] == 'tib'
+    projection = config['storage']['option_external_id']
+    assert projection['enabled'] is True
+    assert projection['mapping_sets'] == ['fairagro-data-generation']
+    assert projection['relations'] == ['exact', 'close']

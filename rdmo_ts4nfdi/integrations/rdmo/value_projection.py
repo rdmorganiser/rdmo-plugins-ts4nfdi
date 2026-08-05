@@ -29,7 +29,7 @@ def project_semantic_option_external_id(sender, instance, raw=False, update_fiel
 
     option_uri = instance.option.uri if instance.option_id else None
     try:
-        external_id = build_option_external_id_projector().project(
+        external_id = build_option_external_id_projector().project_value(
             option_uri=option_uri,
             external_id=instance.external_id,
             previous_option_uri=previous_option_uri,
@@ -51,4 +51,3 @@ def project_semantic_option_external_id(sender, instance, raw=False, update_fiel
         return
 
     instance.external_id = external_id
-

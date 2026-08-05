@@ -54,8 +54,17 @@ class SemanticOptionSet:
     source_name: str | None = None
     source_sha256: str | None = None
 
-    def get(self, option_uri: str) -> SemanticOption | None:
-        return next((option for option in self.options if option.uri == option_uri), None)
+    def get(self, identifier: str) -> SemanticOption | None:
+        direct = next((option for option in self.options if option.uri == identifier), None)
+        if direct:
+            return direct
+
+        matches = tuple(
+            option
+            for option in self.options
+            if len(option.targets) == 1 and option.targets[0].iri == identifier
+        )
+        return matches[0] if len(matches) == 1 else None
 
 
 class SemanticOptionRegistry(Protocol):

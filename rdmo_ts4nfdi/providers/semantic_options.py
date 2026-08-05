@@ -2,6 +2,8 @@ from django.utils.translation import get_language
 
 from rdmo.options.providers import Provider
 
+from rdmo_ts4nfdi.application import SemanticOptionExternalIdProjector
+from rdmo_ts4nfdi.config import load_option_external_id_projection_policy
 from rdmo_ts4nfdi.domain import SemanticOption
 from rdmo_ts4nfdi.semantic_options import PackageSemanticOptionRegistry
 
@@ -19,11 +21,18 @@ class SemanticOptionSetProvider(Provider):
         if not self.mapping_set_id:
             raise RuntimeError(f'{type(self).__name__}.mapping_set_id must be configured.')
 
-        mapping_set = PackageSemanticOptionRegistry().get(self.mapping_set_id)
+        registry = PackageSemanticOptionRegistry()
+        mapping_set = registry.get(self.mapping_set_id)
+        projector = SemanticOptionExternalIdProjector(
+            registry,
+            load_option_external_id_projection_policy(),
+        )
         language = get_language()
         return [
             {
-                'id': option.uri,
+                # RDMO restores a provider selection by comparing Value.external_id
+                # with this id. Both therefore have to use the same projection.
+                'id': projector.option_identifier(option.uri),
                 'text': option.label(language),
                 'help': self.build_help_html(option, mapping_set.version),
             }

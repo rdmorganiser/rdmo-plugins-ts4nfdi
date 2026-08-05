@@ -26,12 +26,15 @@ from .semantic_options import (
 )
 
 __all__ = [
+    'SEMANTIC_CURATION_STATUSES',
+    'SEMANTIC_MAPPING_RELATIONS',
     'AnnotationCandidate',
     'AnnotationDetail',
     'AnnotationMatcher',
     'AnnotationOccurrence',
     'AnnotationSummary',
     'InterviewAnswer',
+    'OptionExternalIdProjectionPolicy',
     'PageAnnotations',
     'PresentationDescriptor',
     'PresentationPolicy',
@@ -39,9 +42,6 @@ __all__ = [
     'QuestionContext',
     'ResolvedMetadata',
     'ResourceReference',
-    'SEMANTIC_CURATION_STATUSES',
-    'SEMANTIC_MAPPING_RELATIONS',
-    'OptionExternalIdProjectionPolicy',
     'SemanticOption',
     'SemanticOptionRegistry',
     'SemanticOptionSet',

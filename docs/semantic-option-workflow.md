@@ -75,7 +75,7 @@ preceding question/title row.
 | Added column | Required | Purpose |
 | --- | --- | --- |
 | `OptionID` | yes | Stable key inside this mapping set. Never reuse it for a different meaning. |
-| `OptionURI` | yes | Stable FAIRagro/RDMO option URI stored as the answer identity. |
+| `OptionURI` | yes | Stable FAIRagro option URI used as the manifest key and as the provider identity when no single concept IRI is projected. |
 | `OptionLabelDE` | recommended | German label of the FAIRagro option, which may differ from `TermDE`. |
 | `OptionLabelEN` | yes | English label of the FAIRagro option, which may differ from `TermEN`. |
 | `Selectable` | yes | `true` for an active choice; `false` preserves a retired option without offering it for new answers. |
@@ -102,8 +102,12 @@ rows. Existing original cells are left as supplied by the curators.
 ### Stable identifiers
 
 After an option has been used in RDMO, do not change its `OptionURI`.
-Existing provider-backed answers keep this URI in `Value.external_id`.
-Changing a label or mapping does not invalidate the answer.
+Without external-ID projection, provider-backed answers keep this URI in
+`Value.external_id`. With projection enabled, an eligible single-target option
+uses the target concept IRI in both the provider response and
+`Value.external_id`; unmapped and multi-target options continue to use the
+`OptionURI`. Changing a projected target therefore requires a scoped value
+migration as part of deployment.
 
 If an option is retired, keep its row and set `Selectable=false`. Deleting or
 reusing its URI could make existing answers impossible to interpret.
@@ -342,3 +346,51 @@ request per concept. Registering the formats in `PROJECT_EXPORTS` is described
 in the repository README. Use the RDMO-compatible internal keys
 `ts-for-nfdi-json` and `ts-for-nfdi-xml`; RDMO 2.5.x does not accept digits in
 the format segment of an export URL.
+
+### Projection into the standard RDMO XML export
+
+The plugin can project a single curated concept into the native
+`Value.external_id` field. This uses a Django `pre_save` receiver registered by
+the plugin app and a framework-independent projection service. No frontend
+state mutation and no Gateway request are involved.
+
+For a fixed option, the standard RDMO XML then contains both identifiers:
+
+```xml
+<option dc:uri="https://rdmo.fairagro.net/terms/options/data_creation/experiment_data"/>
+<external_id>http://opendata.inrae.fr/thesaurusINRAE/c_17625</external_id>
+```
+
+For a dynamic provider option, RDMO has no `Option` row. Its local option URI
+initially occupies `external_id`, so the projection replaces that value with
+the single concept IRI. The semantic registry accepts either identifier when
+building annotations. Options without a target, with multiple targets, or with
+a relation/status excluded by the storage policy keep their existing value.
+
+RDMO restores a dynamic selection by matching `Value.external_id` against the
+`id` returned by the provider. The semantic provider therefore applies this
+same projection policy when constructing its option IDs. This invariant keeps
+the selected label visible after an interview reload; changing only the stored
+value or only the provider ID would make the control appear empty.
+
+Configure the policy explicitly:
+
+```toml
+[storage.option_external_id]
+enabled = true
+mapping_sets = ["fairagro-data-generation"]
+relations = ["exact", "close"]
+curation_statuses = ["draft", "reviewed"]
+```
+
+Signals apply only when a live value is saved. They do not rewrite existing
+answers and Django's `bulk_create` does not emit `pre_save`. Use the scoped
+management command for existing project values:
+
+```shell
+python manage.py ts4nfdi_sync_external_ids --project 32 --dry-run
+python manage.py ts4nfdi_sync_external_ids --project 32
+```
+
+The command requires an explicit project id and bypasses save signals while
+performing the configured projection. Always inspect the dry-run count first.
