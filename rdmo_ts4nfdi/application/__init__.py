@@ -2,5 +2,10 @@
 
 from .annotations import AnnotationService
 from .targets import SemanticAnnotationTargetResolver
+from .value_projection import SemanticOptionExternalIdProjector
 
-__all__ = ['AnnotationService', 'SemanticAnnotationTargetResolver']
+__all__ = [
+    'AnnotationService',
+    'SemanticAnnotationTargetResolver',
+    'SemanticOptionExternalIdProjector',
+]

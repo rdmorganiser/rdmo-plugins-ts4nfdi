@@ -3,6 +3,17 @@ from typing import Protocol
 
 from .annotations import ResourceReference
 
+SEMANTIC_MAPPING_RELATIONS = frozenset({'exact', 'close', 'broad', 'narrow', 'related', 'component'})
+SEMANTIC_CURATION_STATUSES = frozenset({'draft', 'reviewed', 'deprecated'})
+
+
+@dataclass(frozen=True, slots=True)
+class OptionExternalIdProjectionPolicy:
+    enabled: bool = False
+    mapping_set_ids: tuple[str, ...] = ()
+    relations: frozenset[str] = frozenset()
+    curation_statuses: frozenset[str] = frozenset()
+
 
 @dataclass(frozen=True, slots=True)
 class SemanticTarget:

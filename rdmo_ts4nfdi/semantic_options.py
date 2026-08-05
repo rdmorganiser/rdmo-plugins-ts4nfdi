@@ -4,6 +4,8 @@ from typing import Any
 
 from rdmo_ts4nfdi.config import load_source_configs
 from rdmo_ts4nfdi.domain import (
+    SEMANTIC_CURATION_STATUSES,
+    SEMANTIC_MAPPING_RELATIONS,
     ResourceReference,
     SemanticOption,
     SemanticOptionSet,
@@ -15,8 +17,6 @@ MANIFEST_PACKAGE = 'rdmo_ts4nfdi.data.semantic_option_sets'
 MANIFESTS = {
     'fairagro-data-generation': 'fairagro_data_generation.json',
 }
-MAPPING_RELATIONS = frozenset({'exact', 'close', 'broad', 'narrow', 'related', 'component'})
-CURATION_STATUSES = frozenset({'draft', 'reviewed', 'deprecated'})
 
 
 class PackageSemanticOptionRegistry:
@@ -125,13 +125,16 @@ class PackageSemanticOptionRegistry:
             raise RuntimeError(f"Semantic target '{target_id}' IRI must be an HTTP(S) IRI.")
 
         relation = require_string(payload, 'relation')
-        if relation not in MAPPING_RELATIONS:
-            raise RuntimeError(f"Semantic target '{target_id}' relation must be one of {sorted(MAPPING_RELATIONS)}.")
+        if relation not in SEMANTIC_MAPPING_RELATIONS:
+            raise RuntimeError(
+                f"Semantic target '{target_id}' relation must be one of {sorted(SEMANTIC_MAPPING_RELATIONS)}."
+            )
 
         curation_status = _optional_string(payload.get('curation_status')) or 'draft'
-        if curation_status not in CURATION_STATUSES:
+        if curation_status not in SEMANTIC_CURATION_STATUSES:
             raise RuntimeError(
-                f"Semantic target '{target_id}' curation_status must be one of {sorted(CURATION_STATUSES)}."
+                f"Semantic target '{target_id}' curation_status must be one of "
+                f'{sorted(SEMANTIC_CURATION_STATUSES)}.'
             )
 
         source_key = require_string(payload, 'source_key')

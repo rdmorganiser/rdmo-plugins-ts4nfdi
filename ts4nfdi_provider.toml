@@ -19,6 +19,15 @@ timeout = 10
 cache_timeout = 300
 # api_token = "configure-via-a-secret-bearing-settings-source"
 
+[storage.option_external_id]
+# Project exactly one curated target IRI from a fixed RDMO Option into the
+# corresponding live Value.external_id. This is local manifest lookup only;
+# saving an interview answer never calls the API Gateway.
+enabled = true
+mapping_sets = ["fairagro-data-generation"]
+relations = ["exact", "close"]
+curation_statuses = ["draft", "reviewed"]
+
 [sources.ebi]
 label = "EBI"
 database = "ebi"

@@ -117,7 +117,7 @@ the `ols4/api/ontologies` endpoint with `collectionId`; `fallback_endpoint =
 "collections/"` can be used to read the embedded `terminologies` list from the
 collections overview when the ontology endpoint is unavailable or empty.
 
-The bundled `/search` providers omit the optional Gateway `display` query
+The bundled `/search` providers omit the optiongstal Gateway `display` query
 parameter. The Gateway's default response already contains the identifiers,
 labels, descriptions, terminology, and source metadata used by the plugin, and
 avoiding field projection prevents a currently observed slow/timeout path in

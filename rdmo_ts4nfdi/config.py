@@ -6,7 +6,14 @@ from typing import Any
 
 from django.conf import settings
 
-from rdmo_ts4nfdi.domain import AnnotationMatcher, PresentationPolicy, ResourceReference
+from rdmo_ts4nfdi.domain import (
+    SEMANTIC_CURATION_STATUSES,
+    SEMANTIC_MAPPING_RELATIONS,
+    AnnotationMatcher,
+    OptionExternalIdProjectionPolicy,
+    PresentationPolicy,
+    ResourceReference,
+)
 from rdmo_ts4nfdi.utils import is_http_iri, normalize_optional_string, require_string
 
 logger = logging.getLogger(__name__)
@@ -123,6 +130,56 @@ def load_gateway_config() -> dict[str, Any]:
         'cache_timeout': gateway_config.get('cache_timeout', 300),
         'api_token': gateway_config.get('api_token', defaults.get('api_token')),
     }
+
+
+def load_option_external_id_projection_policy() -> OptionExternalIdProjectionPolicy:
+    storage_config = load_config().get('storage', {})
+    if storage_config in (None, False):
+        return OptionExternalIdProjectionPolicy()
+    if not isinstance(storage_config, dict):
+        raise RuntimeError('TS4NFDI_PROVIDER storage config must be a dictionary.')
+
+    raw_policy = storage_config.get('option_external_id', {})
+    if raw_policy in (None, False):
+        return OptionExternalIdProjectionPolicy()
+    if not isinstance(raw_policy, dict):
+        raise RuntimeError('TS4NFDI_PROVIDER storage option_external_id config must be a dictionary.')
+
+    unsupported = sorted(
+        set(raw_policy) - {'enabled', 'mapping_sets', 'relations', 'curation_statuses'}
+    )
+    if unsupported:
+        raise RuntimeError(f'Unsupported option_external_id config keys: {unsupported}')
+
+    enabled = raw_policy.get('enabled', False)
+    if not isinstance(enabled, bool):
+        raise RuntimeError('option_external_id enabled must be a boolean.')
+
+    mapping_set_ids = _normalize_string_list(raw_policy.get('mapping_sets'), 'mapping_sets')
+    relations = frozenset(_normalize_string_list(raw_policy.get('relations'), 'relations'))
+    curation_statuses = frozenset(
+        _normalize_string_list(raw_policy.get('curation_statuses'), 'curation_statuses')
+    )
+
+    unsupported_relations = sorted(relations - SEMANTIC_MAPPING_RELATIONS)
+    if unsupported_relations:
+        raise RuntimeError(f'Unsupported option_external_id relations: {unsupported_relations}')
+    unsupported_statuses = sorted(curation_statuses - SEMANTIC_CURATION_STATUSES)
+    if unsupported_statuses:
+        raise RuntimeError(f'Unsupported option_external_id curation statuses: {unsupported_statuses}')
+    if enabled and not mapping_set_ids:
+        raise RuntimeError('Enabled option_external_id projection requires at least one mapping set.')
+    if enabled and not relations:
+        raise RuntimeError('Enabled option_external_id projection requires at least one mapping relation.')
+    if enabled and not curation_statuses:
+        raise RuntimeError('Enabled option_external_id projection requires at least one curation status.')
+
+    return OptionExternalIdProjectionPolicy(
+        enabled=enabled,
+        mapping_set_ids=mapping_set_ids,
+        relations=relations,
+        curation_statuses=curation_statuses,
+    )
 
 
 def load_source_configs() -> dict[str, dict[str, str | None]]:
@@ -417,3 +474,17 @@ def _load_raw_frontend_config() -> dict[str, Any]:
         sorted(frontend_config.keys()),
     )
     return frontend_config
+
+
+def _normalize_string_list(value: Any, name: str) -> tuple[str, ...]:
+    if value in (None, False):
+        return ()
+    if not isinstance(value, list):
+        raise RuntimeError(f'option_external_id {name} must be a list.')
+    if any(not isinstance(item, str) for item in value):
+        raise RuntimeError(f'option_external_id {name} must contain only strings.')
+
+    normalized = tuple(dict.fromkeys(item.strip() for item in value if item.strip()))
+    if len(normalized) != len(value):
+        raise RuntimeError(f'option_external_id {name} must contain unique, non-empty strings.')
+    return normalized

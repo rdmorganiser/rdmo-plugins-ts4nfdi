@@ -15,7 +15,15 @@ from .annotations import (
     ResolvedMetadata,
     ResourceReference,
 )
-from .semantic_options import SemanticOption, SemanticOptionRegistry, SemanticOptionSet, SemanticTarget
+from .semantic_options import (
+    SEMANTIC_CURATION_STATUSES,
+    SEMANTIC_MAPPING_RELATIONS,
+    OptionExternalIdProjectionPolicy,
+    SemanticOption,
+    SemanticOptionRegistry,
+    SemanticOptionSet,
+    SemanticTarget,
+)
 
 __all__ = [
     'AnnotationCandidate',
@@ -31,6 +39,9 @@ __all__ = [
     'QuestionContext',
     'ResolvedMetadata',
     'ResourceReference',
+    'SEMANTIC_CURATION_STATUSES',
+    'SEMANTIC_MAPPING_RELATIONS',
+    'OptionExternalIdProjectionPolicy',
     'SemanticOption',
     'SemanticOptionRegistry',
     'SemanticOptionSet',
