@@ -43,7 +43,10 @@ class SemanticAnnotationTargetResolver:
                 )
             return
 
-        if is_http_iri(answer.identifier):
+        # Free-text and regular entity annotations remain HTTP-IRI-only.
+        # Provider-backed resources can additionally be resolved by the
+        # provider's own stable opaque identifier.
+        if is_http_iri(answer.identifier) or matcher.provider_key:
             yield AnnotationCandidate(
                 question=answer.question,
                 value_id=answer.value_id,

@@ -1,5 +1,9 @@
 import {HTTP_IRI, normalizeResource, translate} from "./core.js";
 
+export function hasAnnotationIdentifier(annotation) {
+    return Boolean(String(annotation?.iri || "").trim());
+}
+
 function createBadge(text, modifier, title) {
     if (!text) {
         return null;
@@ -86,7 +90,7 @@ export class NativeInlineAnnotationRenderer {
         slot.setAttribute("aria-hidden", annotations.length ? "false" : "true");
 
         annotations.forEach((annotation) => {
-            if (!annotation.iri || !HTTP_IRI.test(annotation.iri)) {
+            if (!hasAnnotationIdentifier(annotation)) {
                 return;
             }
             const row = document.createElement("button");

@@ -7,9 +7,17 @@ import {
 
 function questionElement(values) {
     return {
-        querySelectorAll: () => values.map(({text, input = false}) => (
-            input ? {value: text} : {textContent: text}
-        ))
+        querySelectorAll: () => values.map(({text, input = false, primaryText}) => {
+            if (input) {
+                return {value: text};
+            }
+            return {
+                textContent: text,
+                querySelector: () => (
+                    primaryText === undefined ? null : {textContent: primaryText}
+                )
+            };
+        })
     };
 }
 
@@ -72,6 +80,32 @@ test("a dataset without a matching selected answer receives no annotation", () =
         null
     );
     assert.equal(host.chooseOccurrence(questionElement([]), [xml], new Set()), null);
+});
+
+test("an occurrence survives a partially changed provider display label", () => {
+    const host = new RDMOTemplateInterviewHost();
+    const terminology = occurrence("1019::0", [
+        annotation("envo", "http://purl.obolibrary.org/obo/envo.owl"),
+        annotation("agrovoc", "agrovoc")
+    ]);
+
+    assert.equal(
+        host.chooseOccurrence(
+            questionElement([
+                {
+                    text: "Environment OntologyFAIRagro TS collectionenvoDescription",
+                    primaryText: "Environment Ontology"
+                },
+                {
+                    text: "agrovocFAIRagro TS collectionagrovocDescription",
+                    primaryText: "agrovoc"
+                }
+            ]),
+            [terminology],
+            new Set()
+        ),
+        terminology
+    );
 });
 
 test("ambiguous repeated answers fail closed when their annotations differ", () => {

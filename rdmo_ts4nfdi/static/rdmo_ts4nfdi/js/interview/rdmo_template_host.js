@@ -7,6 +7,20 @@ function normalizeDisplayedValue(value) {
         .toLocaleLowerCase();
 }
 
+function selectedValueText(element) {
+    if ("value" in element) {
+        return element.value;
+    }
+
+    // Provider option markup can add breadcrumbs and descriptions beside the
+    // actual label. RDMO places all of it inside the selected-value container,
+    // so using its complete textContent would no longer equal Value.text.
+    const primaryLabel = element.querySelector?.(
+        ".interview-select-option > span:first-child"
+    );
+    return primaryLabel ? primaryLabel.textContent : element.textContent;
+}
+
 function annotationFingerprint(occurrence) {
     return (occurrence.annotations || []).map((annotation) => [
         annotation.label,
@@ -166,7 +180,7 @@ export class RDMOTemplateInterviewHost {
                 ".text-input input, .textarea-input textarea"
             )
         ).map((element) => normalizeDisplayedValue(
-            "value" in element ? element.value : element.textContent
+            selectedValueText(element)
         )).filter(Boolean));
         if (!displayedValues.size) {
             return null;
@@ -178,17 +192,27 @@ export class RDMOTemplateInterviewHost {
                     .map((annotation) => normalizeDisplayedValue(annotation.label))
                     .filter(Boolean)
             );
-            return {candidate, labels};
-        }).filter(({labels}) => (
-            labels.size > 0
-            && Array.from(labels).every((label) => displayedValues.has(label))
+            const matchedLabels = new Set(
+                Array.from(labels).filter((label) => displayedValues.has(label))
+            );
+            return {candidate, matchedLabels};
+        }).filter(({matchedLabels}) => (
+            matchedLabels.size > 0
         ));
         if (!matches.length) {
             return null;
         }
 
-        const largestMatch = Math.max(...matches.map(({labels}) => labels.size));
-        const bestMatches = matches.filter(({labels}) => labels.size === largestMatch);
+        // A provider may change the display label independently of an already
+        // stored RDMO Value.text (for example ``envo`` becoming
+        // ``Environment Ontology``). Use the occurrence with the greatest
+        // visible overlap instead of requiring every stored label to match.
+        const largestMatch = Math.max(
+            ...matches.map(({matchedLabels}) => matchedLabels.size)
+        );
+        const bestMatches = matches.filter(
+            ({matchedLabels}) => matchedLabels.size === largestMatch
+        );
         if (bestMatches.length === 1) {
             return bestMatches[0].candidate;
         }

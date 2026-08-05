@@ -142,6 +142,40 @@ def test_page_annotations_group_candidates_by_question_occurrence():
     ]
 
 
+def test_provider_backed_ontology_accepts_an_opaque_provider_identifier():
+    matcher = replace(
+        make_matcher(),
+        resource_type='ontology',
+        provider_key='collection-terminologies',
+        presentation=PresentationPolicy(adapter='native'),
+        source=None,
+        ontology_id=None,
+        gateway_params=(),
+    )
+    answer = replace(
+        make_answer(),
+        label='AGROVOC',
+        identifier='agrovoc',
+    )
+
+    payload = make_service((answer,), matcher=matcher).list_page(
+        SimpleNamespace(id=24),
+        SimpleNamespace(id=341),
+    ).to_dict()
+
+    annotation = payload['occurrences'][0]['annotations'][0]
+    assert annotation['label'] == 'AGROVOC'
+    assert annotation['iri'] == 'agrovoc'
+    assert annotation['kind'] == 'ontology'
+
+
+def test_unconfigured_opaque_identifier_is_not_annotated():
+    answer = replace(make_answer(), identifier='not-an-iri')
+    resolver = SemanticAnnotationTargetResolver(Registry())
+
+    assert list(resolver.resolve(answer, make_matcher())) == []
+
+
 def test_project_annotation_export_keeps_selected_and_semantic_identifiers():
     mapping_set = SemanticOptionSet(
         id='fairagro-data-generation',

@@ -2,9 +2,16 @@ import assert from "node:assert/strict";
 import {test} from "node:test";
 
 import {
+    hasAnnotationIdentifier,
     hasSemanticConceptMetadata,
     missingSemanticMetadataMessage
 } from "../../rdmo_ts4nfdi/static/rdmo_ts4nfdi/js/interview/native_presentation.js";
+
+test("provider-backed annotations can use an opaque resource identifier", () => {
+    assert.equal(hasAnnotationIdentifier({iri: "agrovoc"}), true);
+    assert.equal(hasAnnotationIdentifier({iri: "  "}), false);
+    assert.equal(hasAnnotationIdentifier({}), false);
+});
 
 test("semantic concept metadata accepts definitions, descriptions, or synonyms", () => {
     assert.equal(

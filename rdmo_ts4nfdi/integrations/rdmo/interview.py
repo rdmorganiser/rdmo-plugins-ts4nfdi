@@ -109,8 +109,14 @@ class RDMOInterviewHost:
     def _value_identifier(value) -> str | None:
         if value.option and is_http_iri(value.option.uri):
             return value.option.uri
-        if is_http_iri(value.external_id):
-            return value.external_id
+        # Dynamic providers may use a stable opaque identifier (for example
+        # an ontology id such as ``agrovoc``) when no canonical HTTP IRI is
+        # present in the provider response. Whether that identifier is a safe
+        # annotation target is decided later by the matched provider-backed
+        # annotation policy.
+        if value.external_id:
+            identifier = str(value.external_id).strip()
+            return identifier or None
         return None
 
     @classmethod
