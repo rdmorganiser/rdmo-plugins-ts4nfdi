@@ -142,6 +142,50 @@ def test_page_annotations_group_candidates_by_question_occurrence():
     ]
 
 
+def test_page_annotation_summary_can_be_enriched_with_gateway_metadata():
+    class SummaryMetadata:
+        def resolve(self, candidate, matcher):
+            return ResolvedMetadata(
+                short_form='4813',
+                source=ResourceReference(
+                    id='agroportal',
+                    label='agroportal',
+                    url='https://data.agroportal.eu',
+                ),
+                terminology=ResourceReference(id='THESAGRO', label='THESAGRO'),
+            )
+
+    matcher = replace(
+        make_matcher(),
+        source=None,
+        ontology_id=None,
+        badge_label='Terminology',
+        gateway_params=(),
+        resolve_summary_metadata=True,
+    )
+    answer = replace(
+        make_answer(),
+        label='Chocolate',
+        identifier='http://sistemas.agricultura.gov.br/tematres/vocab/thesagro/4813',
+    )
+    service = AnnotationService(
+        host=Host((answer,)),
+        targets=SemanticAnnotationTargetResolver(Registry()),
+        metadata=SummaryMetadata(),
+        presentation=Presentation(),
+        matchers=(matcher,),
+    )
+
+    summary = service.list_page(
+        SimpleNamespace(id=24),
+        SimpleNamespace(id=341),
+    ).to_dict()['occurrences'][0]['annotations'][0]
+
+    assert summary['short_form'] == '4813'
+    assert summary['source']['id'] == 'agroportal'
+    assert summary['terminology']['id'] == 'THESAGRO'
+
+
 def test_provider_backed_ontology_accepts_an_opaque_provider_identifier():
     matcher = replace(
         make_matcher(),

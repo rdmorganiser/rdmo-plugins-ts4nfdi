@@ -116,7 +116,8 @@ class AnnotationService:
                 )
                 if key not in grouped:
                     grouped[key] = (candidate.question, [])
-                grouped[key][1].append(self._summarize(candidate, matcher))
+                metadata = self._resolve_summary_metadata(candidate, matcher)
+                grouped[key][1].append(self._summarize(candidate, matcher, metadata))
 
         occurrences = tuple(
             AnnotationOccurrence(
@@ -194,9 +195,33 @@ class AnnotationService:
             presentation=presentation,
         )
 
+    def _resolve_summary_metadata(
+        self,
+        candidate: AnnotationCandidate,
+        matcher: AnnotationMatcher,
+    ) -> ResolvedMetadata | None:
+        if not matcher.resolve_summary_metadata:
+            return None
+        try:
+            return self.metadata.resolve(candidate, matcher)
+        except Exception as exc:
+            # Summary enrichment is optional. Keep the annotation list usable
+            # when the external Gateway is slow, unavailable, or ambiguous.
+            logger.warning(
+                'Could not enrich TS4NFDI annotation summary for value=%s matcher=%r: %s',
+                candidate.value_id,
+                matcher.id,
+                exc,
+            )
+            return None
+
     @staticmethod
-    def _summarize(candidate: AnnotationCandidate, matcher: AnnotationMatcher) -> AnnotationSummary:
-        terminology = candidate.terminology
+    def _summarize(
+        candidate: AnnotationCandidate,
+        matcher: AnnotationMatcher,
+        metadata: ResolvedMetadata | None = None,
+    ) -> AnnotationSummary:
+        terminology = candidate.terminology or (metadata.terminology if metadata else None)
         if terminology is None and (matcher.ontology_id or matcher.badge_label):
             terminology = ResourceReference(
                 id=matcher.ontology_id,
@@ -211,7 +236,8 @@ class AnnotationService:
             label=candidate.answer_label or candidate.label,
             iri=candidate.iri,
             badge_label=matcher.badge_label,
-            source=candidate.source or matcher.source,
+            short_form=metadata.short_form if metadata else None,
+            source=candidate.source or (metadata.source if metadata else None) or matcher.source,
             terminology=terminology,
             answer_id=candidate.answer_id,
             target_id=candidate.target_id,

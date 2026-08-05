@@ -49,6 +49,7 @@ class AnnotationMatcher:
     ontology_id: str | None = None
     mapping_set_id: str | None = None
     gateway_params: tuple[tuple[str, Any], ...] = ()
+    resolve_summary_metadata: bool = False
 
     def matches(self, question: 'QuestionContext') -> bool:
         return (
@@ -113,6 +114,7 @@ class AnnotationSummary:
     iri: str
     question_id: int
     badge_label: str | None = None
+    short_form: str | None = None
     source: ResourceReference | None = None
     terminology: ResourceReference | None = None
     answer_id: str | None = None
@@ -132,6 +134,7 @@ class AnnotationSummary:
             'label': self.label,
             'iri': self.iri,
             'badge_label': self.badge_label,
+            'short_form': self.short_form,
             'source': self.source.to_dict() if self.source else None,
             'terminology': self.terminology.to_dict() if self.terminology else None,
             'answer_id': self.answer_id,

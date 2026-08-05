@@ -50,6 +50,7 @@ def _append_annotation(parent, payload: dict) -> None:
     )
     for key in (
         'label',
+        'short_form',
         'answer_id',
         'target_id',
         'target_label',

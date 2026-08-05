@@ -4,6 +4,13 @@ export function hasAnnotationIdentifier(annotation) {
     return Boolean(String(annotation?.iri || "").trim());
 }
 
+export function annotationTermLabel(annotation) {
+    return annotation?.short_form
+        || annotation?.target_label
+        || annotation?.label
+        || annotation?.kind;
+}
+
 function createBadge(text, modifier, title) {
     if (!text) {
         return null;
@@ -48,6 +55,7 @@ function annotationFingerprint(annotations) {
         annotation.label,
         annotation.iri,
         annotation.badge_label,
+        annotation.short_form,
         annotation.source?.id,
         annotation.terminology?.id
     ].join(":")).join("|");
@@ -116,7 +124,7 @@ export class NativeInlineAnnotationRenderer {
                     title: terminology.iri
                 },
                 {
-                    text: annotation.target_label || annotation.label || annotation.kind,
+                    text: annotationTermLabel(annotation),
                     modifier: "term",
                     title: annotation.iri
                 }

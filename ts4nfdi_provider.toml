@@ -200,6 +200,10 @@ attribute_uri = "https://rdmo.fairagro.net/terms/domain/rdmo-plugins-ts4nfdi/dat
 optionset_uri = "https://rdmo.fairagro.net/terms/options/rdmo-plugins-ts4nfdi/keywords"
 resource_type = "entity"
 badge_label = "Terminology"
+# RDMO stores the selected label and IRI, but not the dynamic provider's
+# source/terminology breadcrumb. Resolve that display metadata from the same
+# Gateway search contract for this deliberately broad multi-source example.
+resolve_summary_metadata = true
 presentation = { adapter = "native" }
 
 # FAIRagro data-generation classifications selected from the plugin's

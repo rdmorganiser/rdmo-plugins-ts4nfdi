@@ -367,6 +367,65 @@ upstream design. A safe mutation API would have to:
 Until such an API exists, this plugin should not simulate clicks, change React
 controlled inputs, dispatch private actions, or write to the Redux store.
 
+## Feature request 5: preserve structured dynamic-option identity metadata
+
+Suggested issue title:
+
+> Let dynamic option providers persist declared provenance metadata with a selected value
+
+### Problem
+
+An RDMO dynamic option provider can return rich search-result objects, but the
+current select widget persists only the provider option's `id` as
+`Value.external_id` and its `text` as `Value.text`. This is sufficient when an
+identifier globally and unambiguously identifies one result. It is insufficient
+for federated search, where the same identifier can be returned through several
+sources or terminology collections and the selected source is meaningful
+provenance.
+
+Re-querying the provider later is only a best-effort reconstruction: external
+results may change, the service may be unavailable, and identical identifiers
+may have conflicting source contexts. Parsing presentation HTML from an option's
+`help` field would couple persistence to markup and should not be required.
+
+This is not terminology-specific. Similar requirements apply to authority
+files, repository search, equipment registries, person/institution lookup, and
+other federated provider integrations.
+
+### Proposed capability
+
+A provider could declare a small JSON-serialisable metadata object on an option,
+and RDMO could persist that object alongside the selected value or in a generic
+related value-metadata model. The field must be opt-in, size-limited, and treated
+as immutable provider provenance rather than trusted HTML.
+
+For example:
+
+```json
+{
+  "id": "https://example.org/concept/123",
+  "text": "Example concept",
+  "metadata": {
+    "source": "example-authority",
+    "collection": "example-vocabulary",
+    "local_id": "123"
+  }
+}
+```
+
+The value REST representation and normal project exports should expose the
+stored metadata. Import should preserve it, and snapshot/copy operations should
+follow the same semantics as the owning value. RDMO does not need to interpret
+the keys; deployments and provider plugins own their schemas.
+
+### Compatibility and safety
+
+Providers that do not return metadata behave exactly as before. RDMO should
+accept JSON values only, enforce a conservative size limit, reject executable
+or markup semantics, and never render metadata without an explicit consumer.
+The selected `external_id` remains the canonical external identifier, so
+existing exports and integrations remain compatible.
+
 ## Suggested upstream sequence
 
 The proposals can be discussed and delivered independently:

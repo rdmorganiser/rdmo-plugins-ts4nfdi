@@ -34,6 +34,12 @@ class GatewayMetadataResolver:
         candidate: AnnotationCandidate,
         matcher: AnnotationMatcher,
     ) -> ResolvedMetadata:
+        # A broad multi-source matcher has no OLS database or ontology route
+        # from which its selected IRI can be reconstructed. Use the same
+        # source-neutral search contract as its dynamic provider.
+        if not matcher.source and not matcher.ontology_id:
+            return self._resolve_entity_from_search(candidate, matcher)
+
         if (
             matcher.source
             and matcher.source.backend_type
@@ -110,17 +116,27 @@ class GatewayMetadataResolver:
             ),
         ]
         payload, _ = self.gateway.get('search', query)
-        result = next(
-            (
-                item
-                for item in extract_results(payload)
-                if get_first_value(item, ('iri', '@id', 'uri', 'id')) == candidate.iri
-            ),
-            None,
-        )
-        if result is None:
+        results = [
+            item
+            for item in extract_results(payload)
+            if get_first_value(item, ('iri', '@id', 'uri', 'id')) == candidate.iri
+        ]
+        if not results:
             raise LookupError(f'No Gateway search metadata was returned for {candidate.iri}.')
-        return normalize_entity_metadata(result, matcher)
+
+        contexts = {
+            (
+                get_first_value(result, ('source_name', 'sourceName', 'source')),
+                get_first_value(result, ('ontologyId', 'ontology_id', 'ontology')),
+                get_first_value(result, ('backend_type', 'backendType')),
+            )
+            for result in results
+        }
+        if len(contexts) > 1:
+            raise LookupError(
+                f'Gateway search returned conflicting source contexts for {candidate.iri}.'
+            )
+        return normalize_entity_metadata(results[0], matcher)
 
     def _resolve_provider_resource(
         self,
@@ -209,7 +225,11 @@ def build_terminology_reference(
     result = result or {}
     terminology_id = get_first_value(result, ('ontologyId', 'ontology_id', 'ontology')) or matcher.ontology_id
     terminology_iri = get_first_value(result, ('ontologyIri', 'ontology_iri'))
-    terminology_label = matcher.badge_label or terminology_id
+    terminology_label = (
+        matcher.badge_label
+        if matcher.ontology_id
+        else terminology_id or matcher.badge_label
+    )
     if not any((terminology_id, terminology_iri, terminology_label)):
         return None
     return ResourceReference(

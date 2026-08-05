@@ -319,6 +319,10 @@ def normalize_annotation_matcher(
             ignored_params,
         )
 
+    resolve_summary_metadata = raw_matcher.get('resolve_summary_metadata', False)
+    if not isinstance(resolve_summary_metadata, bool):
+        raise RuntimeError('resolve_summary_metadata must be a boolean')
+
     return AnnotationMatcher(
         id=matcher_id,
         question_uri=require_string(raw_matcher, 'question_uri'),
@@ -332,6 +336,7 @@ def normalize_annotation_matcher(
         ontology_id=normalize_optional_string(raw_matcher.get('ontology_id')),
         mapping_set_id=normalize_optional_string(raw_matcher.get('mapping_set_id')),
         gateway_params=tuple(gateway_params.items()),
+        resolve_summary_metadata=resolve_summary_metadata,
     )
 
 

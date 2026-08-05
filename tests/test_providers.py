@@ -581,6 +581,7 @@ def test_annotation_config_is_validated_and_sanitized(provider_modules):
                         'attribute_uri': 'https://example.test/attribute',
                         'optionset_uri': 'https://example.test/optionset',
                         'resource_type': 'entity',
+                        'resolve_summary_metadata': True,
                         'mapping_set_id': 'example-mappings',
                         'presentation': {
                             'adapter': 'tss',
@@ -612,6 +613,7 @@ def test_annotation_config_is_validated_and_sanitized(provider_modules):
     assert matchers[0].presentation.adapter == 'tss'
     assert matchers[0].presentation.component == 'entity-info'
     assert matchers[0].mapping_set_id == 'example-mappings'
+    assert matchers[0].resolve_summary_metadata is True
     assert matchers[0].gateway_query == (('database', 'ols'),)
     assert frontend_config == {
         'annotations': {
@@ -824,6 +826,124 @@ def test_entity_metadata_normalizes_gateway_fields(provider_modules):
         label='EDAM',
         iri='http://edamontology.org',
     )
+
+
+def test_broad_entity_metadata_recovers_the_gateway_search_breadcrumb(provider_modules):
+    concept_iri = 'http://sistemas.agricultura.gov.br/tematres/vocab/thesagro/4813'
+    matcher = provider_modules.domain.AnnotationMatcher(
+        id='keywords',
+        question_uri='https://example.test/question',
+        attribute_uri='https://example.test/attribute',
+        optionset_uri='https://example.test/optionset',
+        resource_type='entity',
+        presentation=provider_modules.domain.PresentationPolicy(adapter='native'),
+        badge_label='Terminology',
+    )
+    candidate = provider_modules.domain.AnnotationCandidate(
+        question=provider_modules.domain.QuestionContext(
+            question_id=1,
+            question_uri=matcher.question_uri,
+            attribute_id=2,
+            attribute_uri=matcher.attribute_uri,
+            optionset_uris=(matcher.optionset_uri,),
+        ),
+        value_id=3,
+        label='Chocolate',
+        iri=concept_iri,
+        set_prefix='',
+        set_index=0,
+        collection_index=0,
+    )
+
+    class Gateway:
+        def __init__(self):
+            self.calls = []
+
+        def get(self, path, query=None):
+            self.calls.append((path, query))
+            return (
+                [
+                    {
+                        'iri': concept_iri,
+                        'label': 'Chocolate',
+                        'short_form': '4813',
+                        'ontology': 'THESAGRO',
+                        'source': 'https://data.agroportal.eu',
+                        'source_name': 'agroportal',
+                        'backend_type': 'ontoportal',
+                    },
+                    {
+                        'iri': 'https://example.test/different-concept',
+                        'label': 'Chocolate',
+                        'ontology': 'other',
+                    },
+                ],
+                False,
+            )
+
+    gateway = Gateway()
+    metadata = provider_modules.annotation_metadata.GatewayMetadataResolver(gateway).resolve(
+        candidate,
+        matcher,
+    )
+
+    assert gateway.calls == [('search', [('query', 'Chocolate')])]
+    assert metadata.short_form == '4813'
+    assert metadata.source.id == 'agroportal'
+    assert metadata.source.url == 'https://data.agroportal.eu'
+    assert metadata.terminology.id == 'THESAGRO'
+    assert metadata.terminology.label == 'THESAGRO'
+
+
+def test_broad_entity_metadata_rejects_conflicting_contexts_for_the_same_iri(provider_modules):
+    matcher = provider_modules.domain.AnnotationMatcher(
+        id='keywords',
+        question_uri='https://example.test/question',
+        attribute_uri='https://example.test/attribute',
+        optionset_uri='https://example.test/optionset',
+        resource_type='entity',
+        presentation=provider_modules.domain.PresentationPolicy(adapter='native'),
+        badge_label='Terminology',
+    )
+    candidate = provider_modules.domain.AnnotationCandidate(
+        question=provider_modules.domain.QuestionContext(
+            question_id=1,
+            question_uri=matcher.question_uri,
+            attribute_id=2,
+            attribute_uri=matcher.attribute_uri,
+            optionset_uris=(matcher.optionset_uri,),
+        ),
+        value_id=3,
+        label='Chocolate',
+        iri='https://example.test/chocolate',
+        set_prefix='',
+        set_index=0,
+        collection_index=0,
+    )
+
+    class Gateway:
+        def get(self, path, query=None):
+            return (
+                [
+                    {
+                        'iri': candidate.iri,
+                        'source_name': 'ebi',
+                        'ontology': 'foodon',
+                    },
+                    {
+                        'iri': candidate.iri,
+                        'source_name': 'agroportal',
+                        'ontology': 'FOBI',
+                    },
+                ],
+                False,
+            )
+
+    with pytest.raises(LookupError, match='conflicting source contexts'):
+        provider_modules.annotation_metadata.GatewayMetadataResolver(Gateway()).resolve(
+            candidate,
+            matcher,
+        )
 
 
 def make_skosmos_annotation_context(provider_modules):

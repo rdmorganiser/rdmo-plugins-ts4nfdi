@@ -2,10 +2,19 @@ import assert from "node:assert/strict";
 import {test} from "node:test";
 
 import {
+    annotationTermLabel,
     hasAnnotationIdentifier,
     hasSemanticConceptMetadata,
     missingSemanticMetadataMessage
 } from "../../rdmo_ts4nfdi/static/rdmo_ts4nfdi/js/interview/native_presentation.js";
+
+test("resolved short forms are used in annotation breadcrumbs", () => {
+    assert.equal(
+        annotationTermLabel({label: "Chocolate", short_form: "4813"}),
+        "4813"
+    );
+    assert.equal(annotationTermLabel({label: "Chocolate"}), "Chocolate");
+});
 
 test("provider-backed annotations can use an opaque resource identifier", () => {
     assert.equal(hasAnnotationIdentifier({iri: "agrovoc"}), true);
