@@ -46,6 +46,9 @@ class ProjectAPIView(GenericAPIView):
 
 
 class AnnotationListView(ProjectAPIView):
+    def get_payload(self, project, page):
+        return build_annotation_service().list_page(project, page)
+
     def get(self, request, project_id):
         project = self.get_project()
 
@@ -63,11 +66,13 @@ class AnnotationListView(ProjectAPIView):
         if page is None:
             raise NotFound()
 
-        payload = build_annotation_service().list_page(
-            project,
-            page,
-        )
+        payload = self.get_payload(project, page)
         return Response(payload.to_dict())
+
+
+class AnnotationListV2View(AnnotationListView):
+    def get_payload(self, project, page):
+        return build_annotation_service().list_page_v2(project, page)
 
 
 class AnnotationDetailView(ProjectAPIView):

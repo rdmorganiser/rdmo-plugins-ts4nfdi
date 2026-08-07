@@ -34,6 +34,29 @@ class PresentationPolicy:
     def option(self, key: str, default: Any = None) -> Any:
         return dict(self.options).get(key, default)
 
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            'adapter': self.adapter,
+            'component': self.component,
+            'options': dict(self.options),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class GatewayContext:
+    ontology_id: str | None = None
+    database: str | None = None
+    backend_type: str | None = None
+    params: tuple[tuple[str, Any], ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            'ontology_id': self.ontology_id,
+            'database': self.database,
+            'backend_type': self.backend_type,
+            'params': dict(self.params),
+        }
+
 
 @dataclass(frozen=True, slots=True)
 class AnnotationMatcher:
@@ -149,6 +172,20 @@ class AnnotationSummary:
 
 
 @dataclass(frozen=True, slots=True)
+class AnnotationDescriptor:
+    annotation: AnnotationSummary
+    gateway_context: GatewayContext | None
+    presentation: PresentationPolicy
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            **self.annotation.to_dict(),
+            'gateway_context': self.gateway_context.to_dict() if self.gateway_context else None,
+            'presentation': self.presentation.to_dict(),
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class AnnotationOccurrence:
     question: QuestionContext
     set_prefix: str
@@ -172,11 +209,50 @@ class AnnotationOccurrence:
 
 
 @dataclass(frozen=True, slots=True)
+class AnnotationDescriptorOccurrence:
+    question: QuestionContext
+    set_prefix: str
+    set_index: int
+    annotations: tuple[AnnotationDescriptor, ...]
+
+    @property
+    def key(self) -> str:
+        return f'{self.question.question_id}:{self.set_prefix}:{self.set_index}'
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            'key': self.key,
+            'question_id': self.question.question_id,
+            'question_uri': self.question.question_uri,
+            'attribute_id': self.question.attribute_id,
+            'set_prefix': self.set_prefix,
+            'set_index': self.set_index,
+            'annotations': [annotation.to_dict() for annotation in self.annotations],
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class PageAnnotations:
     project_id: int
     page_id: int
     occurrences: tuple[AnnotationOccurrence, ...]
     api_version: str = '1'
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            'api_version': self.api_version,
+            'project_id': self.project_id,
+            'page_id': self.page_id,
+            'occurrences': [occurrence.to_dict() for occurrence in self.occurrences],
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class PageAnnotationDescriptors:
+    project_id: int
+    page_id: int
+    occurrences: tuple[AnnotationDescriptorOccurrence, ...]
+    api_version: str = '2'
 
     def to_dict(self) -> dict[str, Any]:
         return {

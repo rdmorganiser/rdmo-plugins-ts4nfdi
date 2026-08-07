@@ -6,11 +6,15 @@ from typing import Any, Protocol
 
 from rdmo_ts4nfdi.domain import (
     AnnotationCandidate,
+    AnnotationDescriptor,
+    AnnotationDescriptorOccurrence,
     AnnotationDetail,
     AnnotationMatcher,
     AnnotationOccurrence,
     AnnotationSummary,
+    GatewayContext,
     InterviewAnswer,
+    PageAnnotationDescriptors,
     PageAnnotations,
     PresentationDescriptor,
     ProjectAnnotations,
@@ -20,6 +24,8 @@ from rdmo_ts4nfdi.domain import (
 )
 
 logger = logging.getLogger(__name__)
+
+PUBLIC_GATEWAY_PARAM_KEYS = frozenset({'collectionId', 'database', 'lang'})
 
 
 class InterviewHost(Protocol):
@@ -129,6 +135,49 @@ class AnnotationService:
             for (_, set_prefix, set_index), (question, annotations) in grouped.items()
         )
         return PageAnnotations(
+            project_id=self.host.project_id(project),
+            page_id=self.host.page_id(page),
+            occurrences=occurrences,
+        )
+
+    def list_page_v2(self, project: Any, page: Any) -> PageAnnotationDescriptors:
+        grouped: OrderedDict[
+            tuple[int, str, int],
+            tuple[QuestionContext, list[AnnotationDescriptor]],
+        ] = OrderedDict()
+
+        for answer in self.host.page_answers(project, page):
+            matcher = self.matchers.match(answer.question)
+            if matcher is None:
+                continue
+
+            for candidate in self.targets.resolve(answer, matcher):
+                contextual_matcher = self._contextualize_matcher(candidate, matcher)
+                key = (
+                    candidate.question.question_id,
+                    candidate.set_prefix,
+                    candidate.set_index,
+                )
+                if key not in grouped:
+                    grouped[key] = (candidate.question, [])
+                grouped[key][1].append(
+                    AnnotationDescriptor(
+                        annotation=self._summarize(candidate, contextual_matcher),
+                        gateway_context=self._gateway_context(contextual_matcher),
+                        presentation=contextual_matcher.presentation,
+                    )
+                )
+
+        occurrences = tuple(
+            AnnotationDescriptorOccurrence(
+                question=question,
+                set_prefix=set_prefix,
+                set_index=set_index,
+                annotations=tuple(annotations),
+            )
+            for (_, set_prefix, set_index), (question, annotations) in grouped.items()
+        )
+        return PageAnnotationDescriptors(
             project_id=self.host.project_id(project),
             page_id=self.host.page_id(page),
             occurrences=occurrences,
@@ -248,6 +297,26 @@ class AnnotationService:
             mapping_set_version=candidate.mapping_set_version,
             question_id=candidate.question.question_id,
         )
+
+    @staticmethod
+    def _gateway_context(matcher: AnnotationMatcher) -> GatewayContext | None:
+        source = matcher.source
+        gateway_params = dict(matcher.gateway_query)
+        database = source.database if source and source.database else gateway_params.get('database')
+        params = tuple(
+            (key, value)
+            for key, value in matcher.gateway_query
+            if key in PUBLIC_GATEWAY_PARAM_KEYS and key != 'database'
+        )
+        context = GatewayContext(
+            ontology_id=matcher.ontology_id,
+            database=database,
+            backend_type=source.backend_type if source else None,
+            params=params,
+        )
+        if not any((context.ontology_id, context.database, context.backend_type, context.params)):
+            return None
+        return context
 
     @staticmethod
     def _contextualize_matcher(
