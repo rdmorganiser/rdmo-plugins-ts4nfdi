@@ -67,13 +67,17 @@ export class RDMOTemplateInterviewHost {
             occurrencesByQuestion.set(occurrence.question_id, current);
         });
 
+        const activePageSetIndex = this.activePageSetIndex();
         const usedKeys = new Set();
         return Array.from(
             document.querySelectorAll(`#main .interview-question ${HOOK_SELECTOR}`)
         ).map((element) => {
             const questionElement = element.closest(".interview-question");
             const questionId = this.discoverQuestionId(questionElement);
-            const candidates = occurrencesByQuestion.get(questionId) || [];
+            const candidates = this.scopeCandidatesToActivePageSet(
+                occurrencesByQuestion.get(questionId) || [],
+                activePageSetIndex
+            );
             const occurrence = this.chooseOccurrence(questionElement, candidates, usedKeys);
             if (occurrence) {
                 usedKeys.add(occurrence.key);
@@ -165,6 +169,40 @@ export class RDMOTemplateInterviewHost {
         ].filter(Boolean).join(" ");
         const match = ariaText.match(/question-(?:text|help)-(\d+)/);
         return match ? Number(match[1]) : null;
+    }
+
+    activePageSetIndex() {
+        const tabs = Array.from(document.querySelectorAll(
+            "#main .interview-page-tabs .nav-tabs > li"
+        ));
+        const activeIndex = tabs.findIndex((tab) => tab.classList.contains("active"));
+
+        // RDMO's collection-page tabs are emitted in set-index order. The
+        // React DOM does not expose the actual set_index, but the active tab's
+        // position is sufficient for the normal, contiguous collection sets
+        // RDMO creates. If it cannot be determined, retain the existing
+        // label-based matching behaviour below.
+        return activeIndex === -1 ? null : activeIndex;
+    }
+
+    scopeCandidatesToActivePageSet(candidates, activePageSetIndex) {
+        if (activePageSetIndex === null) {
+            return candidates;
+        }
+
+        const topLevelCandidates = candidates.filter(
+            (candidate) => !candidate.set_prefix
+        );
+        if (!topLevelCandidates.length) {
+            return candidates;
+        }
+
+        // A collection page renders only the active top-level set. Do not
+        // fall back to another set when this one has no semantic annotations:
+        // showing no row is safer than attaching another dataset's details.
+        return topLevelCandidates.filter(
+            (candidate) => Number(candidate.set_index) === activePageSetIndex
+        );
     }
 
     chooseOccurrence(questionElement, candidates, usedKeys) {

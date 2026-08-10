@@ -22,7 +22,13 @@ function questionElement(values) {
 }
 
 function occurrence(key, annotations) {
-    return {key, annotations};
+    const [, setPrefix = "", setIndex = "0"] = key.split(":");
+    return {
+        key,
+        set_prefix: setPrefix,
+        set_index: Number(setIndex),
+        annotations
+    };
 }
 
 function annotation(label, iri) {
@@ -138,5 +144,38 @@ test("identical repeated annotations may share a visually indistinguishable occu
     assert.equal(
         host.chooseOccurrence(questionElement([{text: "XML"}]), [first, second], new Set()),
         first
+    );
+});
+
+test("the active collection-page tab selects its own duplicate annotation", () => {
+    const host = new RDMOTemplateInterviewHost();
+    const datasetM2 = occurrence("7::1", [
+        annotation("YAML", "http://edamontology.org/format_3750")
+    ]);
+    const datasetD3 = occurrence("7::2", [
+        annotation("YAML", "http://edamontology.org/format_3750")
+    ]);
+
+    const candidates = host.scopeCandidatesToActivePageSet(
+        [datasetM2, datasetD3],
+        2
+    );
+
+    assert.deepEqual(candidates, [datasetD3]);
+    assert.equal(
+        host.chooseOccurrence(questionElement([{text: "YAML"}]), candidates, new Set()),
+        datasetD3
+    );
+});
+
+test("a collection page does not borrow annotations from another active tab", () => {
+    const host = new RDMOTemplateInterviewHost();
+    const datasetM2 = occurrence("7::1", [
+        annotation("YAML", "http://edamontology.org/format_3750")
+    ]);
+
+    assert.deepEqual(
+        host.scopeCandidatesToActivePageSet([datasetM2], 2),
+        []
     );
 });
