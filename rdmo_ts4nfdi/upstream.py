@@ -9,7 +9,7 @@ import sys
 import tarfile
 import tempfile
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 from urllib.request import Request, urlopen
 
 from rdmo_ts4nfdi.vendor import load_tss_vendor_manifest
@@ -20,8 +20,14 @@ STATIC_ROOT = PACKAGE_ROOT / 'static'
 PACKAGE_NAME = '@ts4nfdi/terminology-service-suite-js'
 DEFAULT_REGISTRY = 'https://registry.npmjs.org'
 DEFAULT_OPENAPI_URL = 'https://terminology.services.base4nfdi.de/api-gateway/v3/api-docs'
+DEFAULT_GATEWAY_URL = 'https://terminology.services.base4nfdi.de/api-gateway'
+FAIRAGRO_COLLECTION_ID = 'ff5491d1-d0a9-481e-ac90-0fad065fa097'
+FAIRAGRO_ENTITYSET_ID = 'fc45621d-7e40-47ce-9616-4133f0b54edf'
+EDAM_SAMPLE_IRI = 'http://edamontology.org/format_2332'
+AGROVOC_SAMPLE_IRI = 'http://aims.fao.org/aos/agrovoc/c_4826'
 REQUIRED_GATEWAY_PATHS = {
     '/collections/',
+    '/entitysets',
     '/search',
     '/ols4/api/ontologies/{onto}',
     '/ols4/api/ontologies/{onto}/terms',
@@ -41,6 +47,17 @@ def fetch_json(url, user_agent):
     request = Request(url, headers={'Accept': 'application/json', 'User-Agent': user_agent})
     with urlopen(request, timeout=30) as response:
         return json.load(response)
+
+
+def fetch_json_response(url, user_agent, headers=None):
+    request_headers = {'Accept': 'application/json', 'User-Agent': user_agent}
+    if headers:
+        request_headers.update(headers)
+    request = Request(url, headers=request_headers)
+    with urlopen(request, timeout=30) as response:
+        return json.load(response), {
+            key.lower(): value for key, value in response.headers.items()
+        }
 
 
 def fetch_bytes(url):
@@ -193,6 +210,115 @@ def check_gateway_contract(openapi_url=DEFAULT_OPENAPI_URL):
     )
 
 
+def check_gateway_live_contract(gateway_url=DEFAULT_GATEWAY_URL, origin=None):
+    """Probe public Gateway responses needed by the configured example routes.
+
+    This intentionally checks response behavior, not merely the OpenAPI route
+    declarations. It is an opt-in deployment check: public DNS, CORS policy,
+    or temporarily unavailable upstream sources must not affect normal RDMO
+    requests or the test suite.
+    """
+    gateway_url = gateway_url.rstrip('/')
+
+    origin = origin.strip() if isinstance(origin, str) else None
+    request_headers = {'Origin': origin} if origin else None
+    edam_payload, edam_headers = fetch_json_response(
+        _gateway_url(
+            gateway_url,
+            'ols4/api/v2/ontologies/edam/entities',
+            iri=EDAM_SAMPLE_IRI,
+            database='ebi',
+        ),
+        'rdmo-ts4nfdi-live-contract-check',
+        request_headers,
+    )
+    if origin and not edam_headers.get('access-control-allow-origin'):
+        raise RuntimeError('Gateway EDAM OLS4 response does not expose a CORS allow-origin header.')
+    if not _contains_iri(_response_items(edam_payload), EDAM_SAMPLE_IRI):
+        raise RuntimeError('Gateway EDAM OLS4 response does not contain the expected sample entity.')
+
+    collections_payload, _collections_headers = fetch_json_response(
+        _gateway_url(gateway_url, 'collections/'),
+        'rdmo-ts4nfdi-live-contract-check',
+    )
+    if not _contains_id(_response_items(collections_payload), FAIRAGRO_COLLECTION_ID):
+        raise RuntimeError('Gateway collections response does not contain the configured FAIRagro collection.')
+
+    entitysets_payload, _entitysets_headers = fetch_json_response(
+        _gateway_url(gateway_url, 'entitysets'),
+        'rdmo-ts4nfdi-live-contract-check',
+    )
+    if not _contains_id(_response_items(entitysets_payload), FAIRAGRO_ENTITYSET_ID):
+        raise RuntimeError('Gateway entity-sets response does not contain the configured FAIRagro entity set.')
+
+    agrovoc_payload, _agrovoc_headers = fetch_json_response(
+        _gateway_url(
+            gateway_url,
+            'ols4/api/v2/ontologies/agrovoc/entities',
+            iri=AGROVOC_SAMPLE_IRI,
+            database='agrovoc',
+        ),
+        'rdmo-ts4nfdi-live-contract-check',
+    )
+    agrovoc_ready = _contains_iri(_response_items(agrovoc_payload), AGROVOC_SAMPLE_IRI)
+    agrovoc_status = (
+        'AGROVOC OLS4 entity available for a future TSS migration.'
+        if agrovoc_ready
+        else 'AGROVOC OLS4 entity unavailable; keep the native annotation path.'
+    )
+    cors_status = (
+        f'CORS available for {origin}'
+        if origin
+        else 'CORS not checked (pass --origin with the RDMO browser origin)'
+    )
+    return (
+        f'Gateway live contract: EDAM OLS4 entity available; {cors_status}; '
+        'FAIRagro collection and entity set available; '
+        f'{agrovoc_status}'
+    )
+
+
+def _gateway_url(gateway_url, path, **params):
+    url = f'{gateway_url}/{path.lstrip("/")}'
+    return f'{url}?{urlencode(params)}' if params else url
+
+
+def _response_items(payload):
+    if isinstance(payload, list):
+        return payload
+    if not isinstance(payload, dict):
+        return ()
+    if any(key in payload for key in ('iri', '@id', 'uri', 'id')):
+        return (payload,)
+    for key in ('elements', 'entitysets', 'items', 'results'):
+        value = payload.get(key)
+        if isinstance(value, list):
+            return value
+    return ()
+
+
+def _contains_iri(items, expected_iri):
+    return any(
+        isinstance(item, dict)
+        and next(
+            (
+                item.get(key)
+                for key in ('iri', '@id', 'uri', 'id')
+                if item.get(key)
+            ),
+            None,
+        ) == expected_iri
+        for item in items
+    )
+
+
+def _contains_id(items, expected_id):
+    return any(
+        isinstance(item, dict) and str(item.get('id') or '').strip() == expected_id
+        for item in items
+    )
+
+
 def vendor_cli(argv=None):
     parser = argparse.ArgumentParser(description='Update or verify the locally served TSS browser bundle.')
     selection = parser.add_mutually_exclusive_group()
@@ -219,10 +345,23 @@ def vendor_cli(argv=None):
 def gateway_contract_cli(argv=None):
     parser = argparse.ArgumentParser(description='Check the live TS4NFDI Gateway routes used by this plugin.')
     parser.add_argument('--openapi-url', default=DEFAULT_OPENAPI_URL)
+    parser.add_argument(
+        '--live',
+        action='store_true',
+        help='probe the public responses and CORS contract used by the example configuration',
+    )
+    parser.add_argument('--gateway-url', default=DEFAULT_GATEWAY_URL)
+    parser.add_argument(
+        '--origin',
+        help='RDMO browser origin to use for the optional direct-mode CORS assertion',
+    )
     args = parser.parse_args(argv)
 
     try:
-        print(check_gateway_contract(args.openapi_url))
+        if args.live:
+            print(check_gateway_live_contract(args.gateway_url, args.origin))
+        else:
+            print(check_gateway_contract(args.openapi_url))
     except (KeyError, OSError, RuntimeError, ValueError) as exc:
         print(f'error: {exc}', file=sys.stderr)
         return 1

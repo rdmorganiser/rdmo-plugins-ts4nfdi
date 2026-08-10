@@ -656,14 +656,14 @@ Target version discussed:
 
 Codex should check the local vendor manifest and assets; do not assume the local update actually happened.
 
-### Vendor verification note (2026-08-10)
+### Vendor verification follow-up (2026-08-10)
 
-The committed `7.1.0` manifest currently records script SHA-256
-`725a708d…`, while the committed `index.iife.js` hashes to `5ec37cc9…`.
-Consequently `ts4nfdi_vendor --check` and its single asset-verification test
-fail before or after the entity-set provenance work. Do not update that hash
-blindly as part of annotation work; rerun the deliberate vendor update against
-the intended official release and commit the asset and manifest together.
+The official npm update for `7.1.0` was rerun after the earlier mismatch. The
+manifest and vendored assets now verify through `ts4nfdi_vendor --check`; the
+script SHA-256 is `725a708d…`. The generated upstream bundle contains trailing
+whitespace, so Git whitespace diagnostics are disabled for that single,
+integrity-verified file. Do not edit or reformat the vendored bundle manually;
+run the deliberate npm-verified update and commit asset and manifest together.
 
 The browser presentation registry already has lifecycle normalization for values like:
 
@@ -959,7 +959,8 @@ Codex should inspect the local tree and mark each item as present / partial / mi
 - [x] Provider-backed collection and collection-terminology matchers can use a bounded click-time native-resource detail endpoint.
 - [x] old semantic-option mapping/projection runtime removed.
 - [x] old FAIRagro CSV/semantic JSON manifest is no longer a runtime dependency; the CSV is retained only as archived curator material.
-- [x] FAIRagro Data Generation matcher stays native until provenance is deterministic.
+- [x] FAIRagro Data Generation recovers deterministic click-time provenance;
+  compatible `ols2` entries use TSS and other sources retain the native drawer.
 
 ## 16.2 Verify TSS version
 
@@ -1057,6 +1058,14 @@ AGROVOC entity via Gateway OLS4 facade
 browser CORS in direct mode
 TSS 7.1 against real Gateway
 ```
+
+The repository now provides `python manage.py ts4nfdi_gateway_check --live`
+for the public HTTP portions of this list. It verifies the direct EDAM OLS4
+response, the configured FAIRagro collection and entity set, and reports
+whether AGROVOC is ready for a TSS migration. Add
+`--origin https://rdmo.example.org` to assert the direct-browser CORS response
+for a specific RDMO deployment. The authenticated RDMO browser click remains a
+separate smoke check.
 
 ---
 

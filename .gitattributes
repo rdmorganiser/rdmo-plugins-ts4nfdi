@@ -1,0 +1,3 @@
+# Keep the npm-published TSS bundle byte-for-byte identical to the verified
+# artifact. Its generated source contains trailing whitespace by design.
+rdmo_ts4nfdi/static/rdmo_ts4nfdi/vendor/tss/index.iife.js -whitespace

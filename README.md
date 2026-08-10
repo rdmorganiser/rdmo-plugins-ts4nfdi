@@ -338,7 +338,7 @@ python manage.py ts4nfdi_vendor --check
 ```
 
 An exact, reproducible upgrade is also possible with
-`python manage.py ts4nfdi_vendor --tss-version 6.17.0` (`--version` is a
+`python manage.py ts4nfdi_vendor --tss-version 7.1.0` (`--version` is a
 Django-reserved option). A scheduled dependency job can run
 `python manage.py ts4nfdi_vendor --check-latest` to report a newly published
 release. The updater reads npm's package metadata, verifies the published
@@ -376,9 +376,31 @@ python manage.py ts4nfdi_gateway_check
 ```
 
 The checker reads the live Gateway OpenAPI document and verifies the entry
-points used by the providers and widgets. Use `--openapi-url` when a deployment
-targets another Gateway environment. The equivalent standalone entry point is
-`python scripts/check_gateway_contract.py`.
+points used by the providers and widgets, including the `/entitysets` route
+used by the FAIRagro Data Generation provider. Use `--openapi-url` when a
+deployment targets another Gateway environment. The equivalent standalone entry
+point is `python scripts/check_gateway_contract.py`.
+
+To check the public responses needed by the supplied direct-mode example
+configuration as well, run:
+
+```shell
+python manage.py ts4nfdi_gateway_check --live
+```
+
+This probes EDAM's OLS4 entity response, the configured FAIRagro collection
+and entity set, and reports whether AGROVOC's OLS4 facade is ready for a future
+TSS migration. It is an operator check, not a normal request-path health
+check; a temporary public Gateway outage does not affect the plugin's local
+tests.
+
+The Gateway emits CORS headers only when it receives a browser `Origin`
+header. To assert direct-mode CORS for a particular deployment, pass its RDMO
+origin explicitly:
+
+```shell
+python manage.py ts4nfdi_gateway_check --live --origin https://rdmo.example.org
+```
 
 Acknowledgements
 ----------------
