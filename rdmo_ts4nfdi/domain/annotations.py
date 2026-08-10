@@ -74,6 +74,7 @@ class AnnotationMatcher:
     ontology_id: str | None = None
     gateway_params: tuple[tuple[str, Any], ...] = ()
     resolve_summary_metadata: bool = False
+    provider_resource_detail: bool = False
 
     def matches(self, question: 'QuestionContext') -> bool:
         return (
@@ -159,6 +160,7 @@ class AnnotationDescriptor:
     gateway_context: GatewayContext | None
     presentation: PresentationPolicy
     entityset_provenance: bool = False
+    provider_resource_detail: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -166,6 +168,7 @@ class AnnotationDescriptor:
             'gateway_context': self.gateway_context.to_dict() if self.gateway_context else None,
             'presentation': self.presentation.to_dict(),
             'entityset_provenance': self.entityset_provenance,
+            'provider_resource_detail': self.provider_resource_detail,
         }
 
 
@@ -314,6 +317,64 @@ class ResolvedMetadata:
 
 
 @dataclass(frozen=True, slots=True)
+class CollectionCollaborator:
+    """One collaborator returned by the Gateway collection resource."""
+
+    username: str
+    role: str | None = None
+
+    def to_dict(self) -> dict[str, str | None]:
+        return {
+            'username': self.username,
+            'role': self.role,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class CollectionTerminology:
+    """A terminology membership suitable for native collection presentation."""
+
+    label: str
+    source: str | None = None
+    uri: str | None = None
+    type: str | None = None
+
+    def to_dict(self) -> dict[str, str | None]:
+        return {
+            'label': self.label,
+            'source': self.source,
+            'uri': self.uri,
+            'type': self.type,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class CollectionMetadata:
+    """The stable, display-safe subset of a Gateway collection record.
+
+    The native RDMO drawer uses this model instead of a raw Gateway response.
+    It deliberately excludes owner-only and implementation-specific fields.
+    """
+
+    uuid: str | None = None
+    permalink: str | None = None
+    is_public: bool | None = None
+    creator: str | None = None
+    collaborators: tuple[CollectionCollaborator, ...] = ()
+    terminologies: tuple[CollectionTerminology, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            'uuid': self.uuid,
+            'permalink': self.permalink,
+            'is_public': self.is_public,
+            'creator': self.creator,
+            'collaborators': [collaborator.to_dict() for collaborator in self.collaborators],
+            'terminologies': [terminology.to_dict() for terminology in self.terminologies],
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class PresentationDescriptor:
     adapter: str
     component: str | None = None
@@ -333,6 +394,7 @@ class AnnotationDetail:
     metadata_status: MetadataStatus
     metadata: ResolvedMetadata
     presentation: PresentationDescriptor
+    collection: CollectionMetadata | None = None
     api_version: str = '1'
 
     def to_dict(self) -> dict[str, Any]:
@@ -364,4 +426,5 @@ class AnnotationDetail:
                 else None
             ),
             'presentation': self.presentation.to_dict(),
+            'collection': self.collection.to_dict() if self.collection else None,
         }

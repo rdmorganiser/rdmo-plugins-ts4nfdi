@@ -23,6 +23,10 @@ export function requiresEntitysetProvenance(annotation) {
     return annotation?.entityset_provenance === true;
 }
 
+export function requiresProviderResourceDetail(annotation) {
+    return annotation?.provider_resource_detail === true;
+}
+
 export function serializeTssParameters(context) {
     const pairs = [
         ["database", context?.database],
@@ -46,11 +50,15 @@ export class AnnotationDetailCoordinator {
         this.baseUrl = String(baseUrl || "").replace(/\/+$/, "");
         this.gateway = gateway || {};
         this.entitysetDetails = new Map();
+        this.providerResourceDetails = new Map();
     }
 
     async resolve(projectId, annotation, signal) {
         if (requiresEntitysetProvenance(annotation)) {
             return this.entitysetDetail(projectId, annotation, signal);
+        }
+        if (requiresProviderResourceDetail(annotation)) {
+            return this.providerResourceDetail(projectId, annotation, signal);
         }
         if (!canUseTssDescriptor(annotation)) {
             return this.api.detail(projectId, annotation, signal);
@@ -68,6 +76,16 @@ export class AnnotationDetailCoordinator {
         return canUseTssDescriptor(detail)
             ? this.tssDetail(projectId, detail)
             : detail;
+    }
+
+    async providerResourceDetail(projectId, annotation, signal) {
+        const cacheKey = `${projectId}:${annotation.matcher_id}:${annotation.value_id}`;
+        let detail = this.providerResourceDetails.get(cacheKey);
+        if (!detail) {
+            detail = await this.api.providerResourceDetail(projectId, annotation, signal);
+            this.providerResourceDetails.set(cacheKey, detail);
+        }
+        return detail;
     }
 
     tssDetail(projectId, annotation) {

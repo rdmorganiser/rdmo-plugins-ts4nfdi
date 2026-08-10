@@ -3,6 +3,8 @@ import {test} from "node:test";
 
 import {
     annotationTermLabel,
+    collectionTerminologyLabel,
+    hasCollectionPresentation,
     hasAnnotationIdentifier,
     hasSemanticConceptMetadata,
     missingSemanticMetadataMessage
@@ -20,6 +22,21 @@ test("provider-backed annotations can use an opaque resource identifier", () => 
     assert.equal(hasAnnotationIdentifier({iri: "agrovoc"}), true);
     assert.equal(hasAnnotationIdentifier({iri: "  "}), false);
     assert.equal(hasAnnotationIdentifier({}), false);
+});
+
+test("collection records select the native collection-card presentation", () => {
+    assert.equal(
+        hasCollectionPresentation({kind: "collection", collection: {uuid: "collection-1"}}),
+        true
+    );
+    assert.equal(
+        hasCollectionPresentation({kind: "collection", collection: null}), false);
+    assert.equal(
+        hasCollectionPresentation({kind: "entity", collection: {uuid: "collection-1"}}), false);
+    assert.equal(
+        collectionTerminologyLabel({label: "atc", source: "zbmed"}),
+        "atc (zbmed)"
+    );
 });
 
 test("semantic concept metadata accepts definitions, descriptions, or synonyms", () => {

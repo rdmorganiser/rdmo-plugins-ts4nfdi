@@ -150,6 +150,23 @@
     font-size: 1.5rem;
 }
 
+.ts4nfdi-annotation-heading {
+    min-width: 0;
+}
+
+.ts4nfdi-collection-visibility {
+    display: inline-block;
+    margin-top: 0.55rem;
+    border-radius: 0.25rem;
+    padding: 0.16rem 0.45rem;
+    color: #fff;
+    background: #263746;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: lowercase;
+}
+
 .ts4nfdi-annotation-eyebrow {
     color: #526b7f;
     font-size: 0.78rem;
@@ -187,6 +204,105 @@
     margin: 0.55rem 0 0;
     color: #3e5262;
     line-height: 1.55;
+}
+
+.ts4nfdi-collection-card {
+    display: grid;
+    gap: 1rem;
+    margin: 0.1rem 0 0;
+    padding: 1rem;
+    border: 1px solid #dce6ed;
+    border-radius: 0.6rem;
+    background: #fff;
+    box-shadow: 0 1px 2px rgb(20 42 63 / 7%);
+}
+
+.ts4nfdi-collection-identifiers {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin: 0;
+}
+
+.ts4nfdi-collection-identifier {
+    min-width: 0;
+    padding: 0.65rem 0.7rem;
+    border: 1px solid #e0e7ed;
+    border-radius: 0.4rem;
+    background: #f5f8fa;
+}
+
+.ts4nfdi-collection-identifier dt {
+    margin-bottom: 0.3rem;
+    color: #40596d;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.ts4nfdi-collection-identifier dd {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+    margin: 0;
+    color: #283e50;
+    font-size: 0.82rem;
+    overflow-wrap: anywhere;
+}
+
+.ts4nfdi-collection-identifier dd > span {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.ts4nfdi-annotation-copy {
+    flex: 0 0 auto;
+    min-height: 1.75rem;
+    padding: 0.22rem 0.45rem;
+    font-size: 0.78rem;
+}
+
+.ts4nfdi-collection-people {
+    color: #465d6e;
+    font-size: 0.88rem;
+}
+
+.ts4nfdi-collection-people p {
+    margin: 0.2rem 0;
+}
+
+.ts4nfdi-collection-description {
+    margin: 0;
+    padding: 0.8rem 0.9rem;
+    border-radius: 0.4rem;
+    color: #334b5d;
+    background: #f2f5f7;
+    line-height: 1.55;
+}
+
+.ts4nfdi-collection-terminologies h3 {
+    margin: 0 0 0.6rem;
+    color: #273f52;
+    font-size: 0.86rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.ts4nfdi-collection-terminology-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.ts4nfdi-collection-terminology-badge {
+    display: inline-block;
+    border: 1px solid #cbd9e5;
+    border-radius: 999px;
+    padding: 0.22rem 0.55rem;
+    color: #285776;
+    background: #edf6fb;
+    font-size: 0.82rem;
+    font-weight: 600;
 }
 
 .ts4nfdi-annotation-section {
@@ -338,6 +454,10 @@
     }
 
     .ts4nfdi-annotation-properties {
+        grid-template-columns: 1fr;
+    }
+
+    .ts4nfdi-collection-identifiers {
         grid-template-columns: 1fr;
     }
 

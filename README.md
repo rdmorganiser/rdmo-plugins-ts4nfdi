@@ -175,6 +175,29 @@ source_key = "ebi"
 presentation = { adapter = "tss", component = "entity-info", entity_type = "class" }
 ```
 
+Native annotations for a bounded provider resource such as a terminology
+collection can retain their own description without using the generic concept
+metadata resolver. Set `provider_resource_detail = true` on its
+provider-backed `collection` or `ontology` matcher:
+
+```toml
+[[frontend.annotations.matchers]]
+id = "terminology-collection"
+question_uri = "https://rdmo.example.org/terms/questions/metadata/collection"
+attribute_uri = "https://rdmo.example.org/terms/domain/metadata/collection"
+optionset_uri = "https://rdmo.example.org/terms/options/metadata/collections"
+resource_type = "collection"
+provider_key = "ts4nfdi_collections"
+badge_label = "TS4NFDI collection"
+provider_resource_detail = true
+presentation = { adapter = "native" }
+```
+
+The page-list response stays Gateway-free. On opening the annotation, the
+browser uses a project-authorized endpoint to read the selected record from
+the same cached Gateway endpoint as the OptionSet provider. This is a small
+native resource lookup, not a concept metadata or label-search fallback.
+
 The `presentation` table selects a replaceable browser presentation adapter.
 The bundled `tss` adapter supports `entity-info` and `metadata` for entity
 annotations and `ontology-info` for ontology annotations. Use
@@ -279,6 +302,7 @@ TS4NFDI_ADAPTERS = {
     "interview_host": "rdmo_ts4nfdi.integrations.rdmo.RDMOInterviewHost",
     "gateway": "rdmo_ts4nfdi.integrations.ts4nfdi.GatewayClient",
     "entityset_provenance": "rdmo_ts4nfdi.application.GatewayEntitySetProvenanceResolver",
+    "provider_resource_detail": "rdmo_ts4nfdi.application.provider_resources.GatewayProviderResourceDetailResolver",
     "metadata_resolver": "rdmo_ts4nfdi.integrations.ts4nfdi.GatewayMetadataResolver",
     "presentation": "rdmo_ts4nfdi.presentation.AnnotationPresentationRegistry",
 }
@@ -288,6 +312,7 @@ The defaults shown above do not need to be configured. Alternative classes
 must implement the documented composition contract. Annotation adapters use
 the small protocols in `rdmo_ts4nfdi.application.annotations`; the entity-set
 provenance adapter receives the configured Gateway client and source registry.
+The provider-resource detail adapter receives the configured Gateway client.
 
 Upstream TS4NFDI dependencies
 -----------------------------

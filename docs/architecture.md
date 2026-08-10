@@ -32,7 +32,7 @@ request.
 
 Deployments can replace the production classes with the `TS4NFDI_ADAPTERS`
 Django setting. It accepts dotted paths for `interview_host`, `gateway`,
-`entityset_provenance`, `metadata_resolver`, and `presentation`. Unknown keys
+`entityset_provenance`, `provider_resource_detail`, `metadata_resolver`, and `presentation`. Unknown keys
 fail fast. The default classes remain explicit in the composition root.
 
 ## Backend boundaries
@@ -104,6 +104,32 @@ definition and provenance. This is intentionally a narrow temporary adapter:
 the public Gateway `/entitysets` route currently lacks browser CORS headers;
 when that is corrected upstream, it can be replaced by a direct browser lookup.
 
+### Provider-resource detail on annotation click
+
+Collections and collection-provided terminologies are not TSS entity widgets,
+but users still need their descriptions. A matcher can therefore explicitly set
+`provider_resource_detail = true`. Its v2 descriptor remains metadata-free;
+only when opened does the browser call the project-authorized
+`annotations/v2/<value_id>/provider-resource/` endpoint.
+
+`GatewayProviderResourceDetailResolver` reuses the exact defaults-expanded
+provider configuration that populated the RDMO OptionSet. It uses the cached
+`GatewayClient`, retrieves the bounded provider response, and selects the
+stored resource identifier. The response contains only the resource's label,
+description, version, source, and terminology context for the native drawer.
+For a Gateway `TerminologyCollectionDto`, it also exposes a typed, display-safe
+collection card model: UUID, permalink, visibility, creator, collaborators,
+and terminology memberships. The browser presents that model in the native
+drawer; it does not embed the Service Portal or issue one request per member
+terminology. It does not search by label or normalize terminology-concept
+metadata.
+
+This currently serves the example collection matcher and both FAIRagro
+collection-terminology matchers. The browser caches each resolved detail for
+the lifetime of its interview controller. Other native concept matchers retain
+the legacy detail fallback because their definitions or dynamic provenance are
+still supplied by `GatewayMetadataResolver`.
+
 ### TS4NFDI adapters
 
 `GatewayClient` owns the authenticated, cached, allowlisted Gateway transport
@@ -111,10 +137,12 @@ used by dynamic providers, native annotation details, and the optional browser
 proxy. A complete TSS v2 descriptor instead lets the browser call the public
 Gateway directly; it does not use this client for terminology metadata.
 
-`GatewayMetadataResolver` owns knowledge of current Gateway result fields. It
-maps external payloads to the native annotation-detail model. It is a fallback
-for native or incomplete descriptors, not a dependency of the TSS-backed v2
-path; TSS owns OLS model normalization and rich terminology rendering there.
+`GatewayMetadataResolver` owns the remaining concept-detail fallback logic:
+OLS and non-OLS lookups, definitions, synonyms, and dynamic search context.
+Provider-backed collection/terminology records use the separate bounded
+provider-resource adapter above. Neither resolver is a dependency of the
+TSS-backed v2 path; TSS owns OLS model normalization and rich terminology
+rendering there.
 
 ### Presentation registry
 
@@ -158,10 +186,10 @@ The TSS adapter loads the pinned external bundle after a user opens an
 annotation. A presentation-only v2 descriptor mounts its widget directly in
 the plugin drawer. In direct mode, it calls the public Gateway with the
 browser-safe descriptor context; in proxy mode, it uses the authenticated RDMO
-proxy. Native or incomplete descriptors retain the legacy detail fallback.
-Entity-set annotations use their dedicated click-time provenance endpoint
-instead of the legacy metadata resolver. A failure stays inside that adapter
-and the native details remain usable.
+proxy. Native provider-resource descriptors and entity-set annotations use
+their dedicated click-time endpoints instead of the legacy metadata resolver.
+Other native or incomplete descriptors retain the legacy detail fallback. A
+failure stays inside that adapter and the native details remain usable.
 
 Deployment-defined presentation modules are loaded from Django staticfiles by
 the browser composition root. They receive normalized plugin detail and mount

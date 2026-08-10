@@ -5,6 +5,7 @@ import {
     AnnotationDetailCoordinator,
     canUseTssDescriptor,
     requiresEntitysetProvenance,
+    requiresProviderResourceDetail,
     serializeTssParameters
 } from "../../rdmo_ts4nfdi/static/rdmo_ts4nfdi/js/interview/detail_coordinator.js";
 
@@ -99,6 +100,40 @@ test("native and under-specified annotations retain the legacy detail path", asy
     assert.deepEqual(await coordinator.resolve("24", native), {label: "legacy"});
     assert.deepEqual(await coordinator.resolve("24", unresolved), {label: "legacy"});
     assert.deepEqual(calls, [["24", 7], ["24", 7]]);
+});
+
+test("provider-resource annotations use their scoped native-detail API and cache the result", async () => {
+    let resourceCalls = 0;
+    const coordinator = new AnnotationDetailCoordinator({
+        api: {
+            detail: async () => { throw new Error("legacy detail must not be called"); },
+            providerResourceDetail: async () => {
+                resourceCalls++;
+                return {
+                    label: "NFDI metadata standards",
+                    metadata_status: "available",
+                    definitions: [],
+                    presentation: {adapter: "native", component: null, props: {}}
+                };
+            }
+        },
+        baseUrl: "/rdmo",
+        gateway: {mode: "direct", base_url: "https://gateway.example"}
+    });
+    const annotation = entityAnnotation({
+        kind: "collection",
+        provider_resource_detail: true,
+        presentation: {adapter: "native", component: null, options: {}},
+        gateway_context: null
+    });
+
+    const first = await coordinator.resolve("24", annotation);
+    const second = await coordinator.resolve("24", annotation);
+
+    assert.equal(requiresProviderResourceDetail(annotation), true);
+    assert.equal(resourceCalls, 1);
+    assert.equal(first.label, "NFDI metadata standards");
+    assert.equal(second, first);
 });
 
 test("entity-set provenance promotes compatible OLS2 entries to the TSS path and caches the result", async () => {

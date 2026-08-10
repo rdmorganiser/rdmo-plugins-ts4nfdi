@@ -149,6 +149,29 @@ def load_source_configs() -> dict[str, dict[str, str | None]]:
     return sources
 
 
+def load_provider_config(provider_key: str) -> dict[str, Any]:
+    """Return one provider's defaults-expanded, source-aware configuration.
+
+    Dynamic RDMO providers and click-time annotation resource lookups must use
+    the same Gateway request configuration.  Keeping that preparation here
+    prevents a native annotation detail path from silently drifting away from
+    the corresponding OptionSet provider.
+    """
+    config = load_config()
+    defaults = config.get('defaults', {})
+    providers = config.get('providers', {})
+
+    if not isinstance(providers, dict) or provider_key not in providers:
+        raise RuntimeError(f"Missing TS4NFDI provider configuration for key '{provider_key}'.")
+    if not isinstance(providers[provider_key], dict):
+        raise RuntimeError(f"TS4NFDI provider configuration for key '{provider_key}' must be a dictionary.")
+
+    return attach_source_config(
+        {**defaults, **providers[provider_key]},
+        context=f"provider '{provider_key}'",
+    )
+
+
 def attach_source_config(config: dict[str, Any], *, context: str) -> dict[str, Any]:
     resolved = dict(config)
     source_key = normalize_optional_string(resolved.get('source_key'))
@@ -277,6 +300,14 @@ def normalize_annotation_matcher(
     if not isinstance(resolve_summary_metadata, bool):
         raise RuntimeError('resolve_summary_metadata must be a boolean')
 
+    provider_resource_detail = raw_matcher.get('provider_resource_detail', False)
+    if not isinstance(provider_resource_detail, bool):
+        raise RuntimeError('provider_resource_detail must be a boolean')
+    if provider_resource_detail and (not provider_key or resource_type == 'entity'):
+        raise RuntimeError(
+            'provider_resource_detail requires a provider-backed ontology or collection matcher'
+        )
+
     return AnnotationMatcher(
         id=matcher_id,
         question_uri=require_string(raw_matcher, 'question_uri'),
@@ -292,6 +323,7 @@ def normalize_annotation_matcher(
         ontology_id=normalize_optional_string(raw_matcher.get('ontology_id')),
         gateway_params=tuple(gateway_params.items()),
         resolve_summary_metadata=resolve_summary_metadata,
+        provider_resource_detail=provider_resource_detail,
     )
 
 

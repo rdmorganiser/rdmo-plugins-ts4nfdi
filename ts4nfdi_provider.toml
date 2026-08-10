@@ -141,6 +141,9 @@ optionset_uri = "https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/co
 resource_type = "collection"
 provider_key = "ts4nfdi_collections"
 badge_label = "TS4NFDI collection"
+# The selected collection's own description is retrieved only when its
+# annotation is opened. This bypasses the generic terminology metadata resolver.
+provider_resource_detail = true
 presentation = { adapter = "native" }
 
 # Complete terminologies selected from the provider's fixed FAIRAgro
@@ -158,6 +161,7 @@ optionset_uri = "https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/co
 resource_type = "ontology"
 provider_key = "ts4nfdi_fairagro_collection_terminologies"
 badge_label = "FAIRagro TS collection"
+provider_resource_detail = true
 presentation = { adapter = "native" }
 
 [frontend.annotations.matchers.gateway_params]
@@ -239,6 +243,7 @@ optionset_uri = "https://rdmo.fairagro.net/terms/options/ts4nfdi/collection_term
 resource_type = "ontology"
 provider_key = "ts4nfdi_fairagro_collection_terminologies"
 badge_label = "FAIRAgro"
+provider_resource_detail = true
 presentation = { adapter = "native" }
 
 [frontend.annotations.matchers.gateway_params]

@@ -83,6 +83,25 @@ export function missingSemanticMetadataMessage(detail) {
     );
 }
 
+export function hasCollectionPresentation(detail) {
+    return detail?.kind === "collection" && Boolean(detail?.collection);
+}
+
+export function collectionTerminologyLabel(terminology) {
+    const label = String(terminology?.label || "").trim();
+    const source = String(terminology?.source || "").trim();
+    if (!label) {
+        return source;
+    }
+    return source ? `${label} (${source})` : label;
+}
+
+function collectionCollaboratorLabel(collaborator) {
+    const username = String(collaborator?.username || "").trim();
+    const role = String(collaborator?.role || "").trim();
+    return role ? `${username} (${role})` : username;
+}
+
 export class NativeInlineAnnotationRenderer {
     render(slot, occurrence, onOpen) {
         const annotations = occurrence?.annotations || [];
@@ -177,6 +196,7 @@ export class NativeAnnotationDrawer {
         this.root.setAttribute("aria-hidden", "false");
         document.body.classList.add("ts4nfdi-annotation-drawer-open");
         this.title().textContent = annotation.label || translate("Terminology details");
+        this.setHeaderStatus();
         this.summary().replaceChildren();
         this.presentations.clear(this.widget());
 
@@ -193,8 +213,15 @@ export class NativeAnnotationDrawer {
             return;
         }
         this.title().textContent = detail.label || translate("Terminology details");
+        this.setHeaderStatus();
         this.summary().replaceChildren();
         this.presentations.clear(this.widget());
+
+        if (hasCollectionPresentation(detail)) {
+            this.renderCollectionDetail(detail);
+            this.renderDetailPresentation(detail);
+            return;
+        }
 
         const source = normalizeResource(detail.source);
         const terminology = normalizeResource(detail.terminology);
@@ -246,17 +273,7 @@ export class NativeAnnotationDrawer {
         ]);
         this.renderActions(detail, source);
 
-        if (detail.metadata_status === "unavailable") {
-            this.renderNotice(
-                translate("Additional terminology metadata is currently unavailable.")
-            );
-        } else {
-            this.presentations.render(
-                this.widget(),
-                detail.presentation,
-                {detail, primary: detail.metadata_status === "presentation"}
-            );
-        }
+        this.renderDetailPresentation(detail);
     }
 
     error(error, retry) {
@@ -265,6 +282,7 @@ export class NativeAnnotationDrawer {
         }
         this.presentations.clear(this.widget());
         this.summary().replaceChildren();
+        this.setHeaderStatus();
         const message = document.createElement("p");
         message.className = "ts4nfdi-annotation-notice";
         message.textContent = translate("Terminology details could not be loaded.");
@@ -287,6 +305,7 @@ export class NativeAnnotationDrawer {
         this.root.setAttribute("aria-hidden", "true");
         document.body.classList.remove("ts4nfdi-annotation-drawer-open");
         this.presentations.clear(this.widget());
+        this.setHeaderStatus();
         this.onClose?.();
         if (this.activeTrigger && document.contains(this.activeTrigger)) {
             this.activeTrigger.focus();
@@ -339,6 +358,129 @@ export class NativeAnnotationDrawer {
         this.summary().appendChild(section);
     }
 
+    renderCollectionDetail(detail) {
+        const collection = detail.collection;
+        this.setHeaderStatus(collection.is_public);
+
+        const card = document.createElement("section");
+        card.className = "ts4nfdi-collection-card";
+
+        const identifiers = document.createElement("dl");
+        identifiers.className = "ts4nfdi-collection-identifiers";
+        this.appendCollectionIdentifier(
+            identifiers,
+            translate("UUID"),
+            collection.uuid,
+            translate("Copy UUID")
+        );
+        this.appendCollectionIdentifier(
+            identifiers,
+            translate("Permalink"),
+            collection.permalink,
+            translate("Copy permalink")
+        );
+        if (identifiers.childElementCount) {
+            card.appendChild(identifiers);
+        }
+
+        const people = document.createElement("div");
+        people.className = "ts4nfdi-collection-people";
+        this.appendCollectionPerson(
+            people,
+            translate("Created by"),
+            collection.creator
+        );
+        const collaborators = (collection.collaborators || [])
+            .map(collectionCollaboratorLabel)
+            .filter(Boolean)
+            .join(", ");
+        this.appendCollectionPerson(
+            people,
+            translate("Collaborators"),
+            collaborators || translate("None")
+        );
+        if (people.childElementCount) {
+            card.appendChild(people);
+        }
+
+        if (detail.description) {
+            const description = document.createElement("p");
+            description.className = "ts4nfdi-collection-description";
+            description.textContent = detail.description;
+            card.appendChild(description);
+        }
+
+        const terminologies = document.createElement("section");
+        terminologies.className = "ts4nfdi-collection-terminologies";
+        const heading = document.createElement("h3");
+        heading.textContent = translate("Terminologies");
+        terminologies.appendChild(heading);
+        const values = collection.terminologies || [];
+        if (values.length) {
+            const badges = document.createElement("div");
+            badges.className = "ts4nfdi-collection-terminology-badges";
+            values.forEach((terminology) => {
+                const label = collectionTerminologyLabel(terminology);
+                if (!label) {
+                    return;
+                }
+                const badge = document.createElement("span");
+                badge.className = "ts4nfdi-collection-terminology-badge";
+                badge.textContent = label;
+                if (terminology.uri) {
+                    badge.title = terminology.uri;
+                }
+                badges.appendChild(badge);
+            });
+            if (badges.childElementCount) {
+                terminologies.appendChild(badges);
+            }
+        }
+        if (!terminologies.querySelector(".ts4nfdi-collection-terminology-badges")) {
+            const none = document.createElement("p");
+            none.className = "ts4nfdi-annotation-description";
+            none.textContent = translate("No terminologies were returned for this collection.");
+            terminologies.appendChild(none);
+        }
+        card.appendChild(terminologies);
+        this.summary().appendChild(card);
+
+        if (!detail.description) {
+            this.renderNotice(missingSemanticMetadataMessage(detail));
+        }
+        this.renderCollectionActions(detail, collection);
+    }
+
+    appendCollectionIdentifier(list, label, value, copyLabel) {
+        if (!value) {
+            return;
+        }
+        const field = document.createElement("div");
+        field.className = "ts4nfdi-collection-identifier";
+        const term = document.createElement("dt");
+        term.textContent = label;
+        const description = document.createElement("dd");
+        const text = document.createElement("span");
+        text.textContent = value;
+        description.appendChild(text);
+        description.appendChild(this.copyButton(value, copyLabel));
+        field.appendChild(term);
+        field.appendChild(description);
+        list.appendChild(field);
+    }
+
+    appendCollectionPerson(parent, label, value) {
+        if (!value) {
+            return;
+        }
+        const item = document.createElement("p");
+        const name = document.createElement("strong");
+        name.textContent = `${label}: `;
+        item.appendChild(name);
+        item.append(value);
+        parent.appendChild(item);
+    }
+
     renderSynonyms(synonyms) {
         const values = synonyms.filter(Boolean);
         if (!values.length) {
@@ -386,19 +528,7 @@ export class NativeAnnotationDrawer {
         actions.className = "ts4nfdi-annotation-actions";
         if (detail.iri && HTTP_IRI.test(detail.iri)) {
             actions.appendChild(this.externalLink(detail.iri, translate("Open concept IRI")));
-            const copy = document.createElement("button");
-            copy.type = "button";
-            copy.className = "ts4nfdi-annotation-action";
-            copy.textContent = translate("Copy IRI");
-            copy.addEventListener("click", async () => {
-                try {
-                    await navigator.clipboard.writeText(detail.iri);
-                    copy.textContent = translate("Copied");
-                } catch (error) {
-                    console.warn("Could not copy terminology IRI.", error);
-                }
-            });
-            actions.appendChild(copy);
+            actions.appendChild(this.copyButton(detail.iri, translate("Copy IRI")));
         }
         if (source.url && HTTP_IRI.test(source.url)) {
             actions.appendChild(this.externalLink(source.url, translate("Open source")));
@@ -409,6 +539,65 @@ export class NativeAnnotationDrawer {
         const section = this.createSection(translate("Links"));
         section.appendChild(actions);
         this.summary().appendChild(section);
+    }
+
+    renderCollectionActions(detail, collection) {
+        const url = collection.permalink || detail.iri;
+        if (!url || !HTTP_IRI.test(url)) {
+            return;
+        }
+        const section = this.createSection(translate("Links"));
+        const actions = document.createElement("div");
+        actions.className = "ts4nfdi-annotation-actions";
+        actions.appendChild(this.externalLink(url, translate("Open collection")));
+        section.appendChild(actions);
+        this.summary().appendChild(section);
+    }
+
+    renderDetailPresentation(detail) {
+        if (detail.metadata_status === "unavailable") {
+            this.renderNotice(
+                translate("Additional terminology metadata is currently unavailable.")
+            );
+            return;
+        }
+        this.presentations.render(
+            this.widget(),
+            detail.presentation,
+            {detail, primary: detail.metadata_status === "presentation"}
+        );
+    }
+
+    copyButton(value, label) {
+        const copy = document.createElement("button");
+        copy.type = "button";
+        copy.className = "ts4nfdi-annotation-action ts4nfdi-annotation-copy";
+        copy.textContent = label;
+        copy.addEventListener("click", async () => {
+            try {
+                await navigator.clipboard.writeText(value);
+                copy.textContent = translate("Copied");
+            } catch (error) {
+                console.warn("Could not copy terminology value.", error);
+            }
+        });
+        return copy;
+    }
+
+    setHeaderStatus(isPublic) {
+        const status = this.root.querySelector("#ts4nfdi-annotation-drawer-status");
+        if (!status) {
+            return;
+        }
+        status.replaceChildren();
+        if (isPublic !== true && isPublic !== false) {
+            return;
+        }
+        const badge = document.createElement("span");
+        badge.className = "ts4nfdi-collection-visibility";
+        badge.textContent = isPublic ? translate("Public") : translate("Private");
+        badge.title = translate("Collection visibility");
+        status.appendChild(badge);
     }
 
     createSection(headingText) {

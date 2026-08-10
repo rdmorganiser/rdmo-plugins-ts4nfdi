@@ -146,6 +146,7 @@ def test_v2_annotation_list_exposes_browser_resolution_context():
         'options': {'entity_type': 'class'},
     }
     assert annotation['entityset_provenance'] is False
+    assert annotation['provider_resource_detail'] is False
 
 
 def test_v2_entityset_annotations_mark_click_time_provenance_without_gateway_metadata_io():
@@ -167,6 +168,32 @@ def test_v2_entityset_annotations_mark_click_time_provenance_without_gateway_met
 
     assert annotation['entityset_provenance'] is True
     assert annotation['gateway_context'] is None
+    assert annotation['presentation'] == {
+        'adapter': 'native',
+        'component': None,
+        'options': {},
+    }
+
+
+def test_v2_provider_resource_annotations_mark_their_scoped_detail_policy():
+    matcher = replace(
+        MATCHER,
+        resource_type='collection',
+        provider_key='ts4nfdi_collections',
+        source=None,
+        ontology_id=None,
+        gateway_params=(),
+        presentation=PresentationPolicy(adapter='native'),
+        provider_resource_detail=True,
+    )
+
+    annotation = make_service(matcher=matcher).list_page_v2(
+        SimpleNamespace(id=24),
+        SimpleNamespace(id=341),
+    ).to_dict()['occurrences'][0]['annotations'][0]
+
+    assert annotation['entityset_provenance'] is False
+    assert annotation['provider_resource_detail'] is True
     assert annotation['presentation'] == {
         'adapter': 'native',
         'component': None,

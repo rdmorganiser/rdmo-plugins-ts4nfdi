@@ -10,6 +10,9 @@ DEFAULT_ADAPTERS = {
     'interview_host': 'rdmo_ts4nfdi.integrations.rdmo.RDMOInterviewHost',
     'gateway': 'rdmo_ts4nfdi.integrations.ts4nfdi.GatewayClient',
     'entityset_provenance': 'rdmo_ts4nfdi.application.GatewayEntitySetProvenanceResolver',
+    'provider_resource_detail': (
+        'rdmo_ts4nfdi.application.provider_resources.GatewayProviderResourceDetailResolver'
+    ),
     'metadata_resolver': 'rdmo_ts4nfdi.integrations.ts4nfdi.GatewayMetadataResolver',
     'presentation': 'rdmo_ts4nfdi.presentation.AnnotationPresentationRegistry',
 }
@@ -44,3 +47,8 @@ def build_entityset_provenance_resolver():
         adapters['gateway'](),
         sources=load_source_configs(),
     )
+
+
+def build_provider_resource_detail_resolver():
+    adapters = load_adapter_classes()
+    return adapters['provider_resource_detail'](adapters['gateway']())

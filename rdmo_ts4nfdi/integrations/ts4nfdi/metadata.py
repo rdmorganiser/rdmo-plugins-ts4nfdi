@@ -1,17 +1,19 @@
 import logging
 from urllib.parse import quote
 
-from rdmo_ts4nfdi.config import load_config
 from rdmo_ts4nfdi.domain import (
     AnnotationCandidate,
     AnnotationMatcher,
     ResolvedMetadata,
-    ResourceReference,
 )
-from rdmo_ts4nfdi.utils import is_http_iri
 
 from .gateway import GatewayClient, GatewayError
 from .payload import extract_results, get_first_value, get_value, get_values
+from .provider_resources import (
+    GatewayProviderResourceClient,
+    build_source_reference,
+    build_terminology_reference,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -143,100 +145,20 @@ class GatewayMetadataResolver:
         candidate: AnnotationCandidate,
         matcher: AnnotationMatcher,
     ) -> ResolvedMetadata:
-        config = load_config()
-        provider_config = {
-            **config.get('defaults', {}),
-            **config['providers'][matcher.provider_key],
-        }
-
-        query = []
-        for config_key, parameter_name in (
-            ('collection_id', provider_config.get('collection_id_param', 'collectionId')),
-            ('page', provider_config.get('page_param', 'page')),
-            ('size', provider_config.get('size_param', 'size')),
-        ):
-            if provider_config.get(config_key) is not None:
-                query.append((parameter_name, provider_config[config_key]))
-        query.extend(provider_config.get('extra_params', {}).items())
-
-        payload, _ = self.gateway.get(provider_config.get('endpoint', ''), query)
-        results = extract_provider_results(payload, provider_config)
-        if not results and provider_config.get('fallback_endpoint'):
-            payload, _ = self.gateway.get(provider_config['fallback_endpoint'])
-            results = extract_provider_results(payload, provider_config)
-
-        result = next(
-            (item for item in results if candidate.iri in provider_resource_identifiers(item, provider_config)),
-            {},
-        )
-        source = build_source_reference(matcher, result)
+        metadata = GatewayProviderResourceClient(self.gateway).resolve_metadata(candidate, matcher)
         return ResolvedMetadata(
-            label=(
-                get_first_value(
-                    result,
-                    tuple(provider_config.get('label_fields', ('label', 'title'))),
-                )
-                or candidate.label
-            ),
-            description=get_first_value(
-                result,
-                tuple(provider_config.get('help_fields', ('description', 'definition'))),
-            ),
-            ontology_id=(get_first_value(result, ('ontologyId', 'ontology_id', 'config.id')) or matcher.ontology_id),
-            source=source,
-            terminology=build_terminology_reference(matcher, result),
-            version=get_first_value(result, ('version', 'config.version')),
+            label=metadata.label or candidate.label,
+            description=metadata.description,
+            definitions=metadata.definitions,
+            synonyms=metadata.synonyms,
+            short_form=metadata.short_form,
+            entity_types=metadata.entity_types,
+            obsolete=metadata.obsolete,
+            version=metadata.version,
+            ontology_id=metadata.ontology_id,
+            source=metadata.source,
+            terminology=metadata.terminology,
         )
-
-
-def build_source_reference(
-    matcher: AnnotationMatcher,
-    result: dict | None = None,
-) -> ResourceReference | None:
-    configured = matcher.source
-    result = result or {}
-    result_id = get_first_value(result, ('source_name', 'sourceName'))
-    result_source = get_first_value(result, ('source',))
-
-    source_id = configured.id if configured else result_id
-    source_label = configured.label if configured else source_id
-    source_url = configured.url if configured else result_source if is_http_iri(result_source) else None
-    if not source_id and result_source and not source_url:
-        source_id = result_source
-        source_label = result_source
-
-    if not any((source_id, source_label, source_url)):
-        return None
-    return ResourceReference(
-        id=source_id,
-        label=source_label,
-        database=configured.database if configured else source_id,
-        backend_type=(
-            configured.backend_type if configured else get_first_value(result, ('backend_type', 'backendType'))
-        ),
-        url=source_url,
-    )
-
-
-def build_terminology_reference(
-    matcher: AnnotationMatcher,
-    result: dict | None = None,
-) -> ResourceReference | None:
-    result = result or {}
-    terminology_id = get_first_value(result, ('ontologyId', 'ontology_id', 'ontology')) or matcher.ontology_id
-    terminology_iri = get_first_value(result, ('ontologyIri', 'ontology_iri'))
-    terminology_label = (
-        matcher.badge_label
-        if matcher.ontology_id
-        else terminology_id or matcher.badge_label
-    )
-    if not any((terminology_id, terminology_iri, terminology_label)):
-        return None
-    return ResourceReference(
-        id=terminology_id,
-        label=terminology_label,
-        iri=terminology_iri,
-    )
 
 
 def normalize_entity_metadata(result: dict, matcher: AnnotationMatcher) -> ResolvedMetadata:
@@ -293,47 +215,3 @@ def extract_entity_results(payload):
                 if isinstance(value, list):
                     return value
     return extract_results(payload)
-
-
-def extract_provider_results(payload, provider_config):
-    if isinstance(payload, dict):
-        embedded = payload.get('_embedded')
-        if isinstance(embedded, dict) and isinstance(embedded.get('ontologies'), list):
-            return embedded['ontologies']
-
-        collection_id = provider_config.get('collection_id')
-        collections = extract_results(payload)
-        if collection_id:
-            collection = next(
-                (
-                    item
-                    for item in collections
-                    if isinstance(item, dict) and get_first_value(item, ('id', 'uuid')) == collection_id
-                ),
-                None,
-            )
-            if collection and isinstance(collection.get('terminologies'), list):
-                return collection['terminologies']
-    return extract_results(payload)
-
-
-def provider_resource_identifiers(item, provider_config):
-    identifiers = {
-        get_first_value(
-            item,
-            tuple(provider_config.get('id_fields', ('iri', 'uri', 'id'))),
-        ),
-        get_first_value(
-            item,
-            tuple(provider_config.get('uri_fields', ('iri', 'uri'))),
-        ),
-        get_first_value(item, ('URI', 'config.id', 'id')),
-    }
-    item_id = get_first_value(item, ('id', 'uuid'))
-    if item_id:
-        permalink_base = provider_config.get(
-            'permalink_base',
-            'https://w3id.org/ts4nfdi/collection/',
-        )
-        identifiers.add(f'{permalink_base.rstrip("/")}/{item_id}')
-    return identifiers - {None}

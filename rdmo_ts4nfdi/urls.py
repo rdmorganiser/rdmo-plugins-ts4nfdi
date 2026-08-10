@@ -6,6 +6,7 @@ from .api.views import (
     AnnotationListView,
     EntitySetProvenanceView,
     GatewayProxyView,
+    ProviderResourceDetailView,
 )
 
 app_name = 'rdmo_ts4nfdi'
@@ -25,6 +26,11 @@ urlpatterns = [
         'projects/<int:project_id>/annotations/v2/<int:value_id>/entityset-provenance/',
         EntitySetProvenanceView.as_view(),
         name='entityset-provenance',
+    ),
+    path(
+        'projects/<int:project_id>/annotations/v2/<int:value_id>/provider-resource/',
+        ProviderResourceDetailView.as_view(),
+        name='provider-resource-detail',
     ),
     path(
         'projects/<int:project_id>/annotations/<int:value_id>/',

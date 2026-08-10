@@ -2,7 +2,7 @@ import logging
 
 from rdmo.options.providers import Provider
 
-from rdmo_ts4nfdi.config import attach_source_config, load_config
+from rdmo_ts4nfdi.config import load_provider_config
 from rdmo_ts4nfdi.integrations.ts4nfdi.payload import extract_results
 from rdmo_ts4nfdi.integrations.ts4nfdi.provider import GatewayProviderClient
 
@@ -62,17 +62,7 @@ class TS4NFDIBaseProvider(Provider):
         return {}
 
     def get_provider_config(self):
-        config = load_config()
-        defaults = config.get('defaults', {})
-        providers = config.get('providers', {})
-
-        if self.key not in providers:
-            raise RuntimeError(f"Missing TS4NFDI provider configuration for key '{self.key}'.")
-
-        provider_config = attach_source_config(
-            {**defaults, **providers[self.key]},
-            context=f"provider '{self.key}'",
-        )
+        provider_config = load_provider_config(self.key)
         logger.debug(
             "Resolved TS4NFDI provider config for key='%s' with config keys=%s",
             self.key,

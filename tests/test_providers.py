@@ -305,6 +305,105 @@ def test_collections_provider_get_options_returns_mapped_collection_options(prov
     assert 'Relevant metadata standards' in options[0]['help']
 
 
+def test_provider_resource_detail_uses_only_the_selected_collection_record(provider_modules):
+    class Gateway:
+        def __init__(self):
+            self.calls = []
+
+        def get(self, path, query=()):
+            self.calls.append((path, list(query)))
+            return (
+                {
+                    'collections': [
+                        {
+                            'id': 'collection-1',
+                            'label': 'NFDI metadata standards',
+                            'description': 'Relevant metadata standards.',
+                            'creator': 'TS4NFDI',
+                            'isPublic': True,
+                            'collaborators': [
+                                {'username': 'alice', 'role': 'ADMIN'},
+                                {'username': 'bob', 'role': 'USER'},
+                            ],
+                            'terminologies': [
+                                {
+                                    'label': 'DataCite Metadata Schema',
+                                    'source': 'base',
+                                    'uri': 'https://schema.datacite.org',
+                                    'type': 'ARTEFACT',
+                                },
+                            ],
+                        },
+                    ],
+                },
+                False,
+            )
+
+    provider_resources = importlib.import_module('rdmo_ts4nfdi.application.provider_resources')
+    matcher = provider_modules.domain.AnnotationMatcher(
+        id='collections',
+        question_uri='https://example.test/questions/collections',
+        attribute_uri='https://example.test/domain/collections',
+        optionset_uri='https://example.test/options/collections',
+        resource_type='collection',
+        provider_key='ts4nfdi_collections',
+        badge_label='TS4NFDI collection',
+        presentation=provider_modules.domain.PresentationPolicy(adapter='native'),
+        provider_resource_detail=True,
+    )
+    annotation = provider_modules.domain.AnnotationSummary(
+        value_id=7,
+        collection_index=0,
+        matcher_id='collections',
+        kind='collection',
+        label='NFDI metadata standards',
+        iri='https://w3id.org/ts4nfdi/collection/collection-1',
+        question_id=3,
+        badge_label='TS4NFDI collection',
+    )
+    gateway = Gateway()
+    payload = provider_resources.GatewayProviderResourceDetailResolver(
+        gateway,
+        provider_config_loader=lambda key: {
+            'endpoint': 'collections/',
+            'id_fields': ['id'],
+            'label_fields': ['label'],
+            'help_fields': ['description'],
+            'permalink_base': 'https://w3id.org/ts4nfdi/collection/',
+        },
+    ).resolve(annotation, matcher).to_dict()
+
+    assert gateway.calls == [('collections/', [])]
+    assert payload['api_version'] == '2'
+    assert payload['label'] == 'NFDI metadata standards'
+    assert payload['description'] == 'Relevant metadata standards.'
+    assert payload['definitions'] == []
+    assert payload['terminology']['label'] == 'TS4NFDI collection'
+    assert payload['collection'] == {
+        'uuid': 'collection-1',
+        'permalink': 'https://w3id.org/ts4nfdi/collection/collection-1',
+        'is_public': True,
+        'creator': 'TS4NFDI',
+        'collaborators': [
+            {'username': 'alice', 'role': 'ADMIN'},
+            {'username': 'bob', 'role': 'USER'},
+        ],
+        'terminologies': [
+            {
+                'label': 'DataCite Metadata Schema',
+                'source': 'base',
+                'uri': 'https://schema.datacite.org',
+                'type': 'ARTEFACT',
+            },
+        ],
+    }
+    assert payload['presentation'] == {
+        'adapter': 'native',
+        'component': None,
+        'props': {},
+    }
+
+
 def test_entityset_provider_maps_gateway_entity_uris_and_localized_labels(provider_modules):
     key = 'ts4nfdi_entitysets'
     configure_provider(
@@ -1289,6 +1388,7 @@ def test_example_catalog_first_page_has_annotation_matchers():
     collection = matchers['example-collection']
     assert collection['resource_type'] == 'collection'
     assert collection['provider_key'] == 'ts4nfdi_collections'
+    assert collection['provider_resource_detail'] is True
     assert collection['presentation']['adapter'] == 'native'
 
     terminology = matchers['example-fairagro-collection-terminology']
@@ -1296,6 +1396,7 @@ def test_example_catalog_first_page_has_annotation_matchers():
     assert terminology['provider_key'] == 'ts4nfdi_fairagro_collection_terminologies'
     assert terminology['badge_label'] == 'FAIRagro TS collection'
     assert terminology['gateway_params']['collectionId'] == ('ff5491d1-d0a9-481e-ac90-0fad065fa097')
+    assert terminology['provider_resource_detail'] is True
     assert terminology['presentation'] == {'adapter': 'native'}
 
 
