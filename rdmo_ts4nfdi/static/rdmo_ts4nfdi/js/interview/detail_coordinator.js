@@ -19,6 +19,10 @@ export function canUseTssDescriptor(annotation) {
     return false;
 }
 
+export function requiresEntitysetProvenance(annotation) {
+    return annotation?.entityset_provenance === true;
+}
+
 export function serializeTssParameters(context) {
     const pairs = [
         ["database", context?.database],
@@ -41,13 +45,29 @@ export class AnnotationDetailCoordinator {
         this.api = api;
         this.baseUrl = String(baseUrl || "").replace(/\/+$/, "");
         this.gateway = gateway || {};
+        this.entitysetDetails = new Map();
     }
 
     async resolve(projectId, annotation, signal) {
+        if (requiresEntitysetProvenance(annotation)) {
+            return this.entitysetDetail(projectId, annotation, signal);
+        }
         if (!canUseTssDescriptor(annotation)) {
             return this.api.detail(projectId, annotation, signal);
         }
         return this.tssDetail(projectId, annotation);
+    }
+
+    async entitysetDetail(projectId, annotation, signal) {
+        const cacheKey = `${projectId}:${annotation.matcher_id}:${annotation.value_id}`;
+        let detail = this.entitysetDetails.get(cacheKey);
+        if (!detail) {
+            detail = await this.api.entitysetProvenance(projectId, annotation, signal);
+            this.entitysetDetails.set(cacheKey, detail);
+        }
+        return canUseTssDescriptor(detail)
+            ? this.tssDetail(projectId, detail)
+            : detail;
     }
 
     tssDetail(projectId, annotation) {

@@ -32,8 +32,8 @@ request.
 
 Deployments can replace the production classes with the `TS4NFDI_ADAPTERS`
 Django setting. It accepts dotted paths for `interview_host`, `gateway`,
-`metadata_resolver`, and `presentation`. Unknown keys fail fast. The default
-classes remain explicit in the composition root.
+`entityset_provenance`, `metadata_resolver`, and `presentation`. Unknown keys
+fail fast. The default classes remain explicit in the composition root.
 
 ## Backend boundaries
 
@@ -80,6 +80,29 @@ normal RDMO provider flow persists the terminology IRI without a plugin signal
 or value projection. [`semantic-option-workflow.md`](semantic-option-workflow.md)
 records the active upstream-curation workflow and the status of the archived
 FAIRagro CSV; no semantic manifest is shipped or read at runtime.
+
+### Entity-set provenance on annotation click
+
+RDMO stores an entity-set choice as its label and entity IRI, whereas the
+Gateway entity-set record also carries its provider and terminology. The v2
+page-list response deliberately does not recover that context: it marks an
+entity-set annotation with `entityset_provenance: true` and performs no Gateway
+metadata request.
+
+Only when the user opens such an annotation does the browser call the
+project-authorized `annotations/v2/<value_id>/entityset-provenance/` endpoint.
+The small `GatewayEntitySetProvenanceResolver` retrieves the configured
+Gateway entity set through the normal cached `GatewayClient`, finds the exact
+selected IRI, and returns only the upstream entity-set definition, provider,
+terminology, and configured source context. It never mutates `Value`, searches
+by label, or normalizes a terminology response.
+
+When that recovered source is configured as `backend_type = "ols2"`, the
+browser constructs a normal TSS `entity-info` descriptor and lets TSS call the
+Gateway. Other backends retain the native drawer, showing the entity-set
+definition and provenance. This is intentionally a narrow temporary adapter:
+the public Gateway `/entitysets` route currently lacks browser CORS headers;
+when that is corrected upstream, it can be replaced by a direct browser lookup.
 
 ### TS4NFDI adapters
 
@@ -135,8 +158,10 @@ The TSS adapter loads the pinned external bundle after a user opens an
 annotation. A presentation-only v2 descriptor mounts its widget directly in
 the plugin drawer. In direct mode, it calls the public Gateway with the
 browser-safe descriptor context; in proxy mode, it uses the authenticated RDMO
-proxy. Native or incomplete descriptors retain the legacy detail fallback. A
-failure stays inside that adapter and the native details remain usable.
+proxy. Native or incomplete descriptors retain the legacy detail fallback.
+Entity-set annotations use their dedicated click-time provenance endpoint
+instead of the legacy metadata resolver. A failure stays inside that adapter
+and the native details remain usable.
 
 Deployment-defined presentation modules are loaded from Django staticfiles by
 the browser composition root. They receive normalized plugin detail and mount

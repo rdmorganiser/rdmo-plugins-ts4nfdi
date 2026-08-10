@@ -229,11 +229,20 @@ def normalize_annotation_matcher(
         raise RuntimeError(f'resource_type must be one of {sorted(ANNOTATION_RESOURCE_TYPES)}')
 
     provider_key = normalize_optional_string(raw_matcher.get('provider_key'))
+    provider_config = providers.get(provider_key) if provider_key else None
     if resource_type in {'ontology', 'collection'}:
         if not provider_key:
             raise RuntimeError(f"provider_key is required for resource_type '{resource_type}'")
-        if provider_key not in providers:
+        if not isinstance(provider_config, dict):
             raise RuntimeError(f"unknown provider_key '{provider_key}'")
+
+    entityset_id = None
+    entityset_endpoint = None
+    if isinstance(provider_config, dict) and provider_config.get('entityset_id') is not None:
+        if resource_type != 'entity':
+            raise RuntimeError('an entity-set provider can only annotate entity resources')
+        entityset_id = require_string(provider_config, 'entityset_id')
+        entityset_endpoint = require_string(provider_config, 'endpoint')
 
     source_config = attach_source_config(
         {
@@ -276,6 +285,8 @@ def normalize_annotation_matcher(
         resource_type=resource_type,
         presentation=normalize_presentation(raw_matcher.get('presentation'), resource_type),
         provider_key=provider_key,
+        entityset_id=entityset_id,
+        entityset_endpoint=entityset_endpoint,
         source=ResourceReference(**source) if source else None,
         badge_label=normalize_optional_string(raw_matcher.get('badge_label')),
         ontology_id=normalize_optional_string(raw_matcher.get('ontology_id')),

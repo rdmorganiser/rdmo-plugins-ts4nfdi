@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 ALLOWED_GATEWAY_PATH_PREFIXES = (
     'collections',
+    'entitysets',
     'ols4/api/individuals',
     'ols4/api/properties',
     'ols4/api/terms',

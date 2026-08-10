@@ -216,9 +216,10 @@ resolve_summary_metadata = true
 presentation = { adapter = "native" }
 
 # FAIRagro data-generation concepts selected from the configured Gateway entity
-# set. Entity sets can combine providers and terminologies; retain the native
-# detail view until per-entity provenance is available deterministically in the
-# annotation descriptor.
+# set. Entity sets can combine providers and terminologies. The v2 list stays
+# metadata-free; on click the plugin recovers the selected entity's upstream
+# provenance. OLS2 entries use TSS, while other backends retain the native
+# entity-set definition and provenance view.
 [[frontend.annotations.matchers]]
 id = "example-fairagro-data-generation"
 question_uri = "https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/data-generation-methods"

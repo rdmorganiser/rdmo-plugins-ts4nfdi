@@ -1,6 +1,12 @@
 from django.urls import path
 
-from .api.views import AnnotationDetailView, AnnotationListV2View, AnnotationListView, GatewayProxyView
+from .api.views import (
+    AnnotationDetailView,
+    AnnotationListV2View,
+    AnnotationListView,
+    EntitySetProvenanceView,
+    GatewayProxyView,
+)
 
 app_name = 'rdmo_ts4nfdi'
 
@@ -14,6 +20,11 @@ urlpatterns = [
         'projects/<int:project_id>/annotations/v2/',
         AnnotationListV2View.as_view(),
         name='annotation-list-v2',
+    ),
+    path(
+        'projects/<int:project_id>/annotations/v2/<int:value_id>/entityset-provenance/',
+        EntitySetProvenanceView.as_view(),
+        name='entityset-provenance',
     ),
     path(
         'projects/<int:project_id>/annotations/<int:value_id>/',

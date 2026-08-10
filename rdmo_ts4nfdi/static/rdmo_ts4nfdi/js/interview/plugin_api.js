@@ -26,6 +26,15 @@ export class PluginAnnotationApi {
         );
     }
 
+    entitysetProvenance(projectId, annotation, signal) {
+        const query = new URLSearchParams({matcher: annotation.matcher_id});
+        return this.request(
+            `projects/${projectId}/annotations/v2/${annotation.value_id}/entityset-provenance/` +
+            `?${query.toString()}`,
+            signal
+        );
+    }
+
     async request(path, signal) {
         const response = await fetch(
             `${this.baseUrl}/api/v1/ts4nfdi/${path.replace(/^\/+/, "")}`,

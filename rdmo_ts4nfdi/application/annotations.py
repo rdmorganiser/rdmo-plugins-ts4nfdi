@@ -165,6 +165,7 @@ class AnnotationService:
                         annotation=self._summarize(candidate, contextual_matcher),
                         gateway_context=self._gateway_context(contextual_matcher),
                         presentation=contextual_matcher.presentation,
+                        entityset_provenance=bool(contextual_matcher.entityset_id),
                     )
                 )
 
@@ -202,19 +203,7 @@ class AnnotationService:
         value: Any,
         matcher_id: str | None = None,
     ) -> AnnotationDetail:
-        candidate_and_matcher = next(
-            (
-                (candidate, matcher)
-                for answer in self.host.value_answers(project, value)
-                if (matcher := self.matchers.match(answer.question, matcher_id)) is not None
-                for candidate in self.targets.resolve(answer, matcher)
-            ),
-            None,
-        )
-        if candidate_and_matcher is None:
-            raise LookupError('No TS4NFDI annotation matcher applies to this value.')
-
-        candidate, matcher = candidate_and_matcher
+        candidate, matcher = self._value_candidate(project, value, matcher_id)
         matcher = self._contextualize_matcher(candidate, matcher)
         annotation = self._summarize(candidate, matcher)
         status = 'available'
@@ -241,6 +230,37 @@ class AnnotationService:
             metadata=metadata,
             presentation=presentation,
         )
+
+    def value_annotation(
+        self,
+        project: Any,
+        value: Any,
+        matcher_id: str | None = None,
+    ) -> tuple[AnnotationSummary, AnnotationMatcher]:
+        """Return the selected value's semantic annotation without metadata I/O."""
+        candidate, matcher = self._value_candidate(project, value, matcher_id)
+        matcher = self._contextualize_matcher(candidate, matcher)
+        return self._summarize(candidate, matcher), matcher
+
+    def _value_candidate(
+        self,
+        project: Any,
+        value: Any,
+        matcher_id: str | None = None,
+    ) -> tuple[AnnotationCandidate, AnnotationMatcher]:
+        candidate_and_matcher = next(
+            (
+                (candidate, matcher)
+                for answer in self.host.value_answers(project, value)
+                if (matcher := self.matchers.match(answer.question, matcher_id)) is not None
+                for candidate in self.targets.resolve(answer, matcher)
+            ),
+            None,
+        )
+        if candidate_and_matcher is None:
+            raise LookupError('No TS4NFDI annotation matcher applies to this value.')
+
+        return candidate_and_matcher
 
     def _resolve_summary_metadata(
         self,

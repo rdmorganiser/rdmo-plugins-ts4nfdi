@@ -4,6 +4,7 @@ import {test} from "node:test";
 import {
     AnnotationDetailCoordinator,
     canUseTssDescriptor,
+    requiresEntitysetProvenance,
     serializeTssParameters
 } from "../../rdmo_ts4nfdi/static/rdmo_ts4nfdi/js/interview/detail_coordinator.js";
 
@@ -98,6 +99,96 @@ test("native and under-specified annotations retain the legacy detail path", asy
     assert.deepEqual(await coordinator.resolve("24", native), {label: "legacy"});
     assert.deepEqual(await coordinator.resolve("24", unresolved), {label: "legacy"});
     assert.deepEqual(calls, [["24", 7], ["24", 7]]);
+});
+
+test("entity-set provenance promotes compatible OLS2 entries to the TSS path and caches the result", async () => {
+    let provenanceCalls = 0;
+    const coordinator = new AnnotationDetailCoordinator({
+        api: {
+            detail: async () => { throw new Error("legacy detail must not be called"); },
+            entitysetProvenance: async () => {
+                provenanceCalls++;
+                return entityAnnotation({
+                    source: {
+                        id: "tib",
+                        label: "TIB Terminology Service",
+                        database: "tib",
+                        backend_type: "ols2"
+                    },
+                    terminology: {id: "ncit", label: "ncit"},
+                    iri: "http://purl.obolibrary.org/obo/NCIT_C180602",
+                    label: "Workshop",
+                    gateway_context: {
+                        ontology_id: "ncit",
+                        database: "tib",
+                        backend_type: "ols2",
+                        params: {}
+                    },
+                    presentation: {
+                        adapter: "tss",
+                        component: "entity-info",
+                        options: {}
+                    }
+                });
+            }
+        },
+        baseUrl: "/rdmo",
+        gateway: {mode: "direct", base_url: "https://gateway.example"}
+    });
+    const annotation = entityAnnotation({
+        entityset_provenance: true,
+        presentation: {adapter: "native", component: null, options: {}},
+        gateway_context: null
+    });
+
+    const first = await coordinator.resolve("24", annotation);
+    const second = await coordinator.resolve("24", annotation);
+
+    assert.equal(requiresEntitysetProvenance(annotation), true);
+    assert.equal(provenanceCalls, 1);
+    assert.equal(first.presentation.adapter, "tss");
+    assert.equal(first.presentation.props.ontologyId, "ncit");
+    assert.equal(second.presentation.props.parameter, "database=tib");
+});
+
+test("entity-set provenance retains the native entry detail for unsupported backends", async () => {
+    const entryDetail = entityAnnotation({
+        source: {
+            id: "agrovoc",
+            label: "FAO AGROVOC service",
+            database: "agrovoc",
+            backend_type: "skosmos"
+        },
+        terminology: {id: "agrovoc", label: "agrovoc"},
+        gateway_context: {
+            ontology_id: "agrovoc",
+            database: "agrovoc",
+            backend_type: "skosmos",
+            params: {}
+        },
+        definitions: ["Image-processing definition."],
+        presentation: {adapter: "native", component: null, options: {}}
+    });
+    const coordinator = new AnnotationDetailCoordinator({
+        api: {
+            detail: async () => { throw new Error("legacy detail must not be called"); },
+            entitysetProvenance: async () => entryDetail
+        },
+        baseUrl: "/rdmo",
+        gateway: {mode: "direct", base_url: "https://gateway.example"}
+    });
+
+    const detail = await coordinator.resolve(
+        "24",
+        entityAnnotation({
+            entityset_provenance: true,
+            presentation: {adapter: "native", component: null, options: {}},
+            gateway_context: null
+        })
+    );
+
+    assert.equal(detail, entryDetail);
+    assert.equal(detail.definitions[0], "Image-processing definition.");
 });
 
 test("TSS parameter serialization rejects delimiter injection", () => {

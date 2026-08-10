@@ -278,15 +278,16 @@ Backend adapters can be replaced through normal Django dotted paths:
 TS4NFDI_ADAPTERS = {
     "interview_host": "rdmo_ts4nfdi.integrations.rdmo.RDMOInterviewHost",
     "gateway": "rdmo_ts4nfdi.integrations.ts4nfdi.GatewayClient",
+    "entityset_provenance": "rdmo_ts4nfdi.application.GatewayEntitySetProvenanceResolver",
     "metadata_resolver": "rdmo_ts4nfdi.integrations.ts4nfdi.GatewayMetadataResolver",
     "presentation": "rdmo_ts4nfdi.presentation.AnnotationPresentationRegistry",
 }
 ```
 
 The defaults shown above do not need to be configured. Alternative classes
-must implement the small protocols in
-`rdmo_ts4nfdi.application.annotations`; their constructors follow the same
-composition contract as the defaults.
+must implement the documented composition contract. Annotation adapters use
+the small protocols in `rdmo_ts4nfdi.application.annotations`; the entity-set
+provenance adapter receives the configured Gateway client and source registry.
 
 Upstream TS4NFDI dependencies
 -----------------------------

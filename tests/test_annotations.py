@@ -2,6 +2,7 @@ from dataclasses import replace
 from types import SimpleNamespace
 
 from rdmo_ts4nfdi.application import AnnotationService, AnnotationTargetResolver
+from rdmo_ts4nfdi.application.entitysets import GatewayEntitySetProvenanceResolver
 from rdmo_ts4nfdi.domain import (
     AnnotationMatcher,
     InterviewAnswer,
@@ -257,6 +258,148 @@ def test_annotation_detail_falls_back_when_metadata_adapter_fails():
     assert payload['metadata_status'] == 'unavailable'
     assert payload['label'] == 'XML'
     assert payload['ontology_id'] == 'edam'
+
+
+def test_entityset_provenance_uses_upstream_entry_without_metadata_normalization():
+    class Gateway:
+        def __init__(self):
+            self.calls = []
+
+        def get(self, path):
+            self.calls.append(path)
+            return (
+                [
+                    {
+                        'id': 'fairagro-options',
+                        'entities': [
+                            {
+                                'uri': 'http://purl.obolibrary.org/obo/NCIT_C180602',
+                                'label': [{'value': 'Workshop', 'lang': 'en'}],
+                                'definition': [{'value': 'A focused educational program.', 'lang': 'en'}],
+                                'terminology': 'ncit',
+                                'provider': 'tib',
+                            },
+                        ],
+                    },
+                ],
+                False,
+            )
+
+    matcher = replace(
+        make_matcher(),
+        provider_key='ts4nfdi_entitysets',
+        entityset_id='fairagro-options',
+        entityset_endpoint='entitysets/',
+        source=None,
+        ontology_id=None,
+        gateway_params=(),
+        presentation=PresentationPolicy(adapter='native'),
+    )
+    answer = replace(
+        make_answer(),
+        label='Workshop',
+        identifier='http://purl.obolibrary.org/obo/NCIT_C180602',
+    )
+    annotation, resolved_matcher = make_service((answer,), matcher=matcher).value_annotation(
+        SimpleNamespace(id=24),
+        SimpleNamespace(id=1),
+        matcher_id='formats',
+    )
+    gateway = Gateway()
+    payload = GatewayEntitySetProvenanceResolver(
+        gateway,
+        sources={
+            'tib': {
+                'id': 'tib',
+                'label': 'TIB Terminology Service',
+                'database': 'tib',
+                'backend_type': 'ols2',
+                'url': 'https://api.terminology.tib.eu/api/v2',
+            },
+        },
+    ).resolve(annotation, resolved_matcher).to_dict()
+
+    assert gateway.calls == ['entitysets']
+    assert payload['definitions'] == ['A focused educational program.']
+    assert payload['source']['database'] == 'tib'
+    assert payload['terminology'] == {
+        'id': 'ncit',
+        'label': 'ncit',
+        'iri': None,
+        'url': None,
+        'database': None,
+        'backend_type': None,
+    }
+    assert payload['gateway_context'] == {
+        'ontology_id': 'ncit',
+        'database': 'tib',
+        'backend_type': 'ols2',
+        'params': {},
+    }
+    assert payload['presentation'] == {
+        'adapter': 'tss',
+        'component': 'entity-info',
+        'options': {},
+    }
+
+
+def test_entityset_provenance_retains_a_native_detail_for_non_ols_sources():
+    class Gateway:
+        def get(self, path):
+            assert path == 'entitysets'
+            return (
+                [
+                    {
+                        'id': 'fairagro-options',
+                        'entities': [
+                            {
+                                'uri': 'http://aims.fao.org/aos/agrovoc/c_37359',
+                                'definition': [{'value': 'Image-processing definition.', 'lang': 'en'}],
+                                'terminology': 'agrovoc',
+                                'provider': 'agrovoc',
+                            },
+                        ],
+                    },
+                ],
+                False,
+            )
+
+    matcher = replace(
+        make_matcher(),
+        entityset_id='fairagro-options',
+        entityset_endpoint='entitysets/',
+        source=None,
+        ontology_id=None,
+        gateway_params=(),
+    )
+    answer = replace(
+        make_answer(),
+        label='image processing',
+        identifier='http://aims.fao.org/aos/agrovoc/c_37359',
+    )
+    annotation, resolved_matcher = make_service((answer,), matcher=matcher).value_annotation(
+        SimpleNamespace(id=24),
+        SimpleNamespace(id=1),
+    )
+    payload = GatewayEntitySetProvenanceResolver(
+        Gateway(),
+        sources={
+            'agrovoc': {
+                'id': 'agrovoc',
+                'label': 'FAO AGROVOC service',
+                'database': 'agrovoc',
+                'backend_type': 'skosmos',
+                'url': 'https://agrovoc.fao.org/browse/rest/v1',
+            },
+        },
+    ).resolve(annotation, resolved_matcher).to_dict()
+
+    assert payload['definitions'] == ['Image-processing definition.']
+    assert payload['presentation'] == {
+        'adapter': 'native',
+        'component': None,
+        'options': {},
+    }
 
 
 def test_tss_presentation_descriptor_keeps_gateway_source_parameters():

@@ -1,6 +1,7 @@
 import logging
 
 from django.shortcuts import get_object_or_404
+from django.utils.translation import get_language
 
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import GenericAPIView
@@ -9,7 +10,10 @@ from rest_framework.response import Response
 from rdmo.projects.models import Project
 
 from rdmo_ts4nfdi.api.permissions import CanViewProject
-from rdmo_ts4nfdi.composition import build_annotation_service
+from rdmo_ts4nfdi.composition import (
+    build_annotation_service,
+    build_entityset_provenance_resolver,
+)
 from rdmo_ts4nfdi.integrations.ts4nfdi.gateway import (
     GatewayClient,
     GatewayError,
@@ -103,6 +107,71 @@ class AnnotationDetailView(ProjectAPIView):
             ) from exc
 
         return Response(payload.to_dict())
+
+
+class EntitySetProvenanceView(ProjectAPIView):
+    """Return click-time source context for one configured entity-set value."""
+
+    def get(self, request, project_id, value_id):
+        project = self.get_project()
+
+        query = AnnotationDetailQuerySerializer(data=request.query_params)
+        query.is_valid(raise_exception=True)
+        value = get_object_or_404(
+            project.values
+            .filter(snapshot=None)
+            .select_related('attribute', 'option'),
+            pk=value_id,
+        )
+
+        try:
+            annotation, matcher = build_annotation_service().value_annotation(
+                project,
+                value,
+                matcher_id=query.validated_data.get('matcher'),
+            )
+            payload = build_entityset_provenance_resolver().resolve(
+                annotation,
+                matcher,
+                language=get_language(),
+            )
+        except LookupError as exc:
+            raise NotFound('No entity-set provenance applies to this value.') from exc
+        except GatewayTimeout as exc:
+            logger.warning(
+                'TS4NFDI entity-set provenance lookup timed out project=%s value=%s user=%s',
+                project_id,
+                value_id,
+                request.user.pk,
+            )
+            return Response(
+                {
+                    'detail': str(exc),
+                    'code': 'gateway_timeout',
+                    'retryable': True,
+                },
+                status=424,
+            )
+        except GatewayError as exc:
+            logger.warning(
+                'TS4NFDI entity-set provenance lookup failed project=%s value=%s user=%s: %s',
+                project_id,
+                value_id,
+                request.user.pk,
+                exc,
+            )
+            return Response(
+                {
+                    'detail': str(exc),
+                    'code': 'gateway_unavailable',
+                    'retryable': True,
+                },
+                status=424,
+            )
+
+        response = Response(payload.to_dict())
+        response['Cache-Control'] = 'private, max-age=60'
+        return response
 
 
 class GatewayProxyView(ProjectAPIView):

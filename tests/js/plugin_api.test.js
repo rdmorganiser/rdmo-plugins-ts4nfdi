@@ -49,3 +49,24 @@ test("legacy detail remains available for native fallback", async () => {
         "/rdmo/api/v1/ts4nfdi/projects/24/annotations/7/?matcher=formats"
     );
 });
+
+test("entity-set provenance uses the scoped v2 click-time endpoint", async () => {
+    const originalFetch = globalThis.fetch;
+    const requests = [];
+    globalThis.fetch = async (url) => {
+        requests.push(url);
+        return {ok: true, json: async () => ({label: "Workshop"})};
+    };
+
+    try {
+        const api = new PluginAnnotationApi("/rdmo");
+        await api.entitysetProvenance("24", {value_id: 7, matcher_id: "fairagro-data-generation"});
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+
+    assert.equal(
+        requests[0],
+        "/rdmo/api/v1/ts4nfdi/projects/24/annotations/v2/7/entityset-provenance/?matcher=fairagro-data-generation"
+    );
+});

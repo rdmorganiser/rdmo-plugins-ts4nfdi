@@ -4,11 +4,12 @@ from django.conf import settings
 from django.utils.module_loading import import_string
 
 from rdmo_ts4nfdi.application import AnnotationService, AnnotationTargetResolver
-from rdmo_ts4nfdi.config import load_annotation_matchers
+from rdmo_ts4nfdi.config import load_annotation_matchers, load_source_configs
 
 DEFAULT_ADAPTERS = {
     'interview_host': 'rdmo_ts4nfdi.integrations.rdmo.RDMOInterviewHost',
     'gateway': 'rdmo_ts4nfdi.integrations.ts4nfdi.GatewayClient',
+    'entityset_provenance': 'rdmo_ts4nfdi.application.GatewayEntitySetProvenanceResolver',
     'metadata_resolver': 'rdmo_ts4nfdi.integrations.ts4nfdi.GatewayMetadataResolver',
     'presentation': 'rdmo_ts4nfdi.presentation.AnnotationPresentationRegistry',
 }
@@ -34,4 +35,12 @@ def build_annotation_service() -> AnnotationService:
         metadata=adapters['metadata_resolver'](gateway),
         presentation=adapters['presentation'](),
         matchers=load_annotation_matchers(),
+    )
+
+
+def build_entityset_provenance_resolver():
+    adapters = load_adapter_classes()
+    return adapters['entityset_provenance'](
+        adapters['gateway'](),
+        sources=load_source_configs(),
     )

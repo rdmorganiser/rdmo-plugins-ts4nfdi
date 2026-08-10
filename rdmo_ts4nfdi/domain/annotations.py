@@ -67,6 +67,8 @@ class AnnotationMatcher:
     resource_type: ResourceKind
     presentation: PresentationPolicy
     provider_key: str | None = None
+    entityset_id: str | None = None
+    entityset_endpoint: str | None = None
     source: ResourceReference | None = None
     badge_label: str | None = None
     ontology_id: str | None = None
@@ -156,10 +158,45 @@ class AnnotationDescriptor:
     annotation: AnnotationSummary
     gateway_context: GatewayContext | None
     presentation: PresentationPolicy
+    entityset_provenance: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         return {
             **self.annotation.to_dict(),
+            'gateway_context': self.gateway_context.to_dict() if self.gateway_context else None,
+            'presentation': self.presentation.to_dict(),
+            'entityset_provenance': self.entityset_provenance,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class EntitySetProvenance:
+    """Click-time context recovered from a configured Gateway entity set.
+
+    This intentionally contains only the entity-set record and configured source
+    information. It is not a replacement for Gateway metadata normalization.
+    """
+
+    annotation: AnnotationSummary
+    source: ResourceReference | None
+    terminology: ResourceReference | None
+    gateway_context: GatewayContext | None
+    definitions: tuple[str, ...] = ()
+    presentation: PresentationPolicy = field(default_factory=PresentationPolicy)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            **self.annotation.to_dict(),
+            'metadata_status': 'available',
+            'ontology_id': self.gateway_context.ontology_id if self.gateway_context else None,
+            'description': self.definitions[0] if self.definitions else None,
+            'definitions': list(self.definitions),
+            'synonyms': [],
+            'entity_types': [],
+            'obsolete': None,
+            'version': None,
+            'source': self.source.to_dict() if self.source else None,
+            'terminology': self.terminology.to_dict() if self.terminology else None,
             'gateway_context': self.gateway_context.to_dict() if self.gateway_context else None,
             'presentation': self.presentation.to_dict(),
         }
