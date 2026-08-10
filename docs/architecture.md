@@ -13,12 +13,10 @@ RDMO API views
 AnnotationService  <--- plugin-owned domain models
    /       |        \
   v        v         v
-RDMO     semantic   metadata resolver
-host     target         |
-adapter  resolver       v
-          |       TS4NFDI Gateway
-          v
-   semantic option registry
+RDMO     target     metadata resolver
+host     resolver       |
+adapter                  v
+                    TS4NFDI Gateway
 
 AnnotationService
       |
@@ -34,8 +32,8 @@ request.
 
 Deployments can replace the production classes with the `TS4NFDI_ADAPTERS`
 Django setting. It accepts dotted paths for `interview_host`, `gateway`,
-`metadata_resolver`, `presentation`, and `semantic_options`. Unknown keys fail
-fast. The default classes remain explicit in the composition root.
+`metadata_resolver`, and `presentation`. Unknown keys fail fast. The default
+classes remain explicit in the composition root.
 
 ## Backend boundaries
 
@@ -60,9 +58,9 @@ It communicates through four small protocols:
 - `PresentationAdapter`.
 
 The target resolver distinguishes the stored RDMO answer identity from the
-external terminology resource which annotates it. Direct provider selections
-resolve to themselves. A curated option can instead expand through a semantic
-option set to zero, one, or several terminology targets.
+external terminology resource which annotates it. Terminology providers return
+the selected resource IRI directly, so provider selections resolve to
+themselves.
 
 ### RDMO adapter
 
@@ -76,24 +74,24 @@ The public dynamic option-provider class paths remain unchanged because RDMO
 deployments persist them in settings. Their external HTTP operation is
 delegated to `GatewayProviderClient`.
 
-`PackageSemanticOptionRegistry` loads versioned, normalized mapping manifests.
-The FAIRagro data-generation provider projects one such manifest into RDMO
-options, while annotations use the same manifest to resolve selected option
-URIs into target concepts. This keeps CSV/import concerns out of both the RDMO
-adapter and the Gateway adapter.
-
-The curator-facing CSV contract, compilation workflow, composition model, and
-stable-identifier rules are documented in
-[`semantic-option-workflow.md`](semantic-option-workflow.md).
+`TS4NFDIEntitySetProvider` exposes a configured Gateway `/entitysets` resource
+as RDMO options. It uses every entity's URI as the provider option ID, so the
+normal RDMO provider flow persists the terminology IRI without a plugin signal
+or value projection. [`semantic-option-workflow.md`](semantic-option-workflow.md)
+records the active upstream-curation workflow and the status of the archived
+FAIRagro CSV; no semantic manifest is shipped or read at runtime.
 
 ### TS4NFDI adapters
 
 `GatewayClient` owns the authenticated, cached, allowlisted Gateway transport
-used by annotation details and the browser proxy.
+used by dynamic providers, native annotation details, and the optional browser
+proxy. A complete TSS v2 descriptor instead lets the browser call the public
+Gateway directly; it does not use this client for terminology metadata.
 
 `GatewayMetadataResolver` owns knowledge of current Gateway result fields. It
-maps external payloads to plugin domain metadata. Neither RDMO nor the browser
-renderer needs to understand raw Gateway response shapes.
+maps external payloads to the native annotation-detail model. It is a fallback
+for native or incomplete descriptors, not a dependency of the TSS-backed v2
+path; TSS owns OLS model normalization and rich terminology rendering there.
 
 ### Presentation registry
 
@@ -101,7 +99,8 @@ The presentation registry maps the configured adapter name to a descriptor.
 The built-in choices are:
 
 - `native`, which needs no external widget;
-- `tss`, which produces public Terminology Service Suite component props.
+- `tss`, for which the browser constructs public Terminology Service Suite
+  component props from a semantic descriptor.
 
 Other adapter names pass their matcher options through as a browser descriptor.
 A deployment can register the corresponding ES module under
@@ -132,9 +131,12 @@ React navigation with mutation observers. It returns ordinary mount elements
 and immutable annotation payloads to the controller. The controller does not
 read or mutate the RDMO Redux store.
 
-The TSS adapter is lazy. It loads the pinned external bundle only after the
-user expands the interactive view. A failure stays inside that adapter and the
-native annotation details remain usable.
+The TSS adapter loads the pinned external bundle after a user opens an
+annotation. A presentation-only v2 descriptor mounts its widget directly in
+the plugin drawer. In direct mode, it calls the public Gateway with the
+browser-safe descriptor context; in proxy mode, it uses the authenticated RDMO
+proxy. Native or incomplete descriptors retain the legacy detail fallback. A
+failure stays inside that adapter and the native details remain usable.
 
 Deployment-defined presentation modules are loaded from Django staticfiles by
 the browser composition root. They receive normalized plugin detail and mount

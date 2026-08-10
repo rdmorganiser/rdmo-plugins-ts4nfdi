@@ -52,13 +52,7 @@ def _append_annotation(parent, payload: dict) -> None:
         'label',
         'short_form',
         'answer_id',
-        'target_id',
-        'target_label',
         'iri',
-        'mapping_relation',
-        'curation_status',
-        'mapping_set_id',
-        'mapping_set_version',
     ):
         _append_text(annotation, key, payload.get(key))
     _append_resource(annotation, 'source', payload.get('source'))

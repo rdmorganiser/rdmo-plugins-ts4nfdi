@@ -25,8 +25,7 @@ function annotationFingerprint(occurrence) {
     return (occurrence.annotations || []).map((annotation) => [
         annotation.label,
         annotation.iri,
-        annotation.matcher_id,
-        annotation.target_id
+        annotation.matcher_id
     ].map(normalizeDisplayedValue).join(":"))
         .sort()
         .join("|");

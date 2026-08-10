@@ -19,15 +19,6 @@ timeout = 10
 cache_timeout = 300
 # api_token = "configure-via-a-secret-bearing-settings-source"
 
-[storage.option_external_id]
-# Project exactly one curated target IRI from a fixed RDMO Option into the
-# corresponding live Value.external_id. This is local manifest lookup only;
-# saving an interview answer never calls the API Gateway.
-enabled = true
-mapping_sets = ["fairagro-data-generation"]
-relations = ["exact", "close"]
-curation_statuses = ["draft", "reviewed"]
-
 [sources.ebi]
 label = "EBI"
 database = "ebi"
@@ -100,7 +91,25 @@ id_fields = ["URI", "config.id", "uri", "ontologyId", "id"]
 label_fields = ["config.title", "label", "ontologyId", "name", "title"]
 help_fields = ["config.description", "description", "definition", "summary"]
 
+# The FAIRagro data-generation question uses this public Gateway entity set.
+# Each entity URI is returned directly as the dynamic RDMO option ID and is
+# therefore preserved as Value.external_id by RDMO's normal provider flow.
+[providers.ts4nfdi_entitysets]
+endpoint = "entitysets/"
+entityset_id = "fc45621d-7e40-47ce-9616-4133f0b54edf"
+id_fields = ["id"]
+label_fields = ["label"]
+help_fields = ["description"]
+
 [frontend]
+# Public Gateway OLS4 endpoints are CORS-enabled. TSS-backed annotations use
+# this direct browser route, so clicking an EDAM annotation bypasses both the
+# legacy annotation-detail API and the RDMO Gateway proxy. Deployments with a
+# private source, server-held credentials, or restrictive browser networking
+# can override this with `mode = "proxy"`.
+[frontend.gateway]
+mode = "direct"
+
 # Interview annotations are opt-in. Each matcher must identify the complete
 # question/attribute/optionset combination.
 [frontend.annotations]
@@ -206,19 +215,18 @@ badge_label = "Terminology"
 resolve_summary_metadata = true
 presentation = { adapter = "native" }
 
-# FAIRagro data-generation classifications selected from the plugin's
-# versioned semantic option-set manifest. Each selected FAIRagro option can
-# resolve to zero, one, or several terminology concepts from different
-# Gateway sources, so source and terminology context come from the mapping
-# target rather than this question-level matcher.
+# FAIRagro data-generation concepts selected from the configured Gateway entity
+# set. Entity sets can combine providers and terminologies; retain the native
+# detail view until per-entity provenance is available deterministically in the
+# annotation descriptor.
 [[frontend.annotations.matchers]]
 id = "example-fairagro-data-generation"
 question_uri = "https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/data-generation-methods"
 attribute_uri = "https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods"
 optionset_uri = "https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/fairagro-data-generation"
 resource_type = "entity"
-mapping_set_id = "fairagro-data-generation"
-badge_label = "FAIRAgro mapping"
+provider_key = "ts4nfdi_entitysets"
+badge_label = "FAIRagro entity set"
 presentation = { adapter = "native" }
 
 # Terminologies selected from the FAIRagro TS4NFDI collection.

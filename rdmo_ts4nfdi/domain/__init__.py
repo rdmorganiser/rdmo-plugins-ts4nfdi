@@ -19,19 +19,8 @@ from .annotations import (
     ResolvedMetadata,
     ResourceReference,
 )
-from .semantic_options import (
-    SEMANTIC_CURATION_STATUSES,
-    SEMANTIC_MAPPING_RELATIONS,
-    OptionExternalIdProjectionPolicy,
-    SemanticOption,
-    SemanticOptionRegistry,
-    SemanticOptionSet,
-    SemanticTarget,
-)
 
 __all__ = [
-    'SEMANTIC_CURATION_STATUSES',
-    'SEMANTIC_MAPPING_RELATIONS',
     'AnnotationCandidate',
     'AnnotationDescriptor',
     'AnnotationDescriptorOccurrence',
@@ -42,7 +31,6 @@ __all__ = [
     'GatewayContext',
     'InterviewAnswer',
     'PageAnnotationDescriptors',
-    'OptionExternalIdProjectionPolicy',
     'PageAnnotations',
     'PresentationDescriptor',
     'PresentationPolicy',
@@ -50,8 +38,4 @@ __all__ = [
     'QuestionContext',
     'ResolvedMetadata',
     'ResourceReference',
-    'SemanticOption',
-    'SemanticOptionRegistry',
-    'SemanticOptionSet',
-    'SemanticTarget',
 ]

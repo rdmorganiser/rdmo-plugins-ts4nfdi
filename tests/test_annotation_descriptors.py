@@ -49,10 +49,9 @@ class Host:
 
 
 class Targets:
-    def __init__(self, source=None, terminology=None, *, mapping=False):
+    def __init__(self, source=None, terminology=None):
         self.source = source
         self.terminology = terminology
-        self.mapping = mapping
 
     def resolve(self, answer, matcher):
         yield AnnotationCandidate(
@@ -65,8 +64,6 @@ class Targets:
             collection_index=answer.collection_index,
             source=self.source,
             terminology=self.terminology,
-            mapping_set_id='fairagro-data-generation' if self.mapping else None,
-            mapping_set_version='draft.1' if self.mapping else None,
         )
 
 
@@ -171,7 +168,7 @@ def test_v2_does_not_resolve_summary_metadata_even_when_matcher_requests_it():
     assert annotation['source']['database'] == 'ebi'
 
 
-def test_v2_annotation_list_contextualizes_semantic_mapping_targets_and_keeps_provenance():
+def test_v2_annotation_list_contextualizes_candidate_source_and_terminology():
     source = ResourceReference(
         id='agroportal',
         label='AgroPortal',
@@ -190,17 +187,15 @@ def test_v2_annotation_list_contextualizes_semantic_mapping_targets_and_keeps_pr
     )
 
     annotation = make_service(
-        targets=Targets(source=source, terminology=terminology, mapping=True),
-        matcher=matcher,
-    ).list_page_v2(
-        SimpleNamespace(id=24),
-        SimpleNamespace(id=341),
-    ).to_dict()['occurrences'][0]['annotations'][0]
+        targets=Targets(
+            source=source, terminology=terminology),
+            matcher=matcher
+            ).list_page_v2(
+                SimpleNamespace(id=24), SimpleNamespace(id=341)
+            ).to_dict()['occurrences'][0]['annotations'][0]
 
     assert annotation['source']['database'] == 'agroportal'
     assert annotation['terminology']['id'] == 'INRAETHES'
-    assert annotation['mapping_set_id'] == 'fairagro-data-generation'
-    assert annotation['mapping_set_version'] == 'draft.1'
     assert annotation['gateway_context'] == {
         'ontology_id': 'INRAETHES',
         'database': 'agroportal',

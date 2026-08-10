@@ -17,11 +17,40 @@ export class TssPresentationAdapter {
         return descriptor && descriptor.adapter === "tss" && FACTORIES[descriptor.component];
     }
 
-    render(host, descriptor) {
+    render(host, descriptor, context = {}) {
         if (!this.supports(descriptor)) {
             return;
         }
+        if (context.primary) {
+            return this.renderPrimary(host, descriptor, context);
+        }
+        return this.renderDisclosure(host, descriptor, context);
+    }
 
+    async renderPrimary(host, descriptor, context) {
+        const container = document.createElement("div");
+        container.className = "ts4nfdi-annotation-widget-root ts4nfdi-annotation-loading";
+        container.textContent = translate("Loading terminology details …");
+        host.appendChild(container);
+
+        await this.loadAssets();
+        if (context.signal?.aborted) {
+            container.replaceChildren();
+            return;
+        }
+
+        const factory = this.factory(descriptor);
+        const props = this.props(descriptor);
+        container.className = "ts4nfdi-annotation-widget-root";
+        container.replaceChildren();
+        const widgetCleanup = this.normalizeCleanup(factory(props, container));
+        return () => {
+            widgetCleanup?.();
+            container.replaceChildren();
+        };
+    }
+
+    renderDisclosure(host, descriptor, context) {
         const disclosure = document.createElement("details");
         disclosure.className = "ts4nfdi-annotation-widget-disclosure";
         const label = document.createElement("summary");
@@ -45,22 +74,16 @@ export class TssPresentationAdapter {
             container.textContent = translate("Loading interactive terminology view …");
             try {
                 await this.loadAssets();
-                if (disposed) {
+                if (disposed || context.signal?.aborted) {
                     return;
                 }
-                const factory = window.ts4nfdiWidgets?.[FACTORIES[descriptor.component]];
-                if (typeof factory !== "function") {
-                    throw new Error(`TSS component '${descriptor.component}' is unavailable.`);
-                }
-                const props = removeNullValues(descriptor.props || {});
-                if (props.api?.startsWith("/")) {
-                    props.api = this.baseUrl + props.api;
-                }
+                const factory = this.factory(descriptor);
+                const props = this.props(descriptor);
                 container.className = "ts4nfdi-annotation-widget-root";
                 container.replaceChildren();
                 widgetCleanup = this.normalizeCleanup(factory(props, container));
             } catch (error) {
-                if (disposed) {
+                if (disposed || context.signal?.aborted) {
                     return;
                 }
                 container.className = "ts4nfdi-annotation-notice";
@@ -78,6 +101,22 @@ export class TssPresentationAdapter {
             widgetCleanup?.();
             container.replaceChildren();
         };
+    }
+
+    factory(descriptor) {
+        const factory = window.ts4nfdiWidgets?.[FACTORIES[descriptor.component]];
+        if (typeof factory !== "function") {
+            throw new Error(`TSS component '${descriptor.component}' is unavailable.`);
+        }
+        return factory;
+    }
+
+    props(descriptor) {
+        const props = removeNullValues(descriptor.props || {});
+        if (props.api?.startsWith("/")) {
+            props.api = this.baseUrl + props.api;
+        }
+        return props;
     }
 
     normalizeCleanup(lifecycle) {

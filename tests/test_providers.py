@@ -1,5 +1,3 @@
-import csv
-import hashlib
 import importlib
 import json
 import re
@@ -23,6 +21,8 @@ def test_documented_project_export_keys_are_rdmo_route_compatible():
 
     assert '"ts4nfdi-json"' not in readme
     assert '"ts4nfdi-xml"' not in readme
+    assert 'rdmo_ts4nfdi.providers.entitysets.TS4NFDIEntitySetProvider' in readme
+    assert 'rdmo_ts4nfdi.providers.semantic_options.FAIRAgroDataGenerationOptionSetProvider' not in readme
 
 
 def install_rdmo_stubs(monkeypatch):
@@ -113,7 +113,6 @@ def provider_modules():
             load_source_configs=config.load_source_configs,
             load_annotation_matchers=config.load_annotation_matchers,
             load_frontend_config=config.load_frontend_config,
-            load_option_external_id_projection_policy=config.load_option_external_id_projection_policy,
             settings=settings,
             gateway=gateway,
             gateway_provider=gateway_provider,
@@ -124,7 +123,7 @@ def provider_modules():
             template_tags=template_tags,
             collection_terminologies_provider=providers.TS4NFDICollectionTerminologiesProvider,
             collections_provider=providers.TS4NFDICollectionsProvider,
-            fairagro_data_generation_provider=providers.FAIRAgroDataGenerationOptionSetProvider,
+            entitysets_provider=providers.TS4NFDIEntitySetProvider,
             ontologies_provider=providers.TS4NFDIOntologiesProvider,
         )
     finally:
@@ -156,6 +155,10 @@ def make_provider(provider_class, key, payload):
     provider.key = key
     provider.make_request = lambda search=None, provider_config=None: payload
     return provider
+
+
+def load_fixture(*parts):
+    return json.loads((ROOT / 'tests' / 'fixtures').joinpath(*parts).read_text(encoding='utf-8'))
 
 
 def test_ontology_provider_get_options_returns_mapped_options(provider_modules):
@@ -302,13 +305,15 @@ def test_collections_provider_get_options_returns_mapped_collection_options(prov
     assert 'Relevant metadata standards' in options[0]['help']
 
 
-def test_fairagro_data_generation_provider_uses_projected_option_ids_and_concept_help(
-    provider_modules,
-):
+def test_entityset_provider_maps_gateway_entity_uris_and_localized_labels(provider_modules):
+    key = 'ts4nfdi_entitysets'
     configure_provider(
         provider_modules,
-        'fairagro_data_generation',
-        {},
+        key,
+        {
+            'endpoint': 'entitysets/',
+            'entityset_id': 'fc45621d-7e40-47ce-9616-4133f0b54edf',
+        },
         sources={
             'agroportal': {
                 'label': 'AgroPortal',
@@ -322,159 +327,49 @@ def test_fairagro_data_generation_provider_uses_projected_option_ids_and_concept
                 'backend_type': 'skosmos',
                 'url': 'https://agrovoc.fao.org/browse/rest/v1',
             },
-            'tib': {
-                'label': 'TIB Terminology Service',
-                'database': 'tib',
-                'backend_type': 'ols2',
-                'url': 'https://api.terminology.tib.eu/api/v2',
-            },
         },
     )
-    provider_modules.settings.TS4NFDI_PROVIDER['storage'] = {
-        'option_external_id': {
-            'enabled': True,
-            'mapping_sets': ['fairagro-data-generation'],
-            'relations': ['exact', 'close'],
-            'curation_statuses': ['draft', 'reviewed'],
-        }
-    }
-    provider_modules.load_config.cache_clear()
+    payload = load_fixture('entitysets', 'fairagro-options.json')
+    provider = make_provider(provider_modules.entitysets_provider, key, payload)
 
-    provider = provider_modules.fairagro_data_generation_provider()
-    provider.key = 'fairagro_data_generation'
     options = provider.get_options(project=None)
 
-    assert provider.search is False
-    assert len(options) == 22
-    assert options[0]['id'] == 'http://opendata.inrae.fr/thesaurusINRAE/c_17625'
-    assert options[0]['text'] == 'Field trials'
-    assert 'AgroPortal' in options[0]['help']
-    assert 'INRAE Thesaurus' in options[0]['help']
-    assert 'field experiment' in options[0]['help']
-    assert 'Related terminology concept.' in options[0]['help']
-    assert 'mapping' not in options[0]['help'].lower()
-    unmapped = next(option for option in options if option['id'].endswith('/field_sampling'))
-    assert 'No related terminology concept is available for this option yet.' in unmapped['help']
-
-@pytest.mark.xfail(reason="to be removed")
-def test_fairagro_data_generation_curator_csv_matches_deployed_manifest():
-    csv_path = ROOT / 'docs/FAIRagro Options - data_generation.csv'
-    manifest_path = ROOT / 'rdmo_ts4nfdi/data/semantic_option_sets/fairagro_data_generation.json'
-    original_columns = [
-        'TermDE',
-        'TermEN',
-        'TerminologyConceptURI',
-        'TerminologyLabel',
-        'TerminologyProvider',
-        'Comment',
+    assert [(option['id'], option['text']) for option in options] == [
+        ('http://opendata.inrae.fr/thesaurusINRAE/c_17625', 'field experiment'),
+        ('http://aims.fao.org/aos/agrovoc/c_37359', 'image processing'),
     ]
-    added_columns = [
-        'OptionID',
-        'OptionURI',
-        'OptionLabelDE',
-        'OptionLabelEN',
-        'Selectable',
-        'TargetID',
-        'TerminologyID',
-        'SourceKey',
-        'MappingRelation',
-        'CurationStatus',
-        'CompositionID',
-        'CompositionOperator',
-        'ComponentOrder',
-        'ComponentRole',
-    ]
+    assert '>AgroPortal</span>' in options[0]['help']
+    assert '>INRAETHES</span>' in options[0]['help']
+    assert '>FAO AGROVOC service</span>' in options[1]['help']
+    assert '>agrovoc</span>' in options[1]['help']
+    assert 'Procedure for restoring or enhancing images, often by computer' in options[1]['help']
 
-    csv_bytes = csv_path.read_bytes()
-    with csv_path.open(encoding='utf-8', newline='') as csv_file:
-        title_row = next(csv.reader(csv_file))
-        reader = csv.DictReader(csv_file)
-        assert title_row[0].startswith('How does your project generate new data?')
-        assert reader.fieldnames == original_columns + added_columns
-        rows = list(reader)
+    german_option = provider.map_entity_to_option(
+        payload[0]['entities'][1],
+        'de',
+        provider_modules.load_source_configs(),
+    )
+    assert german_option['id'] == 'http://aims.fao.org/aos/agrovoc/c_37359'
+    assert german_option['text'] == 'Bildverarbeitung'
 
-    manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
-    assert manifest['source_sha256'] == hashlib.sha256(csv_bytes).hexdigest()
 
-    manifest_options = {option['uri']: option for option in manifest['options']}
-    csv_option_uris = {row['OptionURI'] for row in rows}
-    assert csv_option_uris <= set(manifest_options)
+def test_entityset_provider_returns_no_options_when_the_configured_set_is_absent(provider_modules):
+    key = 'ts4nfdi_entitysets'
+    configure_provider(
+        provider_modules,
+        key,
+        {
+            'endpoint': 'entitysets/',
+            'entityset_id': 'missing-entity-set',
+        },
+    )
+    provider = make_provider(
+        provider_modules.entitysets_provider,
+        key,
+        load_fixture('entitysets', 'fairagro-options.json'),
+    )
 
-    option_columns = [
-        'OptionID',
-        'OptionURI',
-        'OptionLabelDE',
-        'OptionLabelEN',
-        'Selectable',
-    ]
-    target_columns = [
-        'TargetID',
-        'TerminologyID',
-        'SourceKey',
-        'MappingRelation',
-        'CurationStatus',
-    ]
-    composition_columns = [
-        'CompositionID',
-        'CompositionOperator',
-        'ComponentOrder',
-    ]
-
-    for option_uri in csv_option_uris:
-        option = manifest_options[option_uri]
-        option_rows = [row for row in rows if row['OptionURI'] == option_uri]
-        assert option_rows
-        for column in option_columns:
-            assert len({row[column] for row in option_rows}) == 1
-
-        first_row = option_rows[0]
-        assert first_row['OptionID'] == option['id']
-        assert first_row['OptionLabelEN'] == option['labels']['en']
-        assert first_row['OptionLabelDE'] == option['labels']['de']
-        assert (first_row['Selectable'] == 'true') == option.get('selectable', True)
-
-        csv_targets = {
-            (
-                row['TargetID'],
-                row['TerminologyConceptURI'],
-                row['TermEN'] or row['TermDE'],
-                row['TerminologyID'],
-                row['SourceKey'],
-                row['MappingRelation'],
-                row['CurationStatus'],
-            )
-            for row in option_rows
-            if row['TargetID']
-        }
-        manifest_targets = {
-            (
-                target['id'],
-                target['iri'],
-                target['label'],
-                target['terminology']['id'],
-                target['source_key'],
-                target['relation'],
-                target.get('curation_status', 'draft'),
-            )
-            for target in option['targets']
-        }
-        assert csv_targets == manifest_targets
-
-        for row in option_rows:
-            if row['TargetID']:
-                assert all(row[column] for column in target_columns)
-                assert row['TerminologyConceptURI'] not in {'', '/'}
-            else:
-                assert not any(row[column] for column in target_columns)
-                assert row['TerminologyConceptURI'] in {'', '/'}
-
-            has_composition = any(row[column] for column in composition_columns)
-            if has_composition:
-                assert row['MappingRelation'] == 'component'
-                assert all(row[column] for column in composition_columns)
-                assert int(row['ComponentOrder']) > 0
-            else:
-                assert row['MappingRelation'] != 'component'
+    assert provider.get_options(project=None) == []
 
 
 def test_collection_terminologies_provider_get_options_returns_collection_terms(provider_modules):
@@ -582,7 +477,6 @@ def test_annotation_config_is_validated_and_sanitized(provider_modules):
                         'optionset_uri': 'https://example.test/optionset',
                         'resource_type': 'entity',
                         'resolve_summary_metadata': True,
-                        'mapping_set_id': 'example-mappings',
                         'presentation': {
                             'adapter': 'tss',
                             'component': 'entity-info',
@@ -612,15 +506,64 @@ def test_annotation_config_is_validated_and_sanitized(provider_modules):
     assert matchers[0].id == 'valid'
     assert matchers[0].presentation.adapter == 'tss'
     assert matchers[0].presentation.component == 'entity-info'
-    assert matchers[0].mapping_set_id == 'example-mappings'
     assert matchers[0].resolve_summary_metadata is True
     assert matchers[0].gateway_query == (('database', 'ols'),)
     assert frontend_config == {
         'annotations': {
-            'api_version': '1',
+            'api_version': '2',
             'enabled': True,
         },
+        'gateway': {'mode': 'proxy'},
         'presentation_adapters': [],
+    }
+
+
+def test_annotation_config_rejects_legacy_mapping_set_id(provider_modules, caplog):
+    provider_modules.settings.TS4NFDI_PROVIDER = {
+        'providers': {},
+        'frontend': {
+            'annotations': {
+                'enabled': True,
+                'matchers': [
+                    {
+                        'id': 'legacy-mapping',
+                        'question_uri': 'https://example.test/question',
+                        'attribute_uri': 'https://example.test/attribute',
+                        'optionset_uri': 'https://example.test/optionset',
+                        'resource_type': 'entity',
+                        'mapping_set_id': 'fairagro-data-generation',
+                        'presentation': {'adapter': 'native'},
+                    },
+                ],
+            },
+        },
+    }
+    provider_modules.load_config.cache_clear()
+
+    with caplog.at_level('ERROR', logger='rdmo_ts4nfdi.config'):
+        assert provider_modules.load_annotation_matchers() == ()
+
+    assert 'legacy matcher keys' in caplog.messages[0]
+    assert 'mapping_set_id' in caplog.messages[0]
+
+
+def test_frontend_direct_gateway_config_exposes_only_public_base_url(provider_modules):
+    provider_modules.settings.TS4NFDI_PROVIDER = {
+        'gateway': {
+            'base_url': 'https://terminology.services.base4nfdi.de/api-gateway/',
+            'api_token': 'server-only-token',
+        },
+        'providers': {},
+        'frontend': {
+            'gateway': {'mode': 'direct'},
+            'annotations': {'enabled': False},
+        },
+    }
+    provider_modules.load_config.cache_clear()
+
+    assert provider_modules.load_frontend_config()['gateway'] == {
+        'mode': 'direct',
+        'base_url': 'https://terminology.services.base4nfdi.de/api-gateway',
     }
 
 
@@ -1200,25 +1143,6 @@ def test_provider_logs_the_prepared_gateway_url(provider_modules, caplog):
     ) in caplog.messages
 
 
-def test_option_external_id_projection_policy_is_normalized(provider_modules):
-    provider_modules.settings.TS4NFDI_PROVIDER = {
-        'storage': {
-            'option_external_id': {
-                'enabled': True,
-                'mapping_sets': ['fairagro-data-generation'],
-                'relations': ['exact', 'close'],
-                'curation_statuses': ['draft', 'reviewed'],
-            }
-        }
-    }
-    provider_modules.load_config.cache_clear()
-
-    policy = provider_modules.load_option_external_id_projection_policy()
-
-    assert policy.enabled is True
-    assert policy.mapping_set_ids == ('fairagro-data-generation',)
-    assert policy.relations == frozenset({'exact', 'close'})
-    assert policy.curation_statuses == frozenset({'draft', 'reviewed'})
 
 
 def test_gateway_client_translates_transport_timeout(provider_modules):
@@ -1428,14 +1352,14 @@ def test_example_catalog_contains_provider_backed_fairagro_data_generation_quest
         'https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods'
     )
     assert methods.find('optionsets/optionset').get(uri_attribute) == optionset_uri
-    assert 'definition, synonyms, terminology, source, and IRI' in methods.findtext("help[@lang='en']")
+    assert 'selected terminology concept IRI' in methods.findtext("help[@lang='en']")
     assert 'Terminologiezuordnungen' not in questionset.findtext("help[@lang='de']")
     assert details.findtext('widget_type') == 'textarea'
     assert details.findtext('is_optional') == 'True'
-    assert optionset.findtext('provider_key') == 'fairagro_data_generation'
+    assert optionset.findtext('provider_key') == 'ts4nfdi_entitysets'
 
 
-def test_fairagro_data_generation_annotation_matcher_uses_semantic_mapping_set():
+def test_fairagro_data_generation_uses_the_configured_entity_set_provider():
     try:
         import tomllib
     except ModuleNotFoundError:
@@ -1446,15 +1370,16 @@ def test_fairagro_data_generation_annotation_matcher_uses_semantic_mapping_set()
     matchers = {matcher['id']: matcher for matcher in config['frontend']['annotations']['matchers']}
     matcher = matchers['example-fairagro-data-generation']
 
-    assert matcher['mapping_set_id'] == 'fairagro-data-generation'
     assert matcher['resource_type'] == 'entity'
+    assert matcher['provider_key'] == 'ts4nfdi_entitysets'
+    assert matcher['badge_label'] == 'FAIRagro entity set'
     assert matcher['presentation']['adapter'] == 'native'
     assert matcher['optionset_uri'] == (
         'https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/fairagro-data-generation'
     )
-    assert config['sources']['agroportal']['database'] == 'agroportal'
-    assert config['sources']['tib']['database'] == 'tib'
-    projection = config['storage']['option_external_id']
-    assert projection['enabled'] is True
-    assert projection['mapping_sets'] == ['fairagro-data-generation']
-    assert projection['relations'] == ['exact', 'close']
+    provider = config['providers']['ts4nfdi_entitysets']
+    assert provider['endpoint'] == 'entitysets/'
+    assert provider['entityset_id'] == 'fc45621d-7e40-47ce-9616-4133f0b54edf'
+    assert config['frontend']['gateway']['mode'] == 'direct'
+    assert 'storage' not in config
+    assert 'mapping_set_id' not in matcher

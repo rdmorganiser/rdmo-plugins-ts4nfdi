@@ -96,7 +96,6 @@ class AnnotationDetailView(ProjectAPIView):
                 project,
                 value,
                 matcher_id=query.validated_data.get('matcher'),
-                target_id=query.validated_data.get('target'),
             )
         except LookupError as exc:
             raise NotFound(

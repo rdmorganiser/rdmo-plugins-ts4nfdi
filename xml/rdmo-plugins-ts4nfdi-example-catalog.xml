@@ -63,7 +63,7 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<text lang="en">EDAM terminology concepts</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en"/>
-		<help lang="de">Dieses Beispiel sucht nach Entitäten in der EDAM-Terminologie. Die aktuelle Provider-Konfiguration ist auf EDAM-Datenformatkonzepte beschränkt. Jeder ausgewählte Wert repräsentiert daher ein Konzept, beispielsweise ein XML-Format, und keine vollständige Ontologie.</help>
+		<help lang="de">Dieses Beispiel sucht nach Entitäten in der EDAM-Terminologie. Die aktuelle Provider-Configuration ist auf EDAM-Datenformatkonzepte beschränkt. Jeder ausgewählte Wert repräsentiert daher in Konzept, beispielsweise in XML-Format, und keine vollständige Ontologie.</help>
 		<text lang="de">Konzepte aus der EDAM-Terminologie</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de"/>
@@ -162,7 +162,7 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<text lang="en">Terminologies from the preselected FAIRagro TS collection</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en"/>
-		<help lang="de">Diese Suche ist durch die Provider-Konfiguration auf die vorausgewählte &lt;a href=&quot;https://w3id.org/ts4nfdi/collection/ff5491d1-d0a9-481e-ac90-0fad065fa097&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;FAIRAgro-TS-Sammlung&lt;/a&gt; beschränkt. Die Sammlung ist für dieses Beispiel festgelegt; Auswahlen in der Frage „Terminologiesammlungen“ ändern diesen Suchbereich nicht.</help>
+		<help lang="de">Diese Suche ist durch die Provider-Configuration auf die vorausgewählte &lt;a href=&quot;https://w3id.org/ts4nfdi/collection/ff5491d1-d0a9-481e-ac90-0fad065fa097&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;FAIRAgro-TS-Sammlung&lt;/a&gt; beschränkt. Die Sammlung ist für dieses Beispiel festgelegt; Auswahlen in der Frage „Terminologiesammlungen“ ändern diesen Suchbereich nicht.</help>
 		<text lang="de">Terminologien aus der vorausgewählten FAIRAgro-TS-Sammlung</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de"/>
@@ -247,7 +247,7 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<text lang="en">Which data formats arise in your project?</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en">Format</verbose_name>
-		<help lang="de">Bei der Wahl des Datenformats sollten die Konsequenzen für die gemeinsame Nutzung, die digitale Archivierung und Langzeitspeicherung sowie die Wiederverwendung berücksichtigt werden. Es empfiehlt sich, möglichst standardisierte, nicht-proprietäre und allgemein bzw. in der spezifischen Community verbreitete Formate zu nutzen. Empfehlungen sind z. B. unter &lt;a href=&quot;https://www.forschungsdaten.info/themen/veroeffentlichen-und-archivieren/formate-erhalten/&quot; target=&quot;_blank&quot;&gt;forschungsdaten.info&lt;/a&gt; zu finden.</help>
+		<help lang="de">Bei der Wahl des Datenformats sollten die Konsequenzen für die gemeinsame Nutzung, die digitale Archivierung und Langzeitspeicherung sowie die Wiederverwendung berücksichtigt werden. Es empfiehlt sich, möglichst standardisierte, nicht-proprietäre und allgemein bzw. in der spezifischen Community verbreitete Format zu nutzen. Empfehlungen sind z. B. under &lt;a href=&quot;https://www.forschungsdaten.info/themen/veroeffentlichen-und-archivieren/formate-erhalten/&quot; target=&quot;_blank&quot;&gt;forschungsdaten.info&lt;/a&gt; zu finden.</help>
 		<text lang="de">Welche Datenformate entstehen in Ihrem Projekt?</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de">Format</verbose_name>
@@ -312,7 +312,7 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<text lang="en">Which keywords will be included in the dataset metadata?</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en">Keyword</verbose_name>
-		<help lang="de">&lt;strong&gt;Sie können ein kontrolliertes Konzept auswählen oder einen eigenen freien Suchbegriff eingeben.&lt;/strong&gt; Durchsuchen Sie zunächst die Terminologiedienste. Wenn kein passendes Konzept vorhanden ist, geben Sie den vollständigen Suchbegriff ein und wählen Sie die Option zum Erstellen. Freie Suchbegriffe besitzen keine Konzept-IRI und keine Terminologiedetails.</help>
+		<help lang="de">&lt;strong&gt;Sie können in kontrolliertes Konzept auswählen oder einen eigenen freien Suchbegriff eingeben.&lt;/strong&gt; Durchsuchen Sie zunächst die Terminologiedienste. Wenn kein passendes Konzept vorhanden ist, geben Sie den vollständigen Suchbegriff in und wählen Sie die Option zum Erstellen. Freie Suchbegriffe besitzen keine Konzept-IRI und keine Terminologiedetails.</help>
 		<text lang="de">Welche Suchbegriffe werden in die Metadaten des Datensatzes aufgenommen?</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de">Suchbegriff</verbose_name>
@@ -356,7 +356,7 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<text lang="en">Which keywords will be included in the dataset metadata?</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en">Keyword</verbose_name>
-		<help lang="de">&lt;strong&gt;Sie können ein kontrolliertes AGROVOC-Konzept auswählen oder einen eigenen freien Suchbegriff eingeben.&lt;/strong&gt; Durchsuchen Sie AGROVOC nach landwirtschaftlichen Themen, Kulturpflanzen, Praktiken, Materialien oder Prozessen. Wenn kein passendes Konzept vorhanden ist, geben Sie den vollständigen Suchbegriff ein und wählen Sie die Option zum Erstellen. Freie Suchbegriffe besitzen keine Konzept-IRI und keine Terminologiedetails.</help>
+		<help lang="de">&lt;strong&gt;Sie können in kontrolliertes AGROVOC-Konzept auswählen oder einen eigenen freien Suchbegriff eingeben.&lt;/strong&gt; Durchsuchen Sie AGROVOC nach landwirtschaftlichen Themen, Kulturpflanzen, Praktiken, Materialien oder Prozessen. Wenn kein passendes Konzept vorhanden ist, geben Sie den vollständigen Suchbegriff in und wählen Sie die Option zum Erstellen. Freie Suchbegriffe besitzen keine Konzept-IRI und keine Terminologiedetails.</help>
 		<text lang="de">Welche Suchbegriffe werden in die Metadaten des Datensatzes aufgenommen?</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de">Suchbegriff</verbose_name>
@@ -399,7 +399,7 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<short_title lang="en"/>
 		<help lang="en">This page separates controlled data-generation classifications from the project-specific description of instruments, software, technologies, and procedures.</help>
 		<verbose_name lang="en"/>
-		<title lang="de">Methoden der Datenerzeugung</title>
+		<title lang="de">Methods der Datenerzeugung</title>
 		<short_title lang="de"/>
 		<help lang="de">Diese Seite trennt kontrollierte Klassifikationen der Datenerzeugung von der projektspezifischen Beschreibung der Instrumente, Software, Technologien und Verfahren.</help>
 		<verbose_name lang="de"/>
@@ -431,18 +431,18 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 	<question dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/data-generation-methods">
 		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
 		<uri_path>rdmo-plugins-ts4nfdi-example-catalog/data-generation-methods</uri_path>
-		<dc:comment>Prototype based on the FAIRagro data-generation question https://rdmo.fairagro.net/terms/questions/dmp4nfdi/v1-0-0/DMP/Dataset/Distribution/rdadmp_title.</dc:comment>
+		<dc:comment>Prototype based on the FAIRagro data-generation question https://rdmo.fairagro.net/terms/questions/dmp4nfdi/v1-0-0/DMP/Dataset/Distribution/rdadmp_title and the configured TS4NFDI Gateway entity set.</dc:comment>
 		<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods"/>
 		<is_collection>True</is_collection>
 		<is_optional>False</is_optional>
-		<help lang="en">Select all methods that apply. Each stored answer keeps the stable FAIRagro option URI. When a related terminology concept is available, select its annotation below the question to see its definition, synonyms, terminology, source, and IRI.</help>
+		<help lang="en">Select all methods that apply. Each stored answer keeps the selected terminology concept IRI from the FAIRagro entity set. Select its annotation below the question to see available terminology details and its IRI.</help>
 		<text lang="en">Which methods, technologies, or processes are used to generate or collect new data?</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en">Data generation method</verbose_name>
-		<help lang="de">Wählen Sie alle zutreffenden Methoden aus. Jede gespeicherte Antwort behält die stabile FAIRagro-Options-URI. Wenn ein zugehöriges Terminologiekonzept vorhanden ist, können Sie dessen Annotation unterhalb der Frage auswählen, um Definition, Synonyme, Terminologie, Quelle und IRI anzuzeigen.</help>
-		<text lang="de">Welche Methoden, Technologien oder Verfahren werden zur Erzeugung oder Erfassung neuer Daten eingesetzt?</text>
+		<help lang="de">Wählen Sie alle zutreffenden Methods aus. Jede gespeicherte Antwort behält die IRI des ausgewählten Terminologiekonzepts aus der FAIRagro Entity Set. Sie können dessen Annotation unterhalb der Frage auswählen, um verfügbare Terminologieinformationen und die IRI anzuzeigen.</help>
+		<text lang="de">Welche Methods, Technologien oder Verfahren werden zur Erzeugung oder Erfassung neuer Daten eingesetzt?</text>
 		<default_text lang="de"/>
-		<verbose_name lang="de">Methode der Datenerzeugung</verbose_name>
+		<verbose_name lang="de">Method der Datenerzeugung</verbose_name>
 		<default_option/>
 		<default_external_id/>
 		<widget_type>select_creatable</widget_type>
@@ -467,8 +467,8 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 	<optionset dc:uri="https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/fairagro-data-generation">
 		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
 		<uri_path>rdmo-plugins-ts4nfdi/fairagro-data-generation</uri_path>
-		<dc:comment>Versioned FAIRagro classifications and draft terminology mappings provided by rdmo-plugins-ts4nfdi.</dc:comment>
-		<provider_key>fairagro_data_generation</provider_key>
+		<dc:comment>FAIRagro data-generation terminology concepts supplied by the configured TS4NFDI Gateway entity set.</dc:comment>
+		<provider_key>ts4nfdi_entitysets</provider_key>
 		<options/>
 		<conditions/>
 	</optionset>
@@ -483,7 +483,7 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<text lang="en">Please describe the instruments, software, technologies, and procedures used.</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en"/>
-		<help lang="de">Nennen Sie Geräte, Software und Versionen, Protokolle, Technologien oder andere Verfahrensinformationen, die zum Verständnis und gegebenenfalls zur Reproduktion der Datenerzeugung erforderlich sind.</help>
+		<help lang="de">Nennen Sie Geräte, Software und Versionen, Protokolle, Technologien oder andere Verfahrensinformationen, die zum Verständnis und gegebenenfalls zur Reproduction der Datenerzeugung erforderlich sind.</help>
 		<text lang="de">Bitte beschreiben Sie die verwendeten Instrumente, Software, Technologien und Verfahren.</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de"/>

@@ -11,8 +11,3 @@ class AnnotationDetailQuerySerializer(serializers.Serializer):
         allow_blank=False,
         max_length=200,
     )
-    target = serializers.CharField(
-        required=False,
-        allow_blank=False,
-        max_length=500,
-    )

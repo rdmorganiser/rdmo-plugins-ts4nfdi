@@ -6,7 +6,6 @@ export function hasAnnotationIdentifier(annotation) {
 
 export function annotationTermLabel(annotation) {
     return annotation?.short_form
-        || annotation?.target_label
         || annotation?.label
         || annotation?.kind;
 }
@@ -50,7 +49,6 @@ function appendBreadcrumb(parent, segments) {
 function annotationFingerprint(annotations) {
     return annotations.map((annotation) => [
         annotation.value_id,
-        annotation.target_id,
         annotation.kind,
         annotation.label,
         annotation.iri,
@@ -248,7 +246,7 @@ export class NativeAnnotationDrawer {
         ]);
         this.renderActions(detail, source);
 
-        if (detail.metadata_status !== "available") {
+        if (detail.metadata_status === "unavailable") {
             this.renderNotice(
                 translate("Additional terminology metadata is currently unavailable.")
             );
@@ -256,7 +254,7 @@ export class NativeAnnotationDrawer {
             this.presentations.render(
                 this.widget(),
                 detail.presentation,
-                {detail}
+                {detail, primary: detail.metadata_status === "presentation"}
             );
         }
     }

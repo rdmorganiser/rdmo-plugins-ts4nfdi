@@ -1,5 +1,6 @@
 import {InterviewAnnotationController} from "./controller.js";
 import {readJsonConfig, translate} from "./core.js";
+import {AnnotationDetailCoordinator} from "./detail_coordinator.js";
 import {
     NativeAnnotationDrawer,
     NativeInlineAnnotationRenderer
@@ -37,9 +38,18 @@ async function boot() {
             translate
         }
     );
+
+    const api = new PluginAnnotationApi(host.baseUrl());
     const controller = new InterviewAnnotationController({
         host,
-        api: new PluginAnnotationApi(host.baseUrl()),
+        annotations: {
+            list: (...args) => api.listV2(...args)
+        },
+        details: new AnnotationDetailCoordinator({
+            api,
+            baseUrl: host.baseUrl(),
+            gateway: frontendConfig.gateway
+        }),
         inlineRenderer: new NativeInlineAnnotationRenderer(),
         drawer: new NativeAnnotationDrawer(
             document.getElementById("ts4nfdi-annotation-drawer"),

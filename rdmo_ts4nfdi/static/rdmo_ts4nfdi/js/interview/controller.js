@@ -1,7 +1,12 @@
 export class InterviewAnnotationController {
-    constructor({host, api, inlineRenderer, drawer}) {
+    constructor({host, annotations, details, api, inlineRenderer, drawer}) {
         this.host = host;
-        this.api = api;
+        this.annotations = annotations || {
+            list: (...args) => api.list(...args)
+        };
+        this.details = details || {
+            resolve: (...args) => api.detail(...args)
+        };
         this.inlineRenderer = inlineRenderer;
         this.drawer = drawer;
         this.pageKey = null;
@@ -51,7 +56,7 @@ export class InterviewAnnotationController {
         this.listRequest?.abort();
         this.listRequest = new AbortController();
         try {
-            const payload = await this.api.list(
+            const payload = await this.annotations.list(
                 projectId,
                 pageId,
                 this.listRequest.signal
@@ -79,7 +84,7 @@ export class InterviewAnnotationController {
         this.detailRequest = new AbortController();
         this.drawer.loading(annotation, trigger);
         try {
-            const detail = await this.api.detail(
+            const detail = await this.details.resolve(
                 projectId,
                 annotation,
                 this.detailRequest.signal

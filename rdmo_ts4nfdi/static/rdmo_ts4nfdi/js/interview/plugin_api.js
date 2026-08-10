@@ -10,13 +10,15 @@ export class PluginAnnotationApi {
         );
     }
 
+    listV2(projectId, pageId, signal) {
+        return this.request(
+            `projects/${projectId}/annotations/v2/?page=${encodeURIComponent(pageId)}`,
+            signal
+        );
+    }
+
     detail(projectId, annotation, signal) {
-        const query = new URLSearchParams({
-            matcher: annotation.matcher_id
-        });
-        if (annotation.target_id) {
-            query.set("target", annotation.target_id);
-        }
+        const query = new URLSearchParams({matcher: annotation.matcher_id});
         return this.request(
             `projects/${projectId}/annotations/${annotation.value_id}/` +
             `?${query.toString()}`,

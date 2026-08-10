@@ -25,12 +25,11 @@ function occurrence(key, annotations) {
     return {key, annotations};
 }
 
-function annotation(label, iri, targetId = null) {
+function annotation(label, iri) {
     return {
         label,
         iri,
-        matcher_id: "formats",
-        target_id: targetId
+        matcher_id: "formats"
     };
 }
 

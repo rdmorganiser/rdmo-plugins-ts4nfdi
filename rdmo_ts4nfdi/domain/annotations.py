@@ -70,7 +70,6 @@ class AnnotationMatcher:
     source: ResourceReference | None = None
     badge_label: str | None = None
     ontology_id: str | None = None
-    mapping_set_id: str | None = None
     gateway_params: tuple[tuple[str, Any], ...] = ()
     resolve_summary_metadata: bool = False
 
@@ -116,13 +115,6 @@ class AnnotationCandidate:
     set_index: int
     collection_index: int
     answer_id: str | None = None
-    answer_label: str | None = None
-    target_id: str | None = None
-    target_label: str | None = None
-    mapping_relation: str | None = None
-    curation_status: str | None = None
-    mapping_set_id: str | None = None
-    mapping_set_version: str | None = None
     source: ResourceReference | None = None
     terminology: ResourceReference | None = None
 
@@ -141,12 +133,6 @@ class AnnotationSummary:
     source: ResourceReference | None = None
     terminology: ResourceReference | None = None
     answer_id: str | None = None
-    target_id: str | None = None
-    target_label: str | None = None
-    mapping_relation: str | None = None
-    curation_status: str | None = None
-    mapping_set_id: str | None = None
-    mapping_set_version: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -161,12 +147,6 @@ class AnnotationSummary:
             'source': self.source.to_dict() if self.source else None,
             'terminology': self.terminology.to_dict() if self.terminology else None,
             'answer_id': self.answer_id,
-            'target_id': self.target_id,
-            'target_label': self.target_label,
-            'mapping_relation': self.mapping_relation,
-            'curation_status': self.curation_status,
-            'mapping_set_id': self.mapping_set_id,
-            'mapping_set_version': self.mapping_set_version,
             'question_id': self.question_id,
         }
 

@@ -31,7 +31,7 @@ OPTIONSET_PROVIDERS += [
     ("ts4nfdi_agrovoc_keywords", _("TS4NFDI AGROVOC Keywords"), "rdmo_ts4nfdi.providers.ontologies.TS4NFDIOntologiesProvider"),
     ("ts4nfdi_collections", _("TS4NFDI Collections"), "rdmo_ts4nfdi.providers.collections.TS4NFDICollectionsProvider"),
     ("ts4nfdi_fairagro_collection_terminologies", _("TS4NFDI Collection Terminologies: FAIRAgro"), "rdmo_ts4nfdi.providers.collection_terminologies.TS4NFDICollectionTerminologiesProvider"),
-    ("fairagro_data_generation", _("FAIRagro Data Generation Methods"), "rdmo_ts4nfdi.providers.semantic_options.FAIRAgroDataGenerationOptionSetProvider"),
+    ("ts4nfdi_entitysets", _("TS4NFDI Entity Sets"), "rdmo_ts4nfdi.providers.entitysets.TS4NFDIEntitySetProvider"),
 ]
 ```
 
@@ -69,33 +69,40 @@ internal keys; in particular, a key such as `ts4nfdi-json` is invalid because it
 contains a digit. The translated labels shown to users can still contain
 `TS4NFDI`.
 
-The export retains the identifier stored by RDMO in `answer_id` and lists each
-semantic concept separately in `iri`, together with mapping-set provenance.
-For fixed options this keeps the stable option URI alongside the projected
-concept IRI. After a dynamic provider identifier is projected into
-`external_id`, the answer and concept identifiers are the same because RDMO
-has no separate `Option` row for that selection.
-
-For RDMO's standard XML export, the optional `storage.option_external_id`
-policy projects a fixed or provider-backed semantic option with exactly one
-configured target into `Value.external_id` during `pre_save`. Fixed options
-retain their `Option.uri`; provider-backed options replace their local option
-identifier with the concept IRI. Unmapped and composed options remain
-unchanged, and saving never calls the Gateway. Existing values can be inspected
-and backfilled explicitly:
-
-```shell
-python manage.py ts4nfdi_sync_external_ids --project 32 --dry-run
-python manage.py ts4nfdi_sync_external_ids --project 32
-```
-
-The projection is disabled when the configuration section is absent. Allowed
-mapping relations and curation statuses must be listed explicitly; see
-`ts4nfdi_provider.toml`.
+The FAIRagro data-generation provider reads the configured Gateway entity set.
+It returns each entity URI directly as the dynamic RDMO option ID, so RDMO's
+normal provider persistence stores that concept IRI in `Value.external_id`.
+The standard RDMO XML export therefore retains the selected terminology IRI;
+no plugin-specific signal, manifest, or external-ID projection is involved.
+This provider change does not rewrite values created by the old manifest-based
+provider; review those historic answers before switching an existing deployment.
 
 The gateway base URL is configured through `TS4NFDI_PROVIDER`. See
 `ts4nfdi_provider.toml` for example provider keys using
 `https://terminology.services.base4nfdi.de/api-gateway`.
+
+The supplied configuration uses browser-direct Gateway transport for public
+TSS-backed annotations such as EDAM. This lets the TSS widget fetch the
+OLS4-compatible entity response directly, without a Django annotation-detail
+request or the RDMO Gateway proxy:
+
+```toml
+[frontend.gateway]
+mode = "direct"
+```
+
+Only the public Gateway base URL is exposed to the browser in this mode—never
+an API token. Set `mode = "proxy"` instead for private sources, server-held
+credentials, or deployments where browser access to the Gateway is blocked.
+
+The FAIRagro data-generation OptionSet uses the generic
+`ts4nfdi_entitysets` provider key with a configured public entity set:
+
+```toml
+[providers.ts4nfdi_entitysets]
+endpoint = "entitysets/"
+entityset_id = "fc45621d-7e40-47ce-9616-4133f0b54edf"
+```
 
 Terminology sources are declared once and referenced by providers and
 annotation matchers. The source supplies both the human-readable breadcrumb
@@ -190,9 +197,12 @@ shown above. Invalid matchers are logged and excluded, so deployments should
 update their TOML before enabling the refactored plugin.
 
 The annotation list endpoint returns only values belonging to a project the
-authenticated user may access. Terminology detail is resolved on demand. The
-browser-facing Gateway proxy is restricted to OLS endpoints and an allowlist
-of query parameters; it never accepts an arbitrary upstream URL.
+authenticated user may access. A deterministic TSS descriptor (for example an
+EDAM entity with an ontology ID and source database) is rendered directly by
+TSS in the browser. Native or incomplete descriptors retain on-demand Django
+detail resolution. The optional browser-facing Gateway proxy is restricted to
+OLS endpoints and an allowlist of query parameters; it never accepts an
+arbitrary upstream URL.
 
 Each saved annotation is displayed as a clickable
 `source › terminology › term` row. Its drawer renders normalized Gateway
@@ -270,7 +280,6 @@ TS4NFDI_ADAPTERS = {
     "gateway": "rdmo_ts4nfdi.integrations.ts4nfdi.GatewayClient",
     "metadata_resolver": "rdmo_ts4nfdi.integrations.ts4nfdi.GatewayMetadataResolver",
     "presentation": "rdmo_ts4nfdi.presentation.AnnotationPresentationRegistry",
-    "semantic_options": "rdmo_ts4nfdi.semantic_options.PackageSemanticOptionRegistry",
 }
 ```
 

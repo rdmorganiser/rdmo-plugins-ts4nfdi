@@ -1,0 +1,34 @@
+[
+  {
+    "id": "fc45621d-7e40-47ce-9616-4133f0b54edf",
+    "label": "FAIRagro Options",
+    "creator": "roman",
+    "description": "This is an example entity set for FAIRagro and the DMP4NFDI incubator",
+    "collaborators": [],
+    "isPublic": true,
+    "entities": [
+      {
+        "uri": "http://opendata.inrae.fr/thesaurusINRAE/c_17625",
+        "label": [{"value": "field experiment", "lang": "en"}],
+        "definition": [],
+        "terminology": "INRAETHES",
+        "provider": "agroportal"
+      },
+      {
+        "uri": "http://aims.fao.org/aos/agrovoc/c_37359",
+        "label": [
+          {"value": "image processing", "lang": "en"},
+          {"value": "Bildverarbeitung", "lang": "de"}
+        ],
+        "definition": [
+          {
+            "value": "Procedure for restoring or enhancing images, often by computer",
+            "lang": "en"
+          }
+        ],
+        "terminology": "agrovoc",
+        "provider": "agrovoc"
+      }
+    ]
+  }
+]

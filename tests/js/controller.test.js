@@ -12,7 +12,8 @@ function makeHarness({detailError = null} = {}) {
         details: [],
         errors: [],
         inline: [],
-        lists: []
+        lists: [],
+        resolves: []
     };
     const occurrence = {key: "7:0:0", annotations: [{value_id: 1}]};
     const host = {
@@ -21,12 +22,15 @@ function makeHarness({detailError = null} = {}) {
         slots: () => [{element: "slot", occurrence}],
         observe: () => () => {}
     };
-    const api = {
+    const annotations = {
         list: async (projectId, pageId) => {
             calls.lists.push([projectId, pageId]);
             return {occurrences: [occurrence]};
-        },
-        detail: async () => {
+        }
+    };
+    const details = {
+        resolve: async (projectId, annotation) => {
+            calls.resolves.push([projectId, annotation.value_id]);
             if (detailError) {
                 throw detailError;
             }
@@ -50,14 +54,15 @@ function makeHarness({detailError = null} = {}) {
         calls,
         controller: new InterviewAnnotationController({
             host,
-            api,
+            annotations,
+            details,
             inlineRenderer,
             drawer
         })
     };
 }
 
-test("refresh coordinates the host, plugin API, and inline renderer", async () => {
+test("refresh coordinates the host, annotation list, and inline renderer", async () => {
     const {calls, controller} = makeHarness();
 
     await controller.refresh();
@@ -73,11 +78,12 @@ test("opening an annotation resolves detail exactly once", async () => {
 
     await controller.open("24", {value_id: 1, matcher_id: "formats"}, "trigger");
 
+    assert.deepEqual(calls.resolves, [["24", 1]]);
     assert.deepEqual(calls.details, [{label: "XML"}]);
     assert.deepEqual(calls.errors, []);
 });
 
-test("a failed detail request waits for an explicit retry", async () => {
+test("a failed detail resolution waits for an explicit retry", async () => {
     const failure = new Error("Gateway unavailable");
     const {calls, controller} = makeHarness({detailError: failure});
 

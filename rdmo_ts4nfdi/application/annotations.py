@@ -201,7 +201,6 @@ class AnnotationService:
         project: Any,
         value: Any,
         matcher_id: str | None = None,
-        target_id: str | None = None,
     ) -> AnnotationDetail:
         candidate_and_matcher = next(
             (
@@ -209,7 +208,6 @@ class AnnotationService:
                 for answer in self.host.value_answers(project, value)
                 if (matcher := self.matchers.match(answer.question, matcher_id)) is not None
                 for candidate in self.targets.resolve(answer, matcher)
-                if target_id is None or candidate.target_id == target_id
             ),
             None,
         )
@@ -282,19 +280,13 @@ class AnnotationService:
             collection_index=candidate.collection_index,
             matcher_id=matcher.id,
             kind=matcher.resource_type,
-            label=candidate.answer_label or candidate.label,
+            label=candidate.label,
             iri=candidate.iri,
             badge_label=matcher.badge_label,
             short_form=metadata.short_form if metadata else None,
             source=candidate.source or (metadata.source if metadata else None) or matcher.source,
             terminology=terminology,
             answer_id=candidate.answer_id,
-            target_id=candidate.target_id,
-            target_label=candidate.target_label,
-            mapping_relation=candidate.mapping_relation,
-            curation_status=candidate.curation_status,
-            mapping_set_id=candidate.mapping_set_id,
-            mapping_set_version=candidate.mapping_set_version,
             question_id=candidate.question.question_id,
         )
 

@@ -1,7 +1,7 @@
 from dataclasses import replace
 from types import SimpleNamespace
 
-from rdmo_ts4nfdi.application import AnnotationService, SemanticAnnotationTargetResolver
+from rdmo_ts4nfdi.application import AnnotationService, AnnotationTargetResolver
 from rdmo_ts4nfdi.domain import (
     AnnotationMatcher,
     InterviewAnswer,
@@ -10,9 +10,6 @@ from rdmo_ts4nfdi.domain import (
     QuestionContext,
     ResolvedMetadata,
     ResourceReference,
-    SemanticOption,
-    SemanticOptionSet,
-    SemanticTarget,
 )
 from rdmo_ts4nfdi.export_renderers import render_semantic_xml
 from rdmo_ts4nfdi.presentation import AnnotationPresentationRegistry
@@ -81,14 +78,6 @@ class Host:
         return (answer for answer in self.answers if answer.value_id == value.id)
 
 
-class Registry:
-    def __init__(self, mapping_sets=()):
-        self.mapping_sets = {mapping_set.id: mapping_set for mapping_set in mapping_sets}
-
-    def get(self, mapping_set_id):
-        return self.mapping_sets[mapping_set_id]
-
-
 class Metadata:
     def resolve(self, candidate, matcher):
         return ResolvedMetadata(
@@ -107,10 +96,10 @@ class Presentation:
         )
 
 
-def make_service(answers, mapping_sets=(), matcher=None):
+def make_service(answers, matcher=None):
     return AnnotationService(
         host=Host(answers),
-        targets=SemanticAnnotationTargetResolver(Registry(mapping_sets)),
+        targets=AnnotationTargetResolver(),
         metadata=Metadata(),
         presentation=Presentation(),
         matchers=(matcher or make_matcher(),),
@@ -132,14 +121,8 @@ def test_page_annotations_group_candidates_by_question_occurrence():
     ).to_dict()
 
     assert payload['api_version'] == '1'
-    assert [occurrence['key'] for occurrence in payload['occurrences']] == [
-        '7:0:0',
-        '7:0:1',
-    ]
-    assert [annotation['value_id'] for annotation in payload['occurrences'][0]['annotations']] == [
-        1,
-        2,
-    ]
+    assert [occurrence['key'] for occurrence in payload['occurrences']] == ['7:0:0', '7:0:1']
+    assert [annotation['value_id'] for annotation in payload['occurrences'][0]['annotations']] == [1, 2]
 
 
 def test_page_annotation_summary_can_be_enriched_with_gateway_metadata():
@@ -170,7 +153,7 @@ def test_page_annotation_summary_can_be_enriched_with_gateway_metadata():
     )
     service = AnnotationService(
         host=Host((answer,)),
-        targets=SemanticAnnotationTargetResolver(Registry()),
+        targets=AnnotationTargetResolver(),
         metadata=SummaryMetadata(),
         presentation=Presentation(),
         matchers=(matcher,),
@@ -196,18 +179,13 @@ def test_provider_backed_ontology_accepts_an_opaque_provider_identifier():
         ontology_id=None,
         gateway_params=(),
     )
-    answer = replace(
-        make_answer(),
-        label='AGROVOC',
-        identifier='agrovoc',
-    )
+    answer = replace(make_answer(), label='AGROVOC', identifier='agrovoc')
 
-    payload = make_service((answer,), matcher=matcher).list_page(
+    annotation = make_service((answer,), matcher=matcher).list_page(
         SimpleNamespace(id=24),
         SimpleNamespace(id=341),
-    ).to_dict()
+    ).to_dict()['occurrences'][0]['annotations'][0]
 
-    annotation = payload['occurrences'][0]['annotations'][0]
     assert annotation['label'] == 'AGROVOC'
     assert annotation['iri'] == 'agrovoc'
     assert annotation['kind'] == 'ontology'
@@ -215,47 +193,15 @@ def test_provider_backed_ontology_accepts_an_opaque_provider_identifier():
 
 def test_unconfigured_opaque_identifier_is_not_annotated():
     answer = replace(make_answer(), identifier='not-an-iri')
-    resolver = SemanticAnnotationTargetResolver(Registry())
-
-    assert list(resolver.resolve(answer, make_matcher())) == []
+    assert list(AnnotationTargetResolver().resolve(answer, make_matcher())) == []
 
 
-def test_project_annotation_export_keeps_selected_and_semantic_identifiers():
-    mapping_set = SemanticOptionSet(
-        id='fairagro-data-generation',
-        version='draft.1',
-        options=(
-            SemanticOption(
-                id='experiment_data',
-                uri='https://example.test/options/experiment_data',
-                labels=(('en', 'Field trials'),),
-                targets=(
-                    SemanticTarget(
-                        id='field-experiment',
-                        iri='https://example.test/concepts/field-experiment',
-                        label='field experiment',
-                        relation='close',
-                        source=ResourceReference(id='example', label='Example source'),
-                        terminology=ResourceReference(id='example-terms', label='Example terminology'),
-                    ),
-                ),
-            ),
-        ),
-    )
-    matcher = replace(
-        make_matcher(),
-        mapping_set_id=mapping_set.id,
-        presentation=PresentationPolicy(adapter='native'),
-        source=None,
-        ontology_id=None,
-        gateway_params=(),
-    )
+def test_project_annotation_export_keeps_selected_entity_iri():
     answer = replace(
         make_answer(),
-        label='Field trials',
-        identifier='https://example.test/options/experiment_data',
+        label='field experiment',
+        identifier='http://opendata.inrae.fr/thesaurusINRAE/c_17625',
     )
-    service = make_service((answer,), (mapping_set,), matcher)
     project = SimpleNamespace(
         id=24,
         title='Semantic project',
@@ -263,26 +209,21 @@ def test_project_annotation_export_keeps_selected_and_semantic_identifiers():
         pages=(SimpleNamespace(id=341),),
     )
 
-    payload = service.export_project(project).to_dict()
+    payload = make_service((answer,)).export_project(project).to_dict()
     annotation = payload['pages'][0]['occurrences'][0]['annotations'][0]
 
     assert payload['title'] == 'Semantic project'
     assert payload['catalog_uri'] == 'https://example.test/catalog'
-    assert annotation['answer_id'] == 'https://example.test/options/experiment_data'
-    assert annotation['iri'] == 'https://example.test/concepts/field-experiment'
-    assert annotation['mapping_set_id'] == 'fairagro-data-generation'
-    assert annotation['mapping_set_version'] == 'draft.1'
+    assert annotation['answer_id'] == answer.identifier
+    assert annotation['iri'] == answer.identifier
 
     xml = render_semantic_xml(payload).decode()
-    assert '<answer_id>https://example.test/options/experiment_data</answer_id>' in xml
-    assert '<iri>https://example.test/concepts/field-experiment</iri>' in xml
-    assert '<mapping_set_version>draft.1</mapping_set_version>' in xml
+    assert f'<answer_id>{answer.identifier}</answer_id>' in xml
+    assert f'<iri>{answer.identifier}</iri>' in xml
 
 
 def test_annotation_detail_is_composed_from_independent_adapters():
-    service = make_service((make_answer(),))
-
-    payload = service.detail(
+    payload = make_service((make_answer(),)).detail(
         SimpleNamespace(id=24),
         SimpleNamespace(id=1),
         matcher_id='formats',
@@ -294,10 +235,7 @@ def test_annotation_detail_is_composed_from_independent_adapters():
     assert payload['presentation'] == {
         'adapter': 'tss',
         'component': 'entity-info',
-        'props': {
-            'projectId': 24,
-            'iri': 'http://edamontology.org/format_2332',
-        },
+        'props': {'projectId': 24, 'iri': 'http://edamontology.org/format_2332'},
     }
 
 
@@ -308,87 +246,17 @@ def test_annotation_detail_falls_back_when_metadata_adapter_fails():
 
     service = AnnotationService(
         host=Host((make_answer(),)),
-        targets=SemanticAnnotationTargetResolver(Registry()),
+        targets=AnnotationTargetResolver(),
         metadata=BrokenMetadata(),
         presentation=Presentation(),
         matchers=(make_matcher(),),
     )
 
-    payload = service.detail(
-        SimpleNamespace(id=24),
-        SimpleNamespace(id=1),
-    ).to_dict()
+    payload = service.detail(SimpleNamespace(id=24), SimpleNamespace(id=1)).to_dict()
 
     assert payload['metadata_status'] == 'unavailable'
     assert payload['label'] == 'XML'
     assert payload['ontology_id'] == 'edam'
-
-
-def test_semantic_option_mapping_expands_answer_identity_into_annotation_target():
-    source = ResourceReference(
-        id='agroportal',
-        label='AgroPortal',
-        database='agroportal',
-        backend_type='ontoportal',
-    )
-    terminology = ResourceReference(id='INRAETHES', label='INRAE Thesaurus')
-    mapping_set = SemanticOptionSet(
-        id='fairagro-data-generation',
-        version='draft.1',
-        options=(
-            SemanticOption(
-                id='experiment_data',
-                uri='https://example.test/options/experiment_data',
-                labels=(('en', 'Field trials'),),
-                targets=(
-                    SemanticTarget(
-                        id='inrae-field-experiment',
-                        iri='http://opendata.inrae.fr/thesaurusINRAE/c_17625',
-                        label='field experiment',
-                        relation='close',
-                        source=source,
-                        terminology=terminology,
-                    ),
-                ),
-            ),
-        ),
-    )
-    matcher = replace(
-        make_matcher(),
-        mapping_set_id='fairagro-data-generation',
-        presentation=PresentationPolicy(adapter='native'),
-        source=None,
-        ontology_id=None,
-        gateway_params=(),
-    )
-    answer = replace(
-        make_answer(),
-        label='Field trials',
-        identifier='https://example.test/options/experiment_data',
-    )
-    service = make_service((answer,), (mapping_set,), matcher)
-
-    summary = service.list_page(SimpleNamespace(id=24), SimpleNamespace(id=341)).to_dict()['occurrences'][0][
-        'annotations'
-    ][0]
-    detail = service.detail(
-        SimpleNamespace(id=24),
-        SimpleNamespace(id=1),
-        matcher_id='formats',
-        target_id='inrae-field-experiment',
-    ).to_dict()
-
-    assert summary['label'] == 'Field trials'
-    assert summary['iri'] == 'http://opendata.inrae.fr/thesaurusINRAE/c_17625'
-    assert summary['target_id'] == 'inrae-field-experiment'
-    assert summary['target_label'] == 'field experiment'
-    assert summary['mapping_relation'] == 'close'
-    assert summary['mapping_set_id'] == 'fairagro-data-generation'
-    assert summary['mapping_set_version'] == 'draft.1'
-    assert summary['source']['database'] == 'agroportal'
-    assert summary['terminology']['id'] == 'INRAETHES'
-    assert detail['label'] == 'field experiment'
-    assert detail['ontology_id'] == 'INRAETHES'
 
 
 def test_tss_presentation_descriptor_keeps_gateway_source_parameters():
@@ -400,26 +268,17 @@ def test_tss_presentation_descriptor_keeps_gateway_source_parameters():
             options=(('entity_type', 'class'),),
         ),
     )
-    annotation = (
-        make_service((make_answer(),))
-        .list_page(
-            SimpleNamespace(id=24),
-            SimpleNamespace(id=341),
-        )
-        .occurrences[0]
-        .annotations[0]
-    )
+    annotation = make_service((make_answer(),)).list_page(
+        SimpleNamespace(id=24),
+        SimpleNamespace(id=341),
+    ).occurrences[0].annotations[0]
 
-    descriptor = (
-        AnnotationPresentationRegistry()
-        .build(
-            24,
-            annotation,
-            ResolvedMetadata(ontology_id='edam'),
-            matcher,
-        )
-        .to_dict()
-    )
+    descriptor = AnnotationPresentationRegistry().build(
+        24,
+        annotation,
+        ResolvedMetadata(ontology_id='edam'),
+        matcher,
+    ).to_dict()
 
     assert descriptor['adapter'] == 'tss'
     assert descriptor['component'] == 'entity-info'
@@ -434,38 +293,23 @@ def test_custom_presentation_descriptor_passes_matcher_options_to_browser():
         presentation=PresentationPolicy(
             adapter='fairagro-concept-card',
             component='compact',
-            options=(
-                ('accent', 'green'),
-                ('show_source', True),
-            ),
+            options=(('accent', 'green'), ('show_source', True)),
         ),
     )
-    annotation = (
-        make_service((make_answer(),))
-        .list_page(
-            SimpleNamespace(id=24),
-            SimpleNamespace(id=341),
-        )
-        .occurrences[0]
-        .annotations[0]
-    )
+    annotation = make_service((make_answer(),)).list_page(
+        SimpleNamespace(id=24),
+        SimpleNamespace(id=341),
+    ).occurrences[0].annotations[0]
 
-    descriptor = (
-        AnnotationPresentationRegistry()
-        .build(
-            24,
-            annotation,
-            ResolvedMetadata(ontology_id='edam'),
-            matcher,
-        )
-        .to_dict()
-    )
+    descriptor = AnnotationPresentationRegistry().build(
+        24,
+        annotation,
+        ResolvedMetadata(ontology_id='edam'),
+        matcher,
+    ).to_dict()
 
     assert descriptor == {
         'adapter': 'fairagro-concept-card',
         'component': 'compact',
-        'props': {
-            'accent': 'green',
-            'show_source': True,
-        },
+        'props': {'accent': 'green', 'show_source': True},
     }
