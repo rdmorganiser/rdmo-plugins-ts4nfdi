@@ -437,6 +437,17 @@
     line-height: 1.45;
 }
 
+/*
+ * RDMO uses the same provider option markup for dropdown results and the
+ * selected React-select value. Descriptions help users compare open dropdown
+ * results, but make the compact selected control overflow. Keep the label and
+ * breadcrumb in selected values while retaining descriptions in the menu.
+ */
+.react-select__single-value .ts4nfdi-option-description,
+.react-select__multi-value__label .ts4nfdi-option-description {
+    display: none;
+}
+
 @media (max-width: 767px) {
     .ts4nfdi-annotation-row {
         align-items: flex-start;
