@@ -6,7 +6,7 @@ entity set configured in [`ts4nfdi_provider.toml`](../ts4nfdi_provider.toml):
 
 ```toml
 [providers.ts4nfdi_entitysets]
-endpoint = "entitysets/"
+endpoint = "entitysets"
 entityset_id = "fc45621d-7e40-47ce-9616-4133f0b54edf"
 ```
 
@@ -26,7 +26,7 @@ To change the available data-generation choices:
    through the TS4NFDI/Gateway-maintainer workflow.
 2. Keep each entity's stable `uri`, `provider`, and `terminology` accurate.
    The URI becomes the saved RDMO answer identity.
-3. Verify the public `entitysets/` response and the RDMO provider output.
+3. Verify the public `entitysets` response and the RDMO provider output.
 4. Restart the Django processes after changing this plugin configuration; no
    catalog import is required unless the question, OptionSet URI, or provider
    key changes.

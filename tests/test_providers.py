@@ -410,7 +410,7 @@ def test_entityset_provider_maps_gateway_entity_uris_and_localized_labels(provid
         provider_modules,
         key,
         {
-            'endpoint': 'entitysets/',
+            'endpoint': 'entitysets',
             'entityset_id': 'fc45621d-7e40-47ce-9616-4133f0b54edf',
         },
         sources={
@@ -458,7 +458,7 @@ def test_entityset_provider_returns_no_options_when_the_configured_set_is_absent
         provider_modules,
         key,
         {
-            'endpoint': 'entitysets/',
+            'endpoint': 'entitysets',
             'entityset_id': 'missing-entity-set',
         },
     )
@@ -1479,7 +1479,7 @@ def test_fairagro_data_generation_uses_the_configured_entity_set_provider():
         'https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/fairagro-data-generation'
     )
     provider = config['providers']['ts4nfdi_entitysets']
-    assert provider['endpoint'] == 'entitysets/'
+    assert provider['endpoint'] == 'entitysets'
     assert provider['entityset_id'] == 'fc45621d-7e40-47ce-9616-4133f0b54edf'
     assert config['frontend']['gateway']['mode'] == 'direct'
     assert 'storage' not in config

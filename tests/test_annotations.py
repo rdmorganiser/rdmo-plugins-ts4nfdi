@@ -289,7 +289,7 @@ def test_entityset_provenance_uses_upstream_entry_without_metadata_normalization
         make_matcher(),
         provider_key='ts4nfdi_entitysets',
         entityset_id='fairagro-options',
-        entityset_endpoint='entitysets/',
+        entityset_endpoint='entitysets',
         source=None,
         ontology_id=None,
         gateway_params=(),
@@ -367,7 +367,7 @@ def test_entityset_provenance_retains_a_native_detail_for_non_ols_sources():
     matcher = replace(
         make_matcher(),
         entityset_id='fairagro-options',
-        entityset_endpoint='entitysets/',
+        entityset_endpoint='entitysets',
         source=None,
         ontology_id=None,
         gateway_params=(),

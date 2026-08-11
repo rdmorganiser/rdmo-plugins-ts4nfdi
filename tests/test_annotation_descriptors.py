@@ -154,7 +154,7 @@ def test_v2_entityset_annotations_mark_click_time_provenance_without_gateway_met
         MATCHER,
         provider_key='ts4nfdi_entitysets',
         entityset_id='entity-set-1',
-        entityset_endpoint='entitysets/',
+        entityset_endpoint='entitysets',
         source=None,
         ontology_id=None,
         gateway_params=(),

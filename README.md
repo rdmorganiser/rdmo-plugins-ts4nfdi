@@ -100,7 +100,7 @@ The FAIRagro data-generation OptionSet uses the generic
 
 ```toml
 [providers.ts4nfdi_entitysets]
-endpoint = "entitysets/"
+endpoint = "entitysets"
 entityset_id = "fc45621d-7e40-47ce-9616-4133f0b54edf"
 ```
 

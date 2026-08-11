@@ -95,7 +95,7 @@ help_fields = ["config.description", "description", "definition", "summary"]
 # Each entity URI is returned directly as the dynamic RDMO option ID and is
 # therefore preserved as Value.external_id by RDMO's normal provider flow.
 [providers.ts4nfdi_entitysets]
-endpoint = "entitysets/"
+endpoint = "entitysets"
 entityset_id = "fc45621d-7e40-47ce-9616-4133f0b54edf"
 id_fields = ["id"]
 label_fields = ["label"]
