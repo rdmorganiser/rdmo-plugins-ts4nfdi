@@ -426,6 +426,13 @@ or markup semantics, and never render metadata without an explicit consumer.
 The selected `external_id` remains the canonical external identifier, so
 existing exports and integrations remain compatible.
 
+The current plugin prototype keeps this limitation explicit. Matcher policy
+`context_resolution = { adapter = "gateway-search" }` lets the browser
+best-effort reconstruct one unambiguous breadcrumb for display, with no RDMO
+value mutation. It deliberately falls back to a generic breadcrumb when the
+Gateway returns conflicting contexts. This is a transitional display adapter,
+not a substitute for persisted selection provenance.
+
 ## Suggested upstream sequence
 
 The proposals can be discussed and delivered independently:

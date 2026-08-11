@@ -175,6 +175,31 @@ source_key = "ebi"
 presentation = { adapter = "tss", component = "entity-info", entity_type = "class" }
 ```
 
+A deliberately broad multi-source provider cannot put its selected source and
+terminology into an RDMO `Value`: RDMO persists only the option label and IRI.
+Enable the narrow v2 browser resolver when its inline annotation should recover
+the same breadcrumb fields returned by Gateway search:
+
+```toml
+[[frontend.annotations.matchers]]
+id = "broad-keyword"
+question_uri = "https://rdmo.example.org/terms/questions/dataset/keyword"
+attribute_uri = "https://rdmo.example.org/terms/domain/dataset/keyword"
+optionset_uri = "https://rdmo.example.org/terms/options/keywords"
+resource_type = "entity"
+badge_label = "Terminology"
+context_resolution = { adapter = "gateway-search" }
+presentation = { adapter = "native" }
+```
+
+Annotation API v2 remains metadata-free. After rendering the fallback row, the
+browser searches by the stored label, requires an exact IRI match, and enriches
+the in-memory row with source, terminology, and short form. Identical requests
+share a controller-lifetime cache; conflicting source contexts fail closed and
+retain the generic breadcrumb. Direct mode calls the public Gateway, while
+proxy mode uses the project-authorized `/gateway/search` compatibility route.
+Neither mode changes the stored RDMO value.
+
 Native annotations for a bounded provider resource such as a terminology
 collection can retain their own description without using the generic concept
 metadata resolver. Set `provider_resource_detail = true` on its
@@ -388,15 +413,15 @@ configuration as well, run:
 python manage.py ts4nfdi_gateway_check --live
 ```
 
-This probes EDAM's OLS4 entity response, the configured FAIRagro collection
-and entity set, and reports whether AGROVOC's OLS4 facade is ready for a future
-TSS migration. It is an operator check, not a normal request-path health
-check; a temporary public Gateway outage does not affect the plugin's local
-tests.
+This probes EDAM's OLS4 entity response, broad Gateway search, the configured
+FAIRagro collection and entity set, and reports whether AGROVOC's OLS4 facade
+is ready for a future TSS migration. It is an operator check, not a normal
+request-path health check; a temporary public Gateway outage does not affect
+the plugin's local tests.
 
 The Gateway emits CORS headers only when it receives a browser `Origin`
-header. To assert direct-mode CORS for a particular deployment, pass its RDMO
-origin explicitly:
+header. To assert direct-mode CORS for both OLS4 and broad search for a
+particular deployment, pass its RDMO origin explicitly:
 
 ```shell
 python manage.py ts4nfdi_gateway_check --live --origin https://rdmo.example.org

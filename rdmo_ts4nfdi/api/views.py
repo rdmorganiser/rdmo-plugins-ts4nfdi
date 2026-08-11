@@ -26,6 +26,7 @@ from rdmo_ts4nfdi.integrations.ts4nfdi.gateway import (
 from .serializers import (
     AnnotationDetailQuerySerializer,
     AnnotationListQuerySerializer,
+    GatewaySearchQuerySerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -240,13 +241,17 @@ class GatewayProxyView(ProjectAPIView):
 
     def get(self, request, project_id, gateway_path):
         self.get_project()
-
         path = f'ols4/api/{gateway_path}'
+
+        return self.proxy(request, project_id, path)
+
+    def proxy(self, request, project_id, path, query=None):
+        gateway_query = query if query is not None else filter_gateway_query(request.query_params)
 
         try:
             payload, cache_hit = GatewayClient().get(
                 path,
-                filter_gateway_query(request.query_params),
+                gateway_query,
             )
         except GatewayRequestError as exc:
             return Response(
@@ -295,3 +300,18 @@ class GatewayProxyView(ProjectAPIView):
             'hit' if cache_hit else 'miss'
         )
         return response
+
+
+class GatewaySearchProxyView(GatewayProxyView):
+    """Proxy the public broad search route only when browser CORS needs it."""
+
+    def get(self, request, project_id):
+        self.get_project()
+        query = GatewaySearchQuerySerializer(data=request.query_params)
+        query.is_valid(raise_exception=True)
+        return self.proxy(
+            request,
+            project_id,
+            'search',
+            [('query', query.validated_data['query'])],
+        )

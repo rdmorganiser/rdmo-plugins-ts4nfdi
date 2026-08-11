@@ -11,3 +11,11 @@ class AnnotationDetailQuerySerializer(serializers.Serializer):
         allow_blank=False,
         max_length=200,
     )
+
+
+class GatewaySearchQuerySerializer(serializers.Serializer):
+    query = serializers.CharField(
+        allow_blank=False,
+        max_length=500,
+        trim_whitespace=True,
+    )

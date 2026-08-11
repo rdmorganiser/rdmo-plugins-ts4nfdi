@@ -576,6 +576,9 @@ def test_annotation_config_is_validated_and_sanitized(provider_modules):
                         'optionset_uri': 'https://example.test/optionset',
                         'resource_type': 'entity',
                         'resolve_summary_metadata': True,
+                        'context_resolution': {
+                            'adapter': 'gateway-search',
+                        },
                         'presentation': {
                             'adapter': 'tss',
                             'component': 'entity-info',
@@ -606,6 +609,7 @@ def test_annotation_config_is_validated_and_sanitized(provider_modules):
     assert matchers[0].presentation.adapter == 'tss'
     assert matchers[0].presentation.component == 'entity-info'
     assert matchers[0].resolve_summary_metadata is True
+    assert matchers[0].context_resolution.adapter == 'gateway-search'
     assert matchers[0].gateway_query == (('database', 'ols'),)
     assert frontend_config == {
         'annotations': {

@@ -237,6 +237,16 @@ def check_gateway_live_contract(gateway_url=DEFAULT_GATEWAY_URL, origin=None):
     if not _contains_iri(_response_items(edam_payload), EDAM_SAMPLE_IRI):
         raise RuntimeError('Gateway EDAM OLS4 response does not contain the expected sample entity.')
 
+    search_payload, search_headers = fetch_json_response(
+        _gateway_url(gateway_url, 'search', query='xml'),
+        'rdmo-ts4nfdi-live-contract-check',
+        request_headers,
+    )
+    if origin and not search_headers.get('access-control-allow-origin'):
+        raise RuntimeError('Gateway search response does not expose a CORS allow-origin header.')
+    if not _response_items(search_payload):
+        raise RuntimeError('Gateway search response does not contain any sample results.')
+
     collections_payload, _collections_headers = fetch_json_response(
         _gateway_url(gateway_url, 'collections/'),
         'rdmo-ts4nfdi-live-contract-check',
@@ -267,7 +277,7 @@ def check_gateway_live_contract(gateway_url=DEFAULT_GATEWAY_URL, origin=None):
         else 'AGROVOC OLS4 entity unavailable; keep the native annotation path.'
     )
     cors_status = (
-        f'CORS available for {origin}'
+        f'OLS4 and search CORS available for {origin}'
         if origin
         else 'CORS not checked (pass --origin with the RDMO browser origin)'
     )

@@ -81,6 +81,28 @@ or value projection. [`semantic-option-workflow.md`](semantic-option-workflow.md
 records the active upstream-curation workflow and the status of the archived
 FAIRagro CSV; no semantic manifest is shipped or read at runtime.
 
+### Browser-side inline context resolution
+
+Dynamic RDMO providers persist a selected label and external identifier, but
+not the provider `help` markup which contained the source, terminology, and
+short-form breadcrumb. Annotation API v2 deliberately does not reconstruct
+that metadata in Django. A broad multi-source entity matcher can instead expose
+`context_resolution = { adapter = "gateway-search" }` in its public descriptor.
+
+`AnnotationContextCoordinator` renders the stored fallback first and then asks
+the browser `BrowserGatewaySearchClient` for the public `/search` response. It
+keeps only results whose IRI exactly matches the stored identifier. One unique
+source/terminology context enriches the in-memory annotation and triggers an
+inline rerender; missing or conflicting contexts leave the fallback unchanged.
+Requests and in-flight promises are deduplicated by label and IRI for the
+controller lifetime.
+
+In direct mode this request goes from the browser to the Gateway. Proxy mode
+uses a narrowly scoped, project-authorized `/gateway/search` endpoint and the
+normal cached `GatewayClient`. This compatibility route accepts only a bounded
+`query` value. Neither path mutates RDMO values, embeds provenance in their
+text, or makes Gateway metadata I/O part of the v2 page-list request.
+
 ### Entity-set provenance on annotation click
 
 RDMO stores an entity-set choice as its label and entity IRI, whereas the
@@ -172,6 +194,7 @@ It connects:
 
 - `RDMOTemplateInterviewHost`;
 - `PluginAnnotationApi`;
+- `AnnotationContextCoordinator` and `BrowserGatewaySearchClient`;
 - `InterviewAnnotationController`;
 - `NativeInlineAnnotationRenderer`;
 - `NativeAnnotationDrawer`;

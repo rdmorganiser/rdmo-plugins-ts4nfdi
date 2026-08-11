@@ -5,6 +5,7 @@ from rdmo_ts4nfdi.application.annotations import AnnotationService
 from rdmo_ts4nfdi.domain import (
     AnnotationCandidate,
     AnnotationMatcher,
+    ContextResolutionPolicy,
     InterviewAnswer,
     PresentationPolicy,
     QuestionContext,
@@ -147,6 +148,27 @@ def test_v2_annotation_list_exposes_browser_resolution_context():
     }
     assert annotation['entityset_provenance'] is False
     assert annotation['provider_resource_detail'] is False
+    assert annotation['context_resolution'] is None
+
+
+def test_v2_annotation_list_exposes_browser_context_resolution_without_metadata_io():
+    matcher = replace(
+        MATCHER,
+        source=None,
+        ontology_id=None,
+        gateway_params=(),
+        presentation=PresentationPolicy(adapter='native'),
+        context_resolution=ContextResolutionPolicy(adapter='gateway-search'),
+    )
+
+    annotation = make_service(matcher=matcher).list_page_v2(
+        SimpleNamespace(id=24),
+        SimpleNamespace(id=341),
+    ).to_dict()['occurrences'][0]['annotations'][0]
+
+    assert annotation['source'] is None
+    assert annotation['gateway_context'] is None
+    assert annotation['context_resolution'] == {'adapter': 'gateway-search'}
 
 
 def test_v2_entityset_annotations_mark_click_time_provenance_without_gateway_metadata_io():

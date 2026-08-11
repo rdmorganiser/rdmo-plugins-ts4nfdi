@@ -44,6 +44,14 @@ export class PluginAnnotationApi {
         );
     }
 
+    gatewaySearch(projectId, query, signal) {
+        const params = new URLSearchParams({query});
+        return this.request(
+            `projects/${projectId}/gateway/search?${params.toString()}`,
+            signal
+        );
+    }
+
     async request(path, signal) {
         const response = await fetch(
             `${this.baseUrl}/api/v1/ts4nfdi/${path.replace(/^\/+/, "")}`,

@@ -91,3 +91,24 @@ test("provider-resource details use the scoped v2 click-time endpoint", async ()
         "/rdmo/api/v1/ts4nfdi/projects/24/annotations/v2/7/provider-resource/?matcher=collections"
     );
 });
+
+test("browser Gateway context search uses the scoped project proxy", async () => {
+    const originalFetch = globalThis.fetch;
+    const requests = [];
+    globalThis.fetch = async (url) => {
+        requests.push(url);
+        return {ok: true, json: async () => []};
+    };
+
+    try {
+        const api = new PluginAnnotationApi("/rdmo");
+        await api.gatewaySearch("24", "Chocolate & milk");
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+
+    assert.equal(
+        requests[0],
+        "/rdmo/api/v1/ts4nfdi/projects/24/gateway/search?query=Chocolate+%26+milk"
+    );
+});

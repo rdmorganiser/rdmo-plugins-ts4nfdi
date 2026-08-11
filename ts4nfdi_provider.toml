@@ -214,9 +214,9 @@ optionset_uri = "https://rdmo.fairagro.net/terms/options/rdmo-plugins-ts4nfdi/ke
 resource_type = "entity"
 badge_label = "Terminology"
 # RDMO stores the selected label and IRI, but not the dynamic provider's
-# source/terminology breadcrumb. Resolve that display metadata from the same
-# Gateway search contract for this deliberately broad multi-source example.
-resolve_summary_metadata = true
+# source/terminology breadcrumb. Annotation API v2 exposes this public policy so
+# the browser can recover that context without Django performing page-list I/O.
+context_resolution = { adapter = "gateway-search" }
 presentation = { adapter = "native" }
 
 # FAIRagro data-generation concepts selected from the configured Gateway entity

@@ -40,6 +40,10 @@ def test_live_gateway_contract_checks_direct_edam_and_fairagro_resources(monkeyp
             {'elements': [{'iri': upstream.EDAM_SAMPLE_IRI}]},
             {'access-control-allow-origin': '*'},
         ),
+        'search?query=xml': (
+            [{'iri': upstream.EDAM_SAMPLE_IRI}],
+            {'access-control-allow-origin': '*'},
+        ),
         'collections/': ([{'id': upstream.FAIRAGRO_COLLECTION_ID}], {}),
         'entitysets': ([{'id': upstream.FAIRAGRO_ENTITYSET_ID}], {}),
         'ols4/api/v2/ontologies/agrovoc/entities': ({'elements': []}, {}),
@@ -63,7 +67,7 @@ def test_live_gateway_contract_checks_direct_edam_and_fairagro_resources(monkeyp
 
     assert result == (
         'Gateway live contract: EDAM OLS4 entity available; '
-        'CORS available for https://rdmo.example; '
+        'OLS4 and search CORS available for https://rdmo.example; '
         'FAIRagro collection and entity set available; '
         'AGROVOC OLS4 entity unavailable; keep the native annotation path.'
     )
@@ -84,9 +88,34 @@ def test_live_gateway_contract_requires_edam_cors(monkeypatch):
         raise AssertionError('Expected a missing EDAM CORS header to fail the live contract check.')
 
 
+def test_live_gateway_contract_requires_search_cors(monkeypatch):
+    responses = {
+        'ols4/api/v2/ontologies/edam/entities': (
+            {'elements': [{'iri': upstream.EDAM_SAMPLE_IRI}]},
+            {'access-control-allow-origin': '*'},
+        ),
+        'search?query=xml': ([{'iri': upstream.EDAM_SAMPLE_IRI}], {}),
+    }
+    monkeypatch.setattr(
+        upstream,
+        'fetch_json_response',
+        lambda url, _user_agent, _headers=None: next(
+            response for suffix, response in responses.items() if suffix in url
+        ),
+    )
+
+    try:
+        upstream.check_gateway_live_contract('https://gateway.example', 'https://rdmo.example')
+    except RuntimeError as exc:
+        assert str(exc) == 'Gateway search response does not expose a CORS allow-origin header.'
+    else:
+        raise AssertionError('Expected a missing search CORS header to fail the live contract check.')
+
+
 def test_live_gateway_contract_does_not_require_cors_without_a_browser_origin(monkeypatch):
     responses = {
         'ols4/api/v2/ontologies/edam/entities': ({'elements': [{'iri': upstream.EDAM_SAMPLE_IRI}]}, {}),
+        'search?query=xml': ([{'iri': upstream.EDAM_SAMPLE_IRI}], {}),
         'collections/': ([{'id': upstream.FAIRAGRO_COLLECTION_ID}], {}),
         'entitysets': ([{'id': upstream.FAIRAGRO_ENTITYSET_ID}], {}),
         'ols4/api/v2/ontologies/agrovoc/entities': ({'elements': []}, {}),

@@ -1,5 +1,9 @@
 import {InterviewAnnotationController} from "./controller.js";
 import {readJsonConfig, translate} from "./core.js";
+import {
+    AnnotationContextCoordinator,
+    BrowserGatewaySearchClient
+} from "./context_resolver.js";
 import {AnnotationDetailCoordinator} from "./detail_coordinator.js";
 import {
     NativeAnnotationDrawer,
@@ -40,11 +44,18 @@ async function boot() {
     );
 
     const api = new PluginAnnotationApi(host.baseUrl());
+    const contexts = new AnnotationContextCoordinator({
+        client: new BrowserGatewaySearchClient({
+            api,
+            gateway: frontendConfig.gateway
+        })
+    });
     const controller = new InterviewAnnotationController({
         host,
         annotations: {
             list: (...args) => api.listV2(...args)
         },
+        contexts,
         details: new AnnotationDetailCoordinator({
             api,
             baseUrl: host.baseUrl(),

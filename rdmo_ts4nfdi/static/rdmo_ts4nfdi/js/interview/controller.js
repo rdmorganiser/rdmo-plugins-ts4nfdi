@@ -1,11 +1,14 @@
 export class InterviewAnnotationController {
-    constructor({host, annotations, details, api, inlineRenderer, drawer}) {
+    constructor({host, annotations, contexts, details, api, inlineRenderer, drawer}) {
         this.host = host;
         this.annotations = annotations || {
             list: (...args) => api.list(...args)
         };
         this.details = details || {
             resolve: (...args) => api.detail(...args)
+        };
+        this.contexts = contexts || {
+            enrichOccurrence: async (_projectId, occurrence) => occurrence
         };
         this.inlineRenderer = inlineRenderer;
         this.drawer = drawer;
@@ -64,13 +67,32 @@ export class InterviewAnnotationController {
             if (revision !== this.revision) {
                 return;
             }
-            this.host.slots(payload).forEach(({element, occurrence}) => {
+            const slots = this.host.slots(payload);
+            slots.forEach(({element, occurrence}) => {
                 this.inlineRenderer.render(
                     element,
                     occurrence,
                     (annotation, trigger) => this.open(projectId, annotation, trigger)
                 );
             });
+            await Promise.all(slots.map(async ({element, occurrence}) => {
+                if (!occurrence) {
+                    return;
+                }
+                const enriched = await this.contexts.enrichOccurrence(
+                    projectId,
+                    occurrence,
+                    this.listRequest.signal
+                );
+                if (revision !== this.revision || enriched === occurrence) {
+                    return;
+                }
+                this.inlineRenderer.render(
+                    element,
+                    enriched,
+                    (annotation, trigger) => this.open(projectId, annotation, trigger)
+                );
+            }));
         } catch (error) {
             if (error.name !== "AbortError") {
                 this.host.clearSlots();

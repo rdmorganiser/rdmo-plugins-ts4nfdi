@@ -6,6 +6,7 @@ from .api.views import (
     AnnotationListView,
     EntitySetProvenanceView,
     GatewayProxyView,
+    GatewaySearchProxyView,
     ProviderResourceDetailView,
 )
 
@@ -36,6 +37,11 @@ urlpatterns = [
         'projects/<int:project_id>/annotations/<int:value_id>/',
         AnnotationDetailView.as_view(),
         name='annotation-detail',
+    ),
+    path(
+        'projects/<int:project_id>/gateway/search',
+        GatewaySearchProxyView.as_view(),
+        name='gateway-search-proxy',
     ),
     path(
         'projects/<int:project_id>/gateway/ols4/api/<path:gateway_path>',

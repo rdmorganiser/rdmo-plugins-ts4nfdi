@@ -6,12 +6,18 @@ from typing import Any
 
 from django.conf import settings
 
-from rdmo_ts4nfdi.domain import AnnotationMatcher, PresentationPolicy, ResourceReference
+from rdmo_ts4nfdi.domain import (
+    AnnotationMatcher,
+    ContextResolutionPolicy,
+    PresentationPolicy,
+    ResourceReference,
+)
 from rdmo_ts4nfdi.utils import is_http_iri, normalize_optional_string, require_string
 
 logger = logging.getLogger(__name__)
 
 ANNOTATION_RESOURCE_TYPES = frozenset({'entity', 'ontology', 'collection'})
+CONTEXT_RESOLUTION_ADAPTERS = frozenset({'gateway-search'})
 ANNOTATION_PRESENTATIONS = {
     'entity': frozenset({'metadata', 'entity-info'}),
     'ontology': frozenset({'ontology-info'}),
@@ -324,7 +330,34 @@ def normalize_annotation_matcher(
         gateway_params=tuple(gateway_params.items()),
         resolve_summary_metadata=resolve_summary_metadata,
         provider_resource_detail=provider_resource_detail,
+        context_resolution=normalize_context_resolution(
+            raw_matcher.get('context_resolution'),
+            resource_type,
+        ),
     )
+
+
+def normalize_context_resolution(
+    raw_policy: Any,
+    resource_type: str,
+) -> ContextResolutionPolicy | None:
+    if raw_policy is None:
+        return None
+    if not isinstance(raw_policy, dict):
+        raise RuntimeError('context_resolution must be a dictionary')
+
+    unsupported = sorted(set(raw_policy) - {'adapter'})
+    if unsupported:
+        raise RuntimeError(f'context_resolution has unsupported keys {unsupported}')
+
+    adapter = require_string(raw_policy, 'adapter')
+    if adapter not in CONTEXT_RESOLUTION_ADAPTERS:
+        raise RuntimeError(
+            f'context_resolution adapter must be one of {sorted(CONTEXT_RESOLUTION_ADAPTERS)}'
+        )
+    if resource_type != 'entity':
+        raise RuntimeError('context_resolution is only supported for entity matchers')
+    return ContextResolutionPolicy(adapter=adapter)
 
 
 def normalize_presentation(raw_presentation: Any, resource_type: str) -> PresentationPolicy:

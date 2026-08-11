@@ -59,6 +59,16 @@ class GatewayContext:
 
 
 @dataclass(frozen=True, slots=True)
+class ContextResolutionPolicy:
+    """Public browser policy for recovering missing annotation provenance."""
+
+    adapter: Literal['gateway-search']
+
+    def to_dict(self) -> dict[str, str]:
+        return {'adapter': self.adapter}
+
+
+@dataclass(frozen=True, slots=True)
 class AnnotationMatcher:
     id: str
     question_uri: str
@@ -75,6 +85,7 @@ class AnnotationMatcher:
     gateway_params: tuple[tuple[str, Any], ...] = ()
     resolve_summary_metadata: bool = False
     provider_resource_detail: bool = False
+    context_resolution: ContextResolutionPolicy | None = None
 
     def matches(self, question: 'QuestionContext') -> bool:
         return (
@@ -161,6 +172,7 @@ class AnnotationDescriptor:
     presentation: PresentationPolicy
     entityset_provenance: bool = False
     provider_resource_detail: bool = False
+    context_resolution: ContextResolutionPolicy | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -169,6 +181,7 @@ class AnnotationDescriptor:
             'presentation': self.presentation.to_dict(),
             'entityset_provenance': self.entityset_provenance,
             'provider_resource_detail': self.provider_resource_detail,
+            'context_resolution': self.context_resolution.to_dict() if self.context_resolution else None,
         }
 
 

@@ -5,7 +5,7 @@ import {
     InterviewAnnotationController
 } from "../../rdmo_ts4nfdi/static/rdmo_ts4nfdi/js/interview/controller.js";
 
-function makeHarness({detailError = null} = {}) {
+function makeHarness({detailError = null, enrichOccurrence = null} = {}) {
     const calls = {
         clear: 0,
         close: 0,
@@ -37,6 +37,9 @@ function makeHarness({detailError = null} = {}) {
             return {label: "XML"};
         }
     };
+    const contexts = {
+        enrichOccurrence: enrichOccurrence || (async (_projectId, current) => current)
+    };
     const inlineRenderer = {
         render: (element, current, open) => {
             calls.inline.push([element, current]);
@@ -55,6 +58,7 @@ function makeHarness({detailError = null} = {}) {
         controller: new InterviewAnnotationController({
             host,
             annotations,
+            contexts,
             details,
             inlineRenderer,
             drawer
@@ -71,6 +75,24 @@ test("refresh coordinates the host, annotation list, and inline renderer", async
     assert.equal(calls.inline.length, 1);
     assert.equal(calls.inline[0][0], "slot");
     assert.equal(calls.inline[0][1].key, "7:0:0");
+});
+
+test("refresh progressively rerenders a browser-enriched occurrence", async () => {
+    const {calls, controller} = makeHarness({
+        enrichOccurrence: async (_projectId, occurrence) => ({
+            ...occurrence,
+            annotations: occurrence.annotations.map((item) => ({
+                ...item,
+                source: {id: "agroportal"}
+            }))
+        })
+    });
+
+    await controller.refresh();
+
+    assert.equal(calls.inline.length, 2);
+    assert.equal(calls.inline[0][1].annotations[0].source, undefined);
+    assert.equal(calls.inline[1][1].annotations[0].source.id, "agroportal");
 });
 
 test("opening an annotation resolves detail exactly once", async () => {

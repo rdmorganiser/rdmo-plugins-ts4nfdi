@@ -167,6 +167,7 @@ class AnnotationService:
                         presentation=contextual_matcher.presentation,
                         entityset_provenance=bool(contextual_matcher.entityset_id),
                         provider_resource_detail=contextual_matcher.provider_resource_detail,
+                        context_resolution=contextual_matcher.context_resolution,
                     )
                 )
 
