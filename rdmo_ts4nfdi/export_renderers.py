@@ -1,4 +1,10 @@
+import json
 from xml.etree import ElementTree
+
+
+def render_semantic_json(payload: dict) -> str:
+    """Render the stable semantic sidecar without altering RDMO's exports."""
+    return json.dumps(payload, ensure_ascii=False, indent=2)
 
 
 def render_semantic_xml(payload: dict) -> bytes:

@@ -189,16 +189,18 @@ optionset_uri = "https://rdmo.example.org/terms/options/keywords"
 resource_type = "entity"
 badge_label = "Terminology"
 context_resolution = { adapter = "gateway-search" }
-presentation = { adapter = "native" }
+presentation = { adapter = "tss", component = "entity-info", entity_type = "class" }
 ```
 
 Annotation API v2 remains metadata-free. After rendering the fallback row, the
 browser searches by the stored label, requires an exact IRI match, and enriches
-the in-memory row with source, terminology, and short form. Identical requests
+the in-memory row with source, terminology, backend, and short form. Identical requests
 share a controller-lifetime cache; conflicting source contexts fail closed and
 retain the generic breadcrumb. Direct mode calls the public Gateway, while
 proxy mode uses the project-authorized `/gateway/search` compatibility route.
-Neither mode changes the stored RDMO value.
+Neither mode changes the stored RDMO value. TSS is selected only when the
+resolved source is an OLS2/OLS4 backend; other backends keep the native detail
+view.
 
 Native annotations for a bounded provider resource such as a terminology
 collection can retain their own description without using the generic concept
@@ -222,6 +224,14 @@ The page-list response stays Gateway-free. On opening the annotation, the
 browser uses a project-authorized endpoint to read the selected record from
 the same cached Gateway endpoint as the OptionSet provider. This is a small
 native resource lookup, not a concept metadata or label-search fallback.
+
+For a provider-backed ontology, `presentation = { adapter = "tss", component =
+"ontology-info" }` is a conditional enhancement. If the ontology response omits
+its source, the click-time resolver can join the selected ontology to its
+configured collection member and source registry. The record is sent to TSS
+only when this produces an OLS2/OLS4 backend, database, and ontology ID. The extra
+collection request is cached; an incomplete, failed, or non-OLS result
+continues to use the native description view.
 
 The `presentation` table selects a replaceable browser presentation adapter.
 The bundled `tss` adapter supports `entity-info` and `metadata` for entity

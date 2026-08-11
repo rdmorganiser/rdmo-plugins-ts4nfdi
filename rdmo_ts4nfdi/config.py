@@ -287,12 +287,17 @@ def normalize_annotation_matcher(
     raw_gateway_params = raw_matcher.get('gateway_params', {})
     if not isinstance(raw_gateway_params, dict):
         raise RuntimeError('gateway_params must be a dictionary')
+    use_database_parameter = raw_matcher.get('use_database_parameter', True)
+    if not isinstance(use_database_parameter, bool):
+        raise RuntimeError('use_database_parameter must be a boolean')
     gateway_params = {
         key: value
         for key, value in raw_gateway_params.items()
-        if key in GATEWAY_PARAM_NAMES and value not in (None, '', [])
+        if key in GATEWAY_PARAM_NAMES
+        and value not in (None, '', [])
+        and (key != 'database' or use_database_parameter)
     }
-    if source_config.get('database'):
+    if use_database_parameter and source_config.get('database'):
         gateway_params['database'] = source_config['database']
     ignored_params = sorted(set(raw_gateway_params) - set(gateway_params))
     if ignored_params:

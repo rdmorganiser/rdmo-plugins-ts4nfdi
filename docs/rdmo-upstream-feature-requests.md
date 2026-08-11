@@ -433,6 +433,50 @@ value mutation. It deliberately falls back to a generic breadcrumb when the
 Gateway returns conflicting contexts. This is a transitional display adapter,
 not a substitute for persisted selection provenance.
 
+## Feature request 6: expose external identifiers consistently in project exports
+
+Suggested issue title:
+
+> Expose `Value.external_id` consistently in machine-readable and human-readable project exports
+
+### Problem
+
+Dynamic providers already persist the selected external identifier in
+`Value.external_id`. RDMO's archival XML can preserve this field, but users do
+not consistently see that an answer is a controlled identifier in normal JSON
+or rendered/PDF output. A label such as “Milk” is therefore visually
+indistinguishable from free text even when it denotes a stable terminology
+concept.
+
+This is useful beyond terminology plugins: repository records, ORCID and ROR
+identifiers, authority files, instruments, licenses, and other provider-backed
+answers have the same requirement.
+
+### Proposed capability
+
+- Include `external_id`, `option_uri`, and the ordinary answer text in a stable
+  value representation used by standard machine-readable exports.
+- Give rendered export templates a documented value helper or hook which can
+  display a controlled-value marker and optional identifier link.
+- Keep the current label-only rendering as the default so existing PDF layouts
+  do not change unless a deployment or export template opts in.
+- Preserve these fields through import, project copy, and snapshots using the
+  existing value semantics.
+
+The RDMO core does not need to resolve or validate the external identifier.
+Plugins and deployments remain responsible for its meaning. This plugin's
+`ts-for-nfdi-json` export can remain a semantic sidecar, but should not have to
+define a second full project-export format merely to expose identifiers already
+stored by RDMO.
+
+### Compatibility and acceptance
+
+- values without an external identifier export exactly as before;
+- controlled and free-text answers remain distinguishable;
+- standard JSON exposes the identifier without parsing display text;
+- an opt-in PDF/rendered template can show the label and identifier accessibly;
+- no provider-specific model or terminology dependency is introduced in RDMO.
+
 ## Suggested upstream sequence
 
 The proposals can be discussed and delivered independently:
@@ -444,7 +488,8 @@ The proposals can be discussed and delivered independently:
 4. Add the minimal read-only occurrence context.
 5. Add further slots or read-only events only after additional generic use
    cases are demonstrated.
-6. Discuss host-mediated mutations separately if a real use case appears.
+6. Expose stored external identifiers through generic export contracts.
+7. Discuss host-mediated mutations separately if a real use case appears.
 
 The first community discussion could combine steps 2–4 as one design issue but
 split the implementation into reviewable changes.

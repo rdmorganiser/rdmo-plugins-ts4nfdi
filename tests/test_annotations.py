@@ -1,3 +1,4 @@
+import json
 from dataclasses import replace
 from types import SimpleNamespace
 
@@ -12,7 +13,7 @@ from rdmo_ts4nfdi.domain import (
     ResolvedMetadata,
     ResourceReference,
 )
-from rdmo_ts4nfdi.export_renderers import render_semantic_xml
+from rdmo_ts4nfdi.export_renderers import render_semantic_json, render_semantic_xml
 from rdmo_ts4nfdi.presentation import AnnotationPresentationRegistry
 
 
@@ -218,6 +219,11 @@ def test_project_annotation_export_keeps_selected_entity_iri():
     assert annotation['answer_id'] == answer.identifier
     assert annotation['iri'] == answer.identifier
 
+    json_payload = json.loads(render_semantic_json(payload))
+    json_annotation = json_payload['pages'][0]['occurrences'][0]['annotations'][0]
+    assert json_annotation['answer_id'] == answer.identifier
+    assert json_annotation['iri'] == answer.identifier
+
     xml = render_semantic_xml(payload).decode()
     assert f'<answer_id>{answer.identifier}</answer_id>' in xml
     assert f'<iri>{answer.identifier}</iri>' in xml
@@ -405,6 +411,12 @@ def test_entityset_provenance_retains_a_native_detail_for_non_ols_sources():
 def test_tss_presentation_descriptor_keeps_gateway_source_parameters():
     matcher = replace(
         make_matcher(),
+        source=ResourceReference(
+            id='ebi',
+            label='EBI',
+            database='ebi',
+            backend_type='ols2',
+        ),
         presentation=PresentationPolicy(
             adapter='tss',
             component='entity-info',
@@ -428,6 +440,34 @@ def test_tss_presentation_descriptor_keeps_gateway_source_parameters():
     assert descriptor['props']['parameter'] == 'database=ebi'
     assert descriptor['props']['entityType'] == 'class'
     assert 'useLegacy' not in descriptor['props']
+
+
+def test_tss_entity_presentation_falls_back_to_native_for_non_ols_sources():
+    matcher = replace(
+        make_matcher(),
+        source=None,
+        presentation=PresentationPolicy(adapter='tss', component='entity-info'),
+    )
+    annotation = make_service((make_answer(),)).list_page(
+        SimpleNamespace(id=24),
+        SimpleNamespace(id=341),
+    ).occurrences[0].annotations[0]
+
+    descriptor = AnnotationPresentationRegistry().build(
+        24,
+        annotation,
+        ResolvedMetadata(
+            ontology_id='foodon',
+            source=ResourceReference(
+                id='agroportal',
+                database='agroportal',
+                backend_type='ontoportal',
+            ),
+        ),
+        matcher,
+    ).to_dict()
+
+    assert descriptor == {'adapter': 'native', 'component': None, 'props': {}}
 
 
 def test_custom_presentation_descriptor_passes_matcher_options_to_browser():

@@ -308,11 +308,11 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<attribute dc:uri="https://rdmo.fairagro.net/terms/domain/rdmo-plugins-ts4nfdi/dataset-keywords"/>
 		<is_collection>True</is_collection>
 		<is_optional>True</is_optional>
-		<help lang="en">&lt;strong&gt;You can select a controlled concept or enter your own free-text keyword.&lt;/strong&gt; Search the terminology services first. If no suitable concept exists, type the complete keyword and choose the create option. Free-text keywords do not have a concept IRI or terminology details.</help>
+		<help lang="en">&lt;span class=&quot;ts4nfdi-free-text-hint&quot;&gt;Controlled concept or free text&lt;/span&gt; &lt;strong&gt;You can select a controlled concept or enter your own free-text keyword.&lt;/strong&gt; Search the terminology services first. If no suitable concept exists, type the complete keyword and choose the create option. Free-text keywords do not have a concept IRI or terminology details.</help>
 		<text lang="en">Which keywords will be included in the dataset metadata?</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en">Keyword</verbose_name>
-		<help lang="de">&lt;strong&gt;Sie können in kontrolliertes Konzept auswählen oder einen eigenen freien Suchbegriff eingeben.&lt;/strong&gt; Durchsuchen Sie zunächst die Terminologiedienste. Wenn kein passendes Konzept vorhanden ist, geben Sie den vollständigen Suchbegriff in und wählen Sie die Option zum Erstellen. Freie Suchbegriffe besitzen keine Konzept-IRI und keine Terminologiedetails.</help>
+		<help lang="de">&lt;span class=&quot;ts4nfdi-free-text-hint&quot;&gt;Kontrolliertes Konzept oder Freitext&lt;/span&gt; &lt;strong&gt;Sie können ein kontrolliertes Konzept auswählen oder einen eigenen freien Suchbegriff eingeben.&lt;/strong&gt; Durchsuchen Sie zunächst die Terminologiedienste. Wenn kein passendes Konzept vorhanden ist, geben Sie den vollständigen Suchbegriff ein und wählen Sie die Option zum Erstellen. Freie Suchbegriffe besitzen keine Konzept-IRI und keine Terminologiedetails.</help>
 		<text lang="de">Welche Suchbegriffe werden in die Metadaten des Datensatzes aufgenommen?</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de">Suchbegriff</verbose_name>
@@ -352,11 +352,11 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/dataset-keywords-agrovoc"/>
 		<is_collection>True</is_collection>
 		<is_optional>True</is_optional>
-		<help lang="en">&lt;strong&gt;You can select a controlled AGROVOC concept or enter your own free-text keyword.&lt;/strong&gt; Search AGROVOC for agricultural topics, crops, practices, materials, or processes. If no suitable concept exists, type the complete keyword and choose the create option. Free-text keywords do not have a concept IRI or terminology details.</help>
+		<help lang="en">&lt;span class=&quot;ts4nfdi-free-text-hint&quot;&gt;Controlled AGROVOC concept or free text&lt;/span&gt; &lt;strong&gt;You can select a controlled AGROVOC concept or enter your own free-text keyword.&lt;/strong&gt; Search AGROVOC for agricultural topics, crops, practices, materials, or processes. If no suitable concept exists, type the complete keyword and choose the create option. Free-text keywords do not have a concept IRI or terminology details.</help>
 		<text lang="en">Which keywords will be included in the dataset metadata?</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en">Keyword</verbose_name>
-		<help lang="de">&lt;strong&gt;Sie können in kontrolliertes AGROVOC-Konzept auswählen oder einen eigenen freien Suchbegriff eingeben.&lt;/strong&gt; Durchsuchen Sie AGROVOC nach landwirtschaftlichen Themen, Kulturpflanzen, Praktiken, Materialien oder Prozessen. Wenn kein passendes Konzept vorhanden ist, geben Sie den vollständigen Suchbegriff in und wählen Sie die Option zum Erstellen. Freie Suchbegriffe besitzen keine Konzept-IRI und keine Terminologiedetails.</help>
+		<help lang="de">&lt;span class=&quot;ts4nfdi-free-text-hint&quot;&gt;Kontrolliertes AGROVOC-Konzept oder Freitext&lt;/span&gt; &lt;strong&gt;Sie können ein kontrolliertes AGROVOC-Konzept auswählen oder einen eigenen freien Suchbegriff eingeben.&lt;/strong&gt; Durchsuchen Sie AGROVOC nach landwirtschaftlichen Themen, Kulturpflanzen, Praktiken, Materialien oder Prozessen. Wenn kein passendes Konzept vorhanden ist, geben Sie den vollständigen Suchbegriff ein und wählen Sie die Option zum Erstellen. Freie Suchbegriffe besitzen keine Konzept-IRI und keine Terminologiedetails.</help>
 		<text lang="de">Welche Suchbegriffe werden in die Metadaten des Datensatzes aufgenommen?</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de">Suchbegriff</verbose_name>
@@ -392,7 +392,7 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 	<page dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/data-generation">
 		<uri_prefix>https://ts4nfdi.github.io/terms</uri_prefix>
 		<uri_path>rdmo-plugins-ts4nfdi-example-catalog/data-generation</uri_path>
-		<dc:comment>Prototype for the FAIRagro data-generation question and its evolving terminology mappings.</dc:comment>
+		<dc:comment>Prototype for the FAIRagro data-generation question and its curated TS4NFDI Gateway entity set.</dc:comment>
 		<attribute/>
 		<is_collection>False</is_collection>
 		<title lang="en">Data generation methods</title>
@@ -416,10 +416,10 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<attribute/>
 		<is_collection>False</is_collection>
 		<title lang="en">How the project generates new data</title>
-		<help lang="en">The available classifications are loaded from a versioned FAIRagro semantic option set. Related terminology concepts are shown with the options and, when available, their definitions and synonyms can be opened below the question.</help>
+		<help lang="en">The available classifications are loaded from a curated TS4NFDI Gateway entity set. The options are terminology concepts; when available, their definitions and provenance can be opened below the question.</help>
 		<verbose_name lang="en"/>
 		<title lang="de">Wie das Projekt neue Daten erzeugt</title>
-		<help lang="de">Die verfügbaren Klassifikationen werden aus einem versionierten semantischen FAIRagro-Optionssatz geladen. Zugehörige Terminologiekonzepte werden bei den Optionen angezeigt; vorhandene Definitionen und Synonyme können unterhalb der Frage geöffnet werden.</help>
+		<help lang="de">Die verfügbaren Klassifikationen werden aus einem kuratierten TS4NFDI-Gateway-Entity-Set geladen. Die Optionen sind Terminologiekonzepte; vorhandene Definitionen und Provenienzinformationen können unterhalb der Frage geöffnet werden.</help>
 		<verbose_name lang="de"/>
 		<questionsets/>
 		<questions>

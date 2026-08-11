@@ -37,3 +37,23 @@ composition columns, `pre_save` projection, and
 They must not be used for new answers. Existing projects created with that old
 provider retain their stored values; review them explicitly before changing
 their catalog or provider configuration.
+
+## Historical values
+
+Changing the provider affects newly selected answers only. A historical value
+whose `external_id` is an old FAIRagro option URI is not silently rewritten to
+a terminology IRI. Automatic save signals are intentionally out of scope
+because they would change archived project data without a reviewed mapping.
+
+For an existing deployment:
+
+1. inventory values whose identifiers use the retired FAIRagro option-URI
+   namespace;
+2. reselect the answer from the current entity set when only a small number of
+   projects is affected; or
+3. prepare a reviewed, versioned old-URI-to-concept-IRI table and use it in an
+   explicit one-time migration with a dry-run report.
+
+Do not infer the replacement from the answer label. Labels are not stable or
+unique enough for a data migration. Free-text answers correctly retain an
+empty external identifier.

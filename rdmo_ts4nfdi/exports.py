@@ -1,12 +1,10 @@
-import json
-
 from django.conf import settings
 from django.http import HttpResponse
 
 from rdmo.projects.exports import Export
 
 from rdmo_ts4nfdi.composition import build_annotation_service
-from rdmo_ts4nfdi.export_renderers import render_semantic_xml
+from rdmo_ts4nfdi.export_renderers import render_semantic_json, render_semantic_xml
 
 
 class SemanticJSONExport(Export):
@@ -15,7 +13,7 @@ class SemanticJSONExport(Export):
     def render(self):
         payload = build_annotation_service().export_project(self.project).to_dict()
         response = HttpResponse(
-            json.dumps(payload, ensure_ascii=False, indent=2),
+            render_semantic_json(payload),
             content_type='application/json',
         )
         if settings.EXPORT_CONTENT_DISPOSITION == 'attachment':

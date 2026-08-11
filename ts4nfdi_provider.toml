@@ -55,7 +55,10 @@ iri_prefixes = ["http://edamontology.org/format_"]
 [providers.ts4nfdi_agrovoc_keywords]
 endpoint = "search"
 source_key = "agrovoc"
-ontologies = ["agrovoc"]
+# The Gateway currently returns no results when its Skosmos-backed AGROVOC
+# source is selected with database=agrovoc. Search broadly and retain only
+# stable AGROVOC IRIs until source-scoped search works upstream again.
+use_database_parameter = false
 iri_prefixes = ["http://aims.fao.org/aos/agrovoc/"]
 limit = 30
 
@@ -149,10 +152,9 @@ presentation = { adapter = "native" }
 # Complete terminologies selected from the provider's fixed FAIRAgro
 # collection. The badge makes that preselected context visible in each
 # annotation; the catalog question help explains that it is not controlled by
-# the preceding collections answer. The native adapter is the reliable
-# prototype default for Gateway terminology responses. Switch this matcher to
-# `presentation = { adapter = "tss", component = "ontology-info" }` after the
-# deployed Gateway response has been verified against the vendored TSS release.
+# the preceding collections answer. Click-time provider detail remains native
+# unless the selected record supplies deterministic OLS2 source and ontology
+# context; compatible records additionally mount TSS ontology-info.
 [[frontend.annotations.matchers]]
 id = "example-fairagro-collection-terminology"
 question_uri = "https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog/collection-terminologies"
@@ -162,7 +164,7 @@ resource_type = "ontology"
 provider_key = "ts4nfdi_fairagro_collection_terminologies"
 badge_label = "FAIRagro TS collection"
 provider_resource_detail = true
-presentation = { adapter = "native" }
+presentation = { adapter = "tss", component = "ontology-info" }
 
 [frontend.annotations.matchers.gateway_params]
 collectionId = "ff5491d1-d0a9-481e-ac90-0fad065fa097"
@@ -204,6 +206,7 @@ resource_type = "entity"
 badge_label = "AGROVOC"
 ontology_id = "agrovoc"
 source_key = "agrovoc"
+use_database_parameter = false
 presentation = { adapter = "native" }
 
 [[frontend.annotations.matchers]]
@@ -217,7 +220,7 @@ badge_label = "Terminology"
 # source/terminology breadcrumb. Annotation API v2 exposes this public policy so
 # the browser can recover that context without Django performing page-list I/O.
 context_resolution = { adapter = "gateway-search" }
-presentation = { adapter = "native" }
+presentation = { adapter = "tss", component = "entity-info", entity_type = "class" }
 
 # FAIRagro data-generation concepts selected from the configured Gateway entity
 # set. Entity sets can combine providers and terminologies. The v2 list stays
@@ -232,7 +235,7 @@ optionset_uri = "https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/fa
 resource_type = "entity"
 provider_key = "ts4nfdi_entitysets"
 badge_label = "FAIRagro entity set"
-presentation = { adapter = "native" }
+presentation = { adapter = "tss", component = "entity-info", entity_type = "class" }
 
 # Terminologies selected from the FAIRagro TS4NFDI collection.
 [[frontend.annotations.matchers]]
@@ -244,7 +247,7 @@ resource_type = "ontology"
 provider_key = "ts4nfdi_fairagro_collection_terminologies"
 badge_label = "FAIRAgro"
 provider_resource_detail = true
-presentation = { adapter = "native" }
+presentation = { adapter = "tss", component = "ontology-info" }
 
 [frontend.annotations.matchers.gateway_params]
 collectionId = "ff5491d1-d0a9-481e-ac90-0fad065fa097"

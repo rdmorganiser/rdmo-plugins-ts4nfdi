@@ -213,6 +213,29 @@ def test_ontology_provider_get_options_returns_mapped_options(provider_modules):
     ]
 
 
+def test_ontology_provider_deduplicates_broad_search_results_by_iri(provider_modules):
+    key = 'ts4nfdi_agrovoc_keywords'
+    configure_provider(
+        provider_modules,
+        key,
+        {
+            'endpoint': 'search',
+            'iri_prefixes': ['http://aims.fao.org/aos/agrovoc/'],
+        },
+    )
+    concept = {
+        'iri': 'http://aims.fao.org/aos/agrovoc/c_25682',
+        'label': 'milk containers',
+        'ontology': 'FPOSOFT',
+        'source_name': 'agroportal',
+    }
+    provider = make_provider(provider_modules.ontologies_provider, key, [concept, concept])
+
+    options = provider.get_options(project=None, search='milk containers')
+
+    assert [option['id'] for option in options] == [concept['iri']]
+
+
 def test_ontology_provider_renders_source_terminology_term_breadcrumb(provider_modules):
     key = 'ts4nfdi_ontologies'
     configure_provider(
@@ -401,6 +424,194 @@ def test_provider_resource_detail_uses_only_the_selected_collection_record(provi
         'adapter': 'native',
         'component': None,
         'props': {},
+    }
+
+
+def test_provider_resource_terminology_promotes_only_deterministic_ols2_records(provider_modules):
+    class Gateway:
+        def __init__(self):
+            self.calls = []
+
+        def get(self, path, query=()):
+            self.calls.append((path, list(query)))
+            if path == 'ols4/api/ontologies':
+                return (
+                    {
+                        '_embedded': {
+                            'ontologies': [
+                                {
+                                    'ontologyId': 'envo',
+                                    'URI': 'http://purl.obolibrary.org/obo/envo.owl',
+                                    'config': {
+                                        'title': 'Environment Ontology',
+                                        'description': 'An environmental ontology.',
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                    False,
+                )
+            return (
+                [
+                    {
+                        'id': 'fairagro',
+                        'terminologies': [
+                            {
+                                'label': 'envo',
+                                'uri': 'http://purl.obolibrary.org/obo/envo.owl',
+                                'source': 'ebi',
+                            },
+                        ],
+                    },
+                ],
+                False,
+            )
+
+    provider_resources = importlib.import_module('rdmo_ts4nfdi.application.provider_resources')
+    matcher = provider_modules.domain.AnnotationMatcher(
+        id='fairagro-terminologies',
+        question_uri='https://example.test/questions/terminologies',
+        attribute_uri='https://example.test/domain/terminologies',
+        optionset_uri='https://example.test/options/terminologies',
+        resource_type='ontology',
+        provider_key='ts4nfdi_fairagro_collection_terminologies',
+        badge_label='FAIRagro TS collection',
+        presentation=provider_modules.domain.PresentationPolicy(
+            adapter='tss',
+            component='ontology-info',
+        ),
+        provider_resource_detail=True,
+    )
+    annotation = provider_modules.domain.AnnotationSummary(
+        value_id=8,
+        collection_index=0,
+        matcher_id=matcher.id,
+        kind='ontology',
+        label='Environment Ontology',
+        iri='http://purl.obolibrary.org/obo/envo.owl',
+        question_id=4,
+        badge_label='FAIRagro TS collection',
+    )
+    gateway = Gateway()
+    payload = provider_resources.GatewayProviderResourceDetailResolver(
+        gateway,
+        provider_config_loader=lambda key: {
+            'endpoint': 'ols4/api/ontologies',
+            'fallback_endpoint': 'collections/',
+            'id_fields': ['URI'],
+            'label_fields': ['config.title'],
+            'help_fields': ['config.description'],
+            'collection_id': 'fairagro',
+        },
+        source_config_loader=lambda: {
+            'ebi': {
+                'id': 'ebi',
+                'label': 'EBI',
+                'database': 'ebi',
+                'backend_type': 'ols2',
+                'url': 'https://www.ebi.ac.uk/ols4/api/v2',
+            },
+        },
+    ).resolve(annotation, matcher).to_dict()
+
+    assert gateway.calls == [
+        ('ols4/api/ontologies', [('collectionId', 'fairagro')]),
+        ('collections/', []),
+    ]
+    assert payload['gateway_context'] == {
+        'ontology_id': 'envo',
+        'database': 'ebi',
+        'backend_type': 'ols2',
+        'params': {},
+    }
+    assert payload['source'] == {
+        'id': 'ebi',
+        'label': 'EBI',
+        'iri': None,
+        'url': 'https://www.ebi.ac.uk/ols4/api/v2',
+        'database': 'ebi',
+        'backend_type': 'ols2',
+    }
+    assert payload['presentation'] == {
+        'adapter': 'tss',
+        'component': 'ontology-info',
+        'props': {},
+    }
+    assert provider_resources.GatewayProviderResourceDetailResolver.presentation(
+        matcher,
+        provider_modules.domain.GatewayContext(
+            ontology_id='envo',
+            database='agroportal',
+            backend_type='ontoportal',
+        ),
+    ).adapter == 'native'
+
+
+def test_provider_resource_terminology_keeps_native_detail_when_source_lookup_fails(provider_modules):
+    class Gateway:
+        def get(self, path, query=()):
+            if path == 'collections/':
+                raise provider_modules.gateway.GatewayError('Collection provenance unavailable.')
+            return (
+                {
+                    '_embedded': {
+                        'ontologies': [
+                            {
+                                'ontologyId': 'envo',
+                                'URI': 'http://purl.obolibrary.org/obo/envo.owl',
+                                'config': {'title': 'Environment Ontology'},
+                            },
+                        ],
+                    },
+                },
+                False,
+            )
+
+    provider_resources = importlib.import_module('rdmo_ts4nfdi.application.provider_resources')
+    matcher = provider_modules.domain.AnnotationMatcher(
+        id='fairagro-terminologies',
+        question_uri='https://example.test/questions/terminologies',
+        attribute_uri='https://example.test/domain/terminologies',
+        optionset_uri='https://example.test/options/terminologies',
+        resource_type='ontology',
+        provider_key='ts4nfdi_fairagro_collection_terminologies',
+        badge_label='FAIRagro TS collection',
+        presentation=provider_modules.domain.PresentationPolicy(
+            adapter='tss',
+            component='ontology-info',
+        ),
+        provider_resource_detail=True,
+    )
+    annotation = provider_modules.domain.AnnotationSummary(
+        value_id=8,
+        collection_index=0,
+        matcher_id=matcher.id,
+        kind='ontology',
+        label='Environment Ontology',
+        iri='http://purl.obolibrary.org/obo/envo.owl',
+        question_id=4,
+        badge_label='FAIRagro TS collection',
+    )
+
+    payload = provider_resources.GatewayProviderResourceDetailResolver(
+        Gateway(),
+        provider_config_loader=lambda key: {
+            'endpoint': 'ols4/api/ontologies',
+            'fallback_endpoint': 'collections/',
+            'id_fields': ['URI'],
+            'collection_id': 'fairagro',
+        },
+        source_config_loader=lambda: {},
+    ).resolve(annotation, matcher).to_dict()
+
+    assert payload['metadata_status'] == 'available'
+    assert payload['presentation']['adapter'] == 'native'
+    assert payload['gateway_context'] == {
+        'ontology_id': 'envo',
+        'database': None,
+        'backend_type': None,
+        'params': {},
     }
 
 
@@ -825,6 +1036,43 @@ def test_annotation_source_config_supplies_gateway_database(provider_modules):
     )
 
 
+def test_annotation_source_config_can_omit_gateway_database(provider_modules):
+    provider_modules.settings.TS4NFDI_PROVIDER = {
+        'sources': {
+            'agrovoc': {
+                'label': 'FAO AGROVOC service',
+                'database': 'agrovoc',
+                'backend_type': 'skosmos',
+            },
+        },
+        'providers': {},
+        'frontend': {
+            'annotations': {
+                'enabled': True,
+                'matchers': [
+                    {
+                        'id': 'agrovoc-keyword',
+                        'question_uri': 'https://example.test/question',
+                        'attribute_uri': 'https://example.test/attribute',
+                        'optionset_uri': 'https://example.test/optionset',
+                        'resource_type': 'entity',
+                        'source_key': 'agrovoc',
+                        'ontology_id': 'agrovoc',
+                        'use_database_parameter': False,
+                        'gateway_params': {'database': 'agrovoc'},
+                    },
+                ],
+            },
+        },
+    }
+    provider_modules.load_config.cache_clear()
+
+    matcher = provider_modules.load_annotation_matchers()[0]
+
+    assert matcher.gateway_query == ()
+    assert matcher.source.database == 'agrovoc'
+
+
 def test_entity_metadata_normalizes_gateway_fields(provider_modules):
     metadata = provider_modules.annotation_metadata.normalize_entity_metadata(
         {
@@ -1200,6 +1448,20 @@ def test_ontology_provider_omits_optional_display_parameter_by_default(provider_
     }
 
 
+def test_ontology_provider_can_omit_the_source_database_parameter(provider_modules):
+    provider = provider_modules.ontologies_provider()
+    params = provider.build_query_params(
+        {
+            'search_param': 'query',
+            'database': 'agrovoc',
+            'use_database_parameter': False,
+        },
+        'milk containers',
+    )
+
+    assert params == {'query': 'milk containers'}
+
+
 def test_gateway_provider_prepares_encoded_request_url(provider_modules):
     request_url = provider_modules.gateway_provider.GatewayProviderClient.prepare_request_url(
         {
@@ -1332,6 +1594,7 @@ def test_example_catalog_contains_controlled_agrovoc_keyword_question():
     assert question.find('attribute').get(uri_attribute) == attribute_uri
     assert question.find('optionsets/optionset').get(uri_attribute) == optionset_uri
     assert 'free-text keyword' in question.findtext("help[@lang='en']")
+    assert 'ts4nfdi-free-text-hint' in question.findtext("help[@lang='en']")
     assert 'freien Suchbegriff' in question.findtext("help[@lang='de']")
     assert attribute.findtext('key') == 'dataset-keywords-agrovoc'
     assert optionset.findtext('provider_key') == 'ts4nfdi_agrovoc_keywords'
@@ -1339,6 +1602,7 @@ def test_example_catalog_contains_controlled_agrovoc_keyword_question():
     federated_question = elements[f'{base_uri}/dataset-keywords']
     assert federated_question.findtext('widget_type') == 'select_creatable'
     assert 'free-text keyword' in federated_question.findtext("help[@lang='en']")
+    assert 'ts4nfdi-free-text-hint' in federated_question.findtext("help[@lang='en']")
     assert 'freien Suchbegriff' in federated_question.findtext("help[@lang='de']")
 
 
@@ -1401,7 +1665,7 @@ def test_example_catalog_first_page_has_annotation_matchers():
     assert terminology['badge_label'] == 'FAIRagro TS collection'
     assert terminology['gateway_params']['collectionId'] == ('ff5491d1-d0a9-481e-ac90-0fad065fa097')
     assert terminology['provider_resource_detail'] is True
-    assert terminology['presentation'] == {'adapter': 'native'}
+    assert terminology['presentation'] == {'adapter': 'tss', 'component': 'ontology-info'}
 
 
 def test_example_catalog_agrovoc_provider_and_annotation_matcher():
@@ -1419,13 +1683,15 @@ def test_example_catalog_agrovoc_provider_and_annotation_matcher():
 
     assert provider['endpoint'] == 'search'
     assert provider['source_key'] == 'agrovoc'
-    assert provider['ontologies'] == ['agrovoc']
+    assert provider['use_database_parameter'] is False
+    assert 'ontologies' not in provider
     assert provider['iri_prefixes'] == ['http://aims.fao.org/aos/agrovoc/']
     assert source['database'] == 'agrovoc'
     assert source['backend_type'] == 'skosmos'
     assert matcher['resource_type'] == 'entity'
     assert matcher['source_key'] == 'agrovoc'
     assert matcher['ontology_id'] == 'agrovoc'
+    assert matcher['use_database_parameter'] is False
     assert matcher['presentation']['adapter'] == 'native'
 
 
@@ -1458,6 +1724,8 @@ def test_example_catalog_contains_provider_backed_fairagro_data_generation_quest
     )
     assert methods.find('optionsets/optionset').get(uri_attribute) == optionset_uri
     assert 'selected terminology concept IRI' in methods.findtext("help[@lang='en']")
+    assert 'TS4NFDI Gateway entity set' in questionset.findtext("help[@lang='en']")
+    assert 'semantic option set' not in questionset.findtext("help[@lang='en']")
     assert 'Terminologiezuordnungen' not in questionset.findtext("help[@lang='de']")
     assert details.findtext('widget_type') == 'textarea'
     assert details.findtext('is_optional') == 'True'
@@ -1478,7 +1746,11 @@ def test_fairagro_data_generation_uses_the_configured_entity_set_provider():
     assert matcher['resource_type'] == 'entity'
     assert matcher['provider_key'] == 'ts4nfdi_entitysets'
     assert matcher['badge_label'] == 'FAIRagro entity set'
-    assert matcher['presentation']['adapter'] == 'native'
+    assert matcher['presentation'] == {
+        'adapter': 'tss',
+        'component': 'entity-info',
+        'entity_type': 'class',
+    }
     assert matcher['optionset_uri'] == (
         'https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/fairagro-data-generation'
     )

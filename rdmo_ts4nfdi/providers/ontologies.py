@@ -29,6 +29,7 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
 
         results = self.filter_results(extract_results(payload), provider_config)
         options = []
+        seen_identifiers = set()
 
         logger.debug(
             "TS4NFDI ontology provider '%s' search=%r filtered result_count=%s",
@@ -39,8 +40,10 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
 
         for result in results:
             option = self.map_result_to_option(result, provider_config)
-            if option:
+            identifier = option.get('id') if option else None
+            if option and identifier not in seen_identifiers:
                 options.append(option)
+                seen_identifiers.add(identifier)
 
         options = self.exclude_selected_options(project, options, provider_config)
         return options[: provider_config.get('limit', 20)]
@@ -58,6 +61,8 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
             ('collection_id', 'collectionId'),
             ('target_db_schema', 'targetDbSchema'),
         ):
+            if config_key == 'database' and not provider_config.get('use_database_parameter', True):
+                continue
             if provider_config.get(config_key):
                 query_params[provider_config.get(f'{config_key}_param', default_param)] = provider_config[config_key]
 

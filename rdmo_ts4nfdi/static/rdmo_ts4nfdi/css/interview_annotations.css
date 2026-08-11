@@ -2,6 +2,18 @@
     display: none;
 }
 
+.ts4nfdi-free-text-hint {
+    display: inline-block;
+    margin: 0 0.35rem 0.3rem 0;
+    padding: 0.2rem 0.55rem;
+    border: 1px solid #9bc8e7;
+    border-radius: 999px;
+    color: #174f77;
+    background: #eaf6fd;
+    font-size: 0.85em;
+    font-weight: 700;
+}
+
 .ts4nfdi-annotation-hook {
     display: grid;
     gap: 0.45rem;

@@ -136,6 +136,44 @@ test("provider-resource annotations use their scoped native-detail API and cache
     assert.equal(second, first);
 });
 
+test("provider-resource terminology detail promotes deterministic OLS2 records to TSS", async () => {
+    const coordinator = new AnnotationDetailCoordinator({
+        api: {
+            providerResourceDetail: async () => ({
+                value_id: 7,
+                matcher_id: "fairagro-terminology",
+                kind: "ontology",
+                label: "Environment Ontology",
+                iri: "http://purl.obolibrary.org/obo/envo.owl",
+                source: {id: "ebi", label: "ebi", database: "ebi", backend_type: "ols2"},
+                terminology: {id: "envo", label: "envo"},
+                gateway_context: {
+                    ontology_id: "envo",
+                    database: "ebi",
+                    backend_type: "ols2",
+                    params: {}
+                },
+                presentation: {adapter: "tss", component: "ontology-info", props: {}}
+            })
+        },
+        baseUrl: "/rdmo",
+        gateway: {mode: "direct", base_url: "https://gateway.example"}
+    });
+    const annotation = entityAnnotation({
+        kind: "ontology",
+        provider_resource_detail: true,
+        presentation: {adapter: "tss", component: "ontology-info", options: {}},
+        gateway_context: null
+    });
+
+    const detail = await coordinator.resolve("24", annotation);
+
+    assert.equal(detail.presentation.adapter, "tss");
+    assert.equal(detail.presentation.component, "ontology-info");
+    assert.equal(detail.presentation.props.ontologyId, "envo");
+    assert.equal(detail.presentation.props.parameter, "database=ebi");
+});
+
 test("entity-set provenance promotes compatible OLS2 entries to the TSS path and caches the result", async () => {
     let provenanceCalls = 0;
     const coordinator = new AnnotationDetailCoordinator({
@@ -237,7 +275,7 @@ test("TSS parameter serialization rejects delimiter injection", () => {
     );
 });
 
-test("entity TSS descriptors require ontology and database context", () => {
+test("entity TSS descriptors require ontology, database, and an OLS backend", () => {
     assert.equal(canUseTssDescriptor(entityAnnotation()), true);
     assert.equal(
         canUseTssDescriptor(entityAnnotation({gateway_context: {ontology_id: "edam", database: null}})),
@@ -245,6 +283,14 @@ test("entity TSS descriptors require ontology and database context", () => {
     );
     assert.equal(
         canUseTssDescriptor(entityAnnotation({gateway_context: {ontology_id: null, database: "ebi"}})),
+        false
+    );
+    assert.equal(
+        canUseTssDescriptor(entityAnnotation({gateway_context: {
+            ontology_id: "foodon",
+            database: "agroportal",
+            backend_type: "ontoportal"
+        }})),
         false
     );
 });

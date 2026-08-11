@@ -1,15 +1,18 @@
-"""Bounded Gateway lookups for provider-backed native resources.
+"""Bounded Gateway lookups for provider-backed resources.
 
 This is deliberately not a terminology metadata resolver.  It reuses the
 same configured endpoint as an RDMO OptionSet provider, finds the already
-selected collection or terminology record, and exposes only its own display
-metadata for the native annotation drawer.
+selected collection or terminology record, and exposes only its own metadata.
+For ontology resources which explicitly request the TSS ontology component,
+it can additionally join the configured collection membership to the source
+registry when the ontology-list response omits its hosting provenance.
 """
 
+import logging
 from collections.abc import Callable
 from typing import Any
 
-from rdmo_ts4nfdi.config import load_provider_config
+from rdmo_ts4nfdi.config import load_provider_config, load_source_configs
 from rdmo_ts4nfdi.domain import (
     AnnotationMatcher,
     CollectionCollaborator,
@@ -20,7 +23,10 @@ from rdmo_ts4nfdi.domain import (
 )
 from rdmo_ts4nfdi.utils import is_http_iri
 
+from .gateway import GatewayError
 from .payload import extract_results, get_first_value, get_value
+
+logger = logging.getLogger(__name__)
 
 
 class GatewayProviderResourceClient:
@@ -31,9 +37,11 @@ class GatewayProviderResourceClient:
         gateway,
         *,
         provider_config_loader: Callable[[str], dict[str, Any]] = load_provider_config,
+        source_config_loader: Callable[[], dict[str, dict[str, str | None]]] = load_source_configs,
     ):
         self.gateway = gateway
         self.provider_config_loader = provider_config_loader
+        self.source_config_loader = source_config_loader
 
     def resolve_metadata(self, annotation, matcher: AnnotationMatcher) -> ResolvedMetadata:
         provider_config, result = self._selected_record(annotation, matcher)
@@ -44,7 +52,7 @@ class GatewayProviderResourceClient:
         annotation,
         matcher: AnnotationMatcher,
     ) -> tuple[ResolvedMetadata, CollectionMetadata | None]:
-        """Return the native detail model using exactly one Gateway lookup."""
+        """Return selected resource detail with optional source provenance."""
         provider_config, result = self._selected_record(annotation, matcher)
         metadata = build_provider_metadata(matcher, result, provider_config)
         collection = (
@@ -85,7 +93,52 @@ class GatewayProviderResourceClient:
             ),
             {},
         )
+        result = self._enrich_ontology_source(annotation, matcher, result, provider_config)
         return provider_config, result
+
+    def _enrich_ontology_source(
+        self,
+        annotation,
+        matcher: AnnotationMatcher,
+        result: dict,
+        provider_config: dict[str, Any],
+    ) -> dict:
+        """Add deterministic source context needed by TSS ontology-info.
+
+        The Gateway's collection-filtered OLS endpoint currently identifies
+        the ontology but not the database which hosts it. The corresponding
+        collection member contains that source key. This extra lookup is both
+        click-time only and cached by ``GatewayClient``.
+        """
+        if not result or not requests_tss_ontology_info(matcher):
+            return result
+
+        sources = self.source_config_loader()
+        source_key = provider_source_key(result)
+        if source_key:
+            return merge_source_config(result, source_key, sources)
+
+        fallback_endpoint = str(provider_config.get('fallback_endpoint', ''))
+        collection_id = provider_config.get('collection_id')
+        if not fallback_endpoint or not collection_id:
+            return result
+
+        try:
+            payload, _cache_hit = self.gateway.get(fallback_endpoint)
+        except GatewayError as exc:
+            logger.warning(
+                "TS4NFDI provider-resource source lookup failed for matcher '%s': %s",
+                matcher.id,
+                exc,
+            )
+            return result
+
+        members = extract_provider_results(payload, provider_config)
+        member = find_selected_collection_member(annotation, result, members)
+        source_key = provider_source_key(member)
+        if not source_key:
+            return result
+        return merge_source_config(result, source_key, sources)
 
     @staticmethod
     def request_query(provider_config: dict[str, Any]) -> list[tuple[str, Any]]:
@@ -99,6 +152,60 @@ class GatewayProviderResourceClient:
                 query.append((parameter_name, provider_config[config_key]))
         query.extend(provider_config.get('extra_params', {}).items())
         return query
+
+
+def requests_tss_ontology_info(matcher: AnnotationMatcher) -> bool:
+    return (
+        matcher.resource_type == 'ontology'
+        and matcher.presentation.adapter == 'tss'
+        and matcher.presentation.component == 'ontology-info'
+    )
+
+
+def provider_source_key(result: dict | None) -> str | None:
+    result = result or {}
+    source_key = get_first_value(result, ('source_name', 'sourceName'))
+    raw_source = get_first_value(result, ('source',))
+    if not source_key and raw_source and not is_http_iri(raw_source):
+        source_key = raw_source
+    return source_key
+
+
+def find_selected_collection_member(annotation, result: dict, members: list[dict]) -> dict:
+    selected_identifiers = {
+        annotation.iri,
+        get_first_value(result, ('URI', 'uri', 'iri', 'config.id')),
+    } - {None}
+    ontology_id = get_first_value(result, ('ontologyId', 'ontology_id', 'id'))
+    normalized_ontology_id = ontology_id.casefold() if ontology_id else None
+
+    for member in members:
+        if not isinstance(member, dict):
+            continue
+        member_identifier = get_first_value(member, ('URI', 'uri', 'iri', 'config.id'))
+        member_id = get_first_value(member, ('ontologyId', 'ontology_id', 'label', 'id'))
+        if member_identifier in selected_identifiers:
+            return member
+        if normalized_ontology_id and member_id and member_id.casefold() == normalized_ontology_id:
+            return member
+    return {}
+
+
+def merge_source_config(
+    result: dict,
+    source_key: str,
+    sources: dict[str, dict[str, str | None]],
+) -> dict:
+    configured = sources.get(source_key)
+    if not configured:
+        return {**result, 'source_name': source_key}
+    return {
+        **result,
+        'source_name': configured.get('database') or source_key,
+        'source_label': configured.get('label') or source_key,
+        'source': configured.get('url'),
+        'backend_type': configured.get('backend_type'),
+    }
 
 
 def build_provider_metadata(
@@ -227,10 +334,11 @@ def build_source_reference(
     configured = matcher.source
     result = result or {}
     result_id = get_first_value(result, ('source_name', 'sourceName'))
+    result_label = get_first_value(result, ('source_label', 'sourceLabel'))
     result_source = get_first_value(result, ('source',))
 
     source_id = configured.id if configured else result_id
-    source_label = configured.label if configured else source_id
+    source_label = configured.label if configured else result_label or source_id
     source_url = configured.url if configured else result_source if is_http_iri(result_source) else None
     if not source_id and result_source and not source_url:
         source_id = result_source
@@ -276,20 +384,20 @@ def extract_provider_results(payload, provider_config):
         if isinstance(embedded, dict) and isinstance(embedded.get('ontologies'), list):
             return embedded['ontologies']
 
-        collection_id = provider_config.get('collection_id')
-        collections = extract_results(payload)
-        if collection_id:
-            collection = next(
-                (
-                    item
-                    for item in collections
-                    if isinstance(item, dict) and get_first_value(item, ('id', 'uuid')) == collection_id
-                ),
-                None,
-            )
-            if collection and isinstance(collection.get('terminologies'), list):
-                return collection['terminologies']
-    return extract_results(payload)
+    results = extract_results(payload)
+    collection_id = provider_config.get('collection_id')
+    if collection_id:
+        collection = next(
+            (
+                item
+                for item in results
+                if isinstance(item, dict) and get_first_value(item, ('id', 'uuid')) == collection_id
+            ),
+            None,
+        )
+        if collection and isinstance(collection.get('terminologies'), list):
+            return collection['terminologies']
+    return results
 
 
 def provider_resource_identifiers(item, provider_config):

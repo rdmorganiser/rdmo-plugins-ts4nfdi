@@ -1,4 +1,5 @@
 const TSS_COMPONENTS = new Set(["metadata", "entity-info", "ontology-info"]);
+const TSS_ENTITY_BACKEND_TYPES = new Set(["ols2", "ols4"]);
 const PUBLIC_GATEWAY_PARAM_KEYS = new Set(["database", "collectionId", "lang"]);
 
 export function canUseTssDescriptor(annotation) {
@@ -11,7 +12,11 @@ export function canUseTssDescriptor(annotation) {
         return false;
     }
     if (annotation.kind === "entity") {
-        return Boolean(annotation.iri && context.ontology_id);
+        return Boolean(
+            annotation.iri &&
+            context.ontology_id &&
+            TSS_ENTITY_BACKEND_TYPES.has(context.backend_type)
+        );
     }
     if (presentation.component === "ontology-info") {
         return Boolean(context.ontology_id);
@@ -85,7 +90,9 @@ export class AnnotationDetailCoordinator {
             detail = await this.api.providerResourceDetail(projectId, annotation, signal);
             this.providerResourceDetails.set(cacheKey, detail);
         }
-        return detail;
+        return canUseTssDescriptor(detail)
+            ? this.tssDetail(projectId, detail)
+            : detail;
     }
 
     tssDetail(projectId, annotation) {

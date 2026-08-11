@@ -13,6 +13,8 @@ PresentationFactory = Callable[
     PresentationDescriptor,
 ]
 
+TSS_ENTITY_BACKEND_TYPES = frozenset({'ols2', 'ols4'})
+
 
 class AnnotationPresentationRegistry:
     """Select a presentation adapter without coupling the application service to TSS."""
@@ -66,6 +68,11 @@ class AnnotationPresentationRegistry:
     ) -> PresentationDescriptor:
         component = matcher.presentation.component
         ontology_id = metadata.ontology_id or matcher.ontology_id
+        source = metadata.source or matcher.source
+        if annotation.kind == 'entity' and (
+            source is None or source.backend_type not in TSS_ENTITY_BACKEND_TYPES
+        ):
+            return PresentationDescriptor(adapter='native')
         if component == 'ontology-info' and not ontology_id:
             return PresentationDescriptor(adapter='native')
 

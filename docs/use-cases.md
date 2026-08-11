@@ -305,18 +305,20 @@ collection-valued attribute:
 
 `https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/dataset-keywords`
 
-The `ts4nfdi_agrovoc_keywords` provider restricts the Gateway `/search`
-endpoint to `database=agrovoc`, the AGROVOC terminology, and AGROVOC IRIs.
-Search results expose the source, terminology, short form, and description.
+The `ts4nfdi_agrovoc_keywords` provider currently queries the Gateway
+`/search` endpoint without a `database` parameter and then restricts the
+response to stable AGROVOC IRIs. The production Gateway currently returns no
+results for `database=agrovoc`; this narrow compatibility policy must not be
+copied to EBI/EDAM or other sources where source selection works. Duplicate
+mirrored results are collapsed by IRI. Search results expose the available
+source, terminology, short form, and description.
 A selected controlled result stores its AGROVOC IRI and receives an
 annotation; a manually created value remains valid but has no semantic
 annotation.
 
-AGROVOC is currently exposed by the Gateway through a Skosmos backend. The
-prototype therefore resolves details through the Gateway's source-neutral
-artefact concept-detail route and renders the normalized metadata with the
-plugin's native drawer. Gateway search is used only if the detail request
-fails. It does not send this source through the OLS-oriented TSS
+AGROVOC is configured as a Skosmos backend. The prototype therefore renders
+its normalized metadata with the plugin's native drawer. It does not send
+this source through the OLS-oriented TSS
 entity-information component or call the AGROVOC Skosmos API directly. The
 matcher remains configuration-driven, so its presentation adapter can be
 changed to a compatible upstream TSS widget without changing the catalog or

@@ -1,11 +1,11 @@
-# TS4NFDI Gateway issue: Skosmos concept details omit AGROVOC definitions
+# TS4NFDI Gateway issue: AGROVOC source-scoped search and concept details
 
 This is a copy-ready upstream issue draft for the
 [TS4NFDI API Gateway](https://github.com/ts4nfdi/api-gateway/issues).
 
 ## Suggested title
 
-> Skosmos concept-detail responses omit AGROVOC `skos:definition` values
+> `database=agrovoc` returns no search or concept-detail results for the configured Skosmos source
 
 ## What Skosmos is
 
@@ -45,7 +45,7 @@ upstream responsibility.
 
 ## Environment
 
-Observed on 29 July 2026:
+Originally observed on 29 July 2026 and rechecked on 11 August 2026:
 
 - API Gateway production:
   `https://terminology.services.base4nfdi.de/api-gateway`
@@ -58,7 +58,7 @@ Observed on 29 July 2026:
 
 ## Reproduction
 
-### 1. Search for the concept
+### 1. Search the configured AGROVOC database
 
 ```bash
 curl --get \
@@ -67,7 +67,15 @@ curl --get \
   'https://terminology.services.base4nfdi.de/api-gateway/search'
 ```
 
-The matching result contains:
+The request currently returns an empty JSON array, including for exact known
+labels such as `milk` and `milk containers`.
+
+A broad search without `database` can return the AGROVOC IRI, but currently
+attributes it to a mirrored OntoPortal artefact rather than to the configured
+Skosmos source. Supplying `source=agrovoc` has the same broad result and does
+not act as source selection.
+
+Before this regression, the matching result contained:
 
 ```json
 {
@@ -91,7 +99,10 @@ curl --get \
   'https://terminology.services.base4nfdi.de/api-gateway/artefacts/agrovoc/resources/concepts/http%3A%2F%2Faims.fao.org%2Faos%2Fagrovoc%2Fc_4826'
 ```
 
-The detail response likewise contains:
+The detail request currently returns an empty JSON array. Without `database`,
+the route can return a mirrored OntoPortal representation rather than the
+configured Skosmos representation. Before this regression, the detail
+response contained:
 
 ```json
 {
@@ -120,6 +131,10 @@ It also exposes the broader concept `animal products` and several narrower
 concepts.
 
 ## Expected behavior
+
+`database=agrovoc` should select the configured AGROVOC Skosmos source for
+both search and concept detail. If `source` is intended to replace `database`,
+it should be documented and enforced rather than silently ignored.
 
 The normalized Gateway concept-detail response should expose the definition
 available from the source, preferably in `descriptions`, while retaining the
@@ -194,9 +209,12 @@ defeating the purpose of the Gateway's normalized interface.
 
 ## RDMO integration behavior
 
-The RDMO plugin uses the generic Gateway concept-detail route for non-OLS
-sources and falls back to the generic Gateway search route only when the
-detail request fails. It does not call the AGROVOC Skosmos REST API directly.
+As a temporary compatibility measure, the RDMO provider omits `database` only
+for the AGROVOC search, restricts results to the AGROVOC IRI namespace, and
+deduplicates mirrored results by IRI. The annotation detail request follows
+the same matcher policy. Other providers, including EBI/EDAM, retain their
+documented `database` parameter. The plugin does not call the AGROVOC Skosmos
+REST API directly.
 
 Until the Gateway exposes semantic content, the interview drawer labels the
 available source/backend fields as “Technical metadata” and explicitly tells

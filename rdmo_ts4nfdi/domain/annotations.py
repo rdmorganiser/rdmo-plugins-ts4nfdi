@@ -407,6 +407,7 @@ class AnnotationDetail:
     metadata_status: MetadataStatus
     metadata: ResolvedMetadata
     presentation: PresentationDescriptor
+    gateway_context: GatewayContext | None = None
     collection: CollectionMetadata | None = None
     api_version: str = '1'
 
@@ -438,6 +439,7 @@ class AnnotationDetail:
                 if self.annotation.terminology
                 else None
             ),
+            'gateway_context': self.gateway_context.to_dict() if self.gateway_context else None,
             'presentation': self.presentation.to_dict(),
             'collection': self.collection.to_dict() if self.collection else None,
         }

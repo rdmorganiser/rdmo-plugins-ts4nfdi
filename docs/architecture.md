@@ -119,7 +119,8 @@ selected IRI, and returns only the upstream entity-set definition, provider,
 terminology, and configured source context. It never mutates `Value`, searches
 by label, or normalizes a terminology response.
 
-When that recovered source is configured as `backend_type = "ols2"`, the
+When that recovered source is configured as `backend_type = "ols2"` or
+`backend_type = "ols4"`, the
 browser constructs a normal TSS `entity-info` descriptor and lets TSS call the
 Gateway. Other backends retain the native drawer, showing the entity-set
 definition and provenance. This is intentionally a narrow temporary adapter:
@@ -138,7 +139,15 @@ only when opened does the browser call the project-authorized
 provider configuration that populated the RDMO OptionSet. It uses the cached
 `GatewayClient`, retrieves the bounded provider response, and selects the
 stored resource identifier. The response contains only the resource's label,
-description, version, source, and terminology context for the native drawer.
+description, version, source, and terminology context. An ontology matcher can
+opt into TSS `ontology-info`. When the collection-filtered ontology response
+omits its hosting source, the resolver performs one additional cached lookup
+of the configured collection and joins the member by selected IRI or ontology
+ID to the configured source registry. The browser promotes the result only
+when this yields a database, an ontology ID, and an OLS2/OLS4 backend;
+otherwise the same response remains native. Failure of the optional provenance
+lookup also preserves the native detail.
+
 For a Gateway `TerminologyCollectionDto`, it also exposes a typed, display-safe
 collection card model: UUID, permalink, visibility, creator, collaborators,
 and terminology memberships. The browser presents that model in the native
@@ -147,10 +156,13 @@ terminology. It does not search by label or normalize terminology-concept
 metadata.
 
 This currently serves the example collection matcher and both FAIRagro
-collection-terminology matchers. The browser caches each resolved detail for
-the lifetime of its interview controller. Other native concept matchers retain
-the legacy detail fallback because their definitions or dynamic provenance are
-still supplied by `GatewayMetadataResolver`.
+collection-terminology matchers. The latter request conditional TSS
+`ontology-info`, while collections always retain their native card. The
+browser caches each resolved detail for
+the lifetime of its interview controller. Unsupported non-OLS concepts, such
+as the current AGROVOC/Skosmos path, retain the native detail fallback because
+their definitions or dynamic provenance are still supplied by
+`GatewayMetadataResolver`.
 
 ### TS4NFDI adapters
 
