@@ -79,6 +79,9 @@ class AnnotationPresentationRegistry:
         props = {
             'api': f'/api/v1/ts4nfdi/projects/{project_id}/gateway/ols4/api/',
             'parameter': urlencode(matcher.gateway_query),
+            # TSS 7.1 defaults to its legacy route. The plugin only supports
+            # the Gateway's OLS4 route for these optional disclosures.
+            'useLegacy': False,
         }
         if annotation.kind == 'entity':
             props.update(
@@ -93,21 +96,6 @@ class AnnotationPresentationRegistry:
                 {
                     'hasTitle': False,
                     'showBadges': True,
-                }
-            )
-        elif component == 'metadata':
-            tabs = set(matcher.presentation.option('tabs', ()))
-            props.update(
-                {
-                    'altNamesTab': 'synonyms' in tabs,
-                    'hierarchyTab': 'hierarchy' in tabs,
-                    'crossRefTab': 'crossref' in tabs,
-                    'terminologyInfoTab': 'ontology' in tabs,
-                    'graphViewTab': 'graphview' in tabs,
-                    'termDepictionTab': 'depiction' in tabs,
-                    'entityInfoTab': 'entityinfo' in tabs,
-                    'entityRelationTab': 'entityrelations' in tabs,
-                    'copyButton': 'right',
                 }
             )
         elif component == 'ontology-info':

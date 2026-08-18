@@ -48,6 +48,7 @@ endpoint = "search"
 source_key = "ebi"
 ontologies = ["edam"]
 iri_prefixes = ["http://edamontology.org/format_"]
+free_text_candidate = true
 # Dataset question sets can legitimately select the same format in different
 # set_prefix/set_index contexts. Do not exclude options selected elsewhere in
 # the project.
@@ -61,10 +62,12 @@ source_key = "agrovoc"
 use_database_parameter = false
 iri_prefixes = ["http://aims.fao.org/aos/agrovoc/"]
 limit = 30
+free_text_candidate = true
 
 [providers.ts4nfdi_keywords]
 endpoint = "search"
 limit = 30
+free_text_candidate = true
 
 [providers.ts4nfdi_collections]
 endpoint = "collections/"
@@ -100,16 +103,17 @@ help_fields = ["config.description", "description", "definition", "summary"]
 [providers.ts4nfdi_entitysets]
 endpoint = "entitysets"
 entityset_id = "fc45621d-7e40-47ce-9616-4133f0b54edf"
+entityset_cache_timeout = 300
+free_text_candidate = true
 id_fields = ["id"]
 label_fields = ["label"]
 help_fields = ["description"]
 
 [frontend]
-# Public Gateway OLS4 endpoints are CORS-enabled. TSS-backed annotations use
-# this direct browser route, so clicking an EDAM annotation bypasses both the
-# legacy annotation-detail API and the RDMO Gateway proxy. Deployments with a
-# private source, server-held credentials, or restrictive browser networking
-# can override this with `mode = "proxy"`.
+# Public Gateway OLS4 endpoints allow cross-origin browser requests. TSS-backed
+# annotations therefore use the direct route and avoid an extra RDMO proxy hop.
+# Deployments with private sources, server-held credentials, or restrictive
+# browser networking can override this with `mode = "proxy"`.
 [frontend.gateway]
 mode = "direct"
 
@@ -261,7 +265,7 @@ collectionId = "ff5491d1-d0a9-481e-ac90-0fad065fa097"
 # badge_label = "EDAM"
 # ontology_id = "edam"
 # source_key = "ebi"
-# presentation = { adapter = "tss", component = "metadata", entity_type = "class", tabs = ["synonyms", "hierarchy", "ontology", "crossref"] }
+# presentation = { adapter = "tss", component = "entity-info", entity_type = "class" }
 #
 # Ontology annotations additionally use their provider to resolve the selected
 # resource:

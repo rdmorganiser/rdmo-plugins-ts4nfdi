@@ -536,7 +536,7 @@ def test_provider_resource_terminology_promotes_only_deterministic_ols2_records(
     assert payload['presentation'] == {
         'adapter': 'tss',
         'component': 'ontology-info',
-        'props': {},
+        'props': {'useLegacy': False},
     }
     assert provider_resources.GatewayProviderResourceDetailResolver.presentation(
         matcher,
@@ -621,7 +621,7 @@ def test_entityset_provider_maps_gateway_entity_uris_and_localized_labels(provid
         provider_modules,
         key,
         {
-            'endpoint': 'entitysets',
+            'endpoint': 'entitysets/',
             'entityset_id': 'fc45621d-7e40-47ce-9616-4133f0b54edf',
         },
         sources={
@@ -642,7 +642,9 @@ def test_entityset_provider_maps_gateway_entity_uris_and_localized_labels(provid
     payload = load_fixture('entitysets', 'fairagro-options.json')
     provider = make_provider(provider_modules.entitysets_provider, key, payload)
 
-    options = provider.get_options(project=None)
+    assert provider.search is True
+    assert provider.get_options(project=None, search='') == []
+    options = provider.get_options(project=None, search='http')
 
     assert [(option['id'], option['text']) for option in options] == [
         ('http://opendata.inrae.fr/thesaurusINRAE/c_17625', 'field experiment'),
@@ -679,7 +681,97 @@ def test_entityset_provider_returns_no_options_when_the_configured_set_is_absent
         load_fixture('entitysets', 'fairagro-options.json'),
     )
 
-    assert provider.get_options(project=None) == []
+    assert provider.get_options(project=None, search='missing') == []
+
+
+def test_entityset_provider_caches_the_list_and_exposes_an_explicit_free_text_option(
+    provider_modules,
+    monkeypatch,
+):
+    key = 'ts4nfdi_entitysets'
+    configure_provider(
+        provider_modules,
+        key,
+        {
+            'endpoint': 'entitysets/',
+            'entityset_id': 'fc45621d-7e40-47ce-9616-4133f0b54edf',
+            'entityset_cache_timeout': 60,
+            'free_text_candidate': True,
+        },
+    )
+    entitysets = importlib.import_module('rdmo_ts4nfdi.providers.entitysets')
+
+    class MemoryCache:
+        def __init__(self):
+            self.values = {}
+
+        def get(self, key):
+            return self.values.get(key)
+
+        def set(self, key, value, timeout):
+            self.values[key] = value
+
+    monkeypatch.setattr(entitysets, 'cache', MemoryCache())
+    payload = load_fixture('entitysets', 'fairagro-options.json')
+    provider = provider_modules.entitysets_provider()
+    provider.key = key
+    requests = []
+
+    def make_request(search=None, provider_config=None):
+        requests.append((search, provider_config['endpoint']))
+        return payload
+
+    provider.make_request = make_request
+    first = provider.get_options(project=None, search='<new & method>')
+    second = provider.get_options(project=None, search='<new & method>')
+
+    assert requests == [(None, 'entitysets/')]
+    assert first == second
+    assert first == [
+        {
+            'id': (
+                '__ts4nfdi_free_text__:ts4nfdi_entitysets:'
+                '8576167d59b1a6ab1da677193cd77c47a0e61725a7fc80af74a35b0614cf1fe4'
+            ),
+            'text': '&lt;new &amp; method&gt;',
+            'help': (
+                '<span class="ts4nfdi-option-description">'
+                'No matching term found. Select this entry to use it as free text.'
+                '</span>'
+            ),
+            'value': '<new & method>',
+            '__isNew__': True,
+            'ts4nfdi_free_text': True,
+        },
+    ]
+
+    curated = provider.get_options(project=None, search='field experiment')
+    assert len(requests) == 1
+    assert [option['text'] for option in curated] == ['field experiment']
+    assert not any(option.get('ts4nfdi_free_text') for option in curated)
+
+
+def test_ontology_provider_keeps_free_text_available_after_a_request_error(provider_modules):
+    key = 'ts4nfdi_keywords'
+    configure_provider(
+        provider_modules,
+        key,
+        {
+            'endpoint': 'search',
+            'free_text_candidate': True,
+        },
+    )
+    provider = provider_modules.ontologies_provider()
+    provider.key = key
+    provider.last_request_error = RuntimeError('offline')
+    provider.make_request = lambda search=None, provider_config=None: None
+
+    options = provider.get_options(project=None, search='own keyword')
+
+    assert options[0]['ts4nfdi_error'] is True
+    assert options[1]['text'] == 'own keyword'
+    assert options[1]['value'] == 'own keyword'
+    assert options[1]['__isNew__'] is True
 
 
 def test_collection_terminologies_provider_get_options_returns_collection_terms(provider_modules):
@@ -859,6 +951,20 @@ def test_annotation_config_rejects_legacy_mapping_set_id(provider_modules, caplo
 
     assert 'legacy matcher keys' in caplog.messages[0]
     assert 'mapping_set_id' in caplog.messages[0]
+
+
+def test_tss_presentation_rejects_removed_request_mode_option(provider_modules):
+    config = importlib.import_module('rdmo_ts4nfdi.config')
+
+    with pytest.raises(RuntimeError, match='does not support presentation options'):
+        config.normalize_presentation(
+            {
+                'adapter': 'tss',
+                'component': 'entity-info',
+                'use_legacy': False,
+            },
+            'entity',
+        )
 
 
 def test_frontend_direct_gateway_config_exposes_only_public_base_url(provider_modules):
@@ -1723,7 +1829,8 @@ def test_example_catalog_contains_provider_backed_fairagro_data_generation_quest
         'https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods'
     )
     assert methods.find('optionsets/optionset').get(uri_attribute) == optionset_uri
-    assert 'selected terminology concept IRI' in methods.findtext("help[@lang='en']")
+    assert 'curated FAIRagro entity-set concept' in methods.findtext("help[@lang='en']")
+    assert 'clearly labelled free-text entry' in methods.findtext("help[@lang='en']")
     assert 'TS4NFDI Gateway entity set' in questionset.findtext("help[@lang='en']")
     assert 'semantic option set' not in questionset.findtext("help[@lang='en']")
     assert 'Terminologiezuordnungen' not in questionset.findtext("help[@lang='de']")
@@ -1755,8 +1862,10 @@ def test_fairagro_data_generation_uses_the_configured_entity_set_provider():
         'https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/fairagro-data-generation'
     )
     provider = config['providers']['ts4nfdi_entitysets']
-    assert provider['endpoint'] == 'entitysets'
+    assert provider['endpoint'] == 'entitysets/'
     assert provider['entityset_id'] == 'fc45621d-7e40-47ce-9616-4133f0b54edf'
+    assert provider['entityset_cache_timeout'] == 300
+    assert provider['free_text_candidate'] is True
     assert config['frontend']['gateway']['mode'] == 'direct'
     assert 'storage' not in config
     assert 'mapping_set_id' not in matcher

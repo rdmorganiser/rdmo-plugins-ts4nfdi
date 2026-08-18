@@ -59,11 +59,11 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/ontologies"/>
 		<is_collection>False</is_collection>
 		<is_optional>False</is_optional>
-		<help lang="en">This example searches for entities in the EDAM terminology. The current provider configuration is restricted to EDAM data-format concepts, so each selected value represents a concept such as an XML format rather than a complete ontology.</help>
+		<help lang="en">This example searches for entities in the EDAM terminology. The current provider configuration is restricted to EDAM data-format concepts, so each selected value represents a concept such as an XML format rather than a complete ontology. If no suitable concept is found, select the clearly labelled free-text entry; free-text answers do not have a concept IRI or terminology details.</help>
 		<text lang="en">EDAM terminology concepts</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en"/>
-		<help lang="de">Dieses Beispiel sucht nach Entitäten in der EDAM-Terminologie. Die aktuelle Provider-Configuration ist auf EDAM-Datenformatkonzepte beschränkt. Jeder ausgewählte Wert repräsentiert daher in Konzept, beispielsweise in XML-Format, und keine vollständige Ontologie.</help>
+		<help lang="de">Dieses Beispiel sucht nach Entitäten in der EDAM-Terminologie. Die aktuelle Provider-Configuration ist auf EDAM-Datenformatkonzepte beschränkt. Jeder ausgewählte Wert repräsentiert daher in Konzept, beispielsweise in XML-Format, und keine vollständige Ontologie. Wenn kein passendes Konzept gefunden wird, wählen Sie den deutlich gekennzeichneten Freitext-Eintrag; Freitext-Antworten besitzen keine Konzept-IRI und keine Terminologiedetails.</help>
 		<text lang="de">Konzepte aus der EDAM-Terminologie</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de"/>
@@ -243,11 +243,11 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/format"/>
 		<is_collection>True</is_collection>
 		<is_optional>False</is_optional>
-		<help lang="en">When choosing a data format, one should consider the consequences for collaborative use, digital preservation and long-term storage as well as re-use. It is advisable to prefer formats that are standardised, open, non-proprietary and well-established in the respective scholarly community. Recommendations can be found in &lt;a href=&quot;https://www.howtofair.dk/how-to-fair/file-formats/&quot; target=&quot;_blank&quot;&gt;How to FAIR&lt;/a&gt;, for example.</help>
+		<help lang="en">When choosing a data format, one should consider the consequences for collaborative use, digital preservation and long-term storage as well as re-use. It is advisable to prefer formats that are standardised, open, non-proprietary and well-established in the respective scholarly community. Recommendations can be found in &lt;a href=&quot;https://www.howtofair.dk/how-to-fair/file-formats/&quot; target=&quot;_blank&quot;&gt;How to FAIR&lt;/a&gt;, for example. If no EDAM concept fits, select the clearly labelled free-text entry; it has no concept IRI or terminology details.</help>
 		<text lang="en">Which data formats arise in your project?</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en">Format</verbose_name>
-		<help lang="de">Bei der Wahl des Datenformats sollten die Konsequenzen für die gemeinsame Nutzung, die digitale Archivierung und Langzeitspeicherung sowie die Wiederverwendung berücksichtigt werden. Es empfiehlt sich, möglichst standardisierte, nicht-proprietäre und allgemein bzw. in der spezifischen Community verbreitete Format zu nutzen. Empfehlungen sind z. B. under &lt;a href=&quot;https://www.forschungsdaten.info/themen/veroeffentlichen-und-archivieren/formate-erhalten/&quot; target=&quot;_blank&quot;&gt;forschungsdaten.info&lt;/a&gt; zu finden.</help>
+		<help lang="de">Bei der Wahl des Datenformats sollten die Konsequenzen für die gemeinsame Nutzung, die digitale Archivierung und Langzeitspeicherung sowie die Wiederverwendung berücksichtigt werden. Es empfiehlt sich, möglichst standardisierte, nicht-proprietäre und allgemein bzw. in der spezifischen Community verbreitete Format zu nutzen. Empfehlungen sind z. B. under &lt;a href=&quot;https://www.forschungsdaten.info/themen/veroeffentlichen-und-archivieren/formate-erhalten/&quot; target=&quot;_blank&quot;&gt;forschungsdaten.info&lt;/a&gt; zu finden. Wenn kein EDAM-Konzept passt, wählen Sie den deutlich gekennzeichneten Freitext-Eintrag; er besitzt keine Konzept-IRI und keine Terminologiedetails.</help>
 		<text lang="de">Welche Datenformate entstehen in Ihrem Projekt?</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de">Format</verbose_name>
@@ -308,11 +308,11 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<attribute dc:uri="https://rdmo.fairagro.net/terms/domain/rdmo-plugins-ts4nfdi/dataset-keywords"/>
 		<is_collection>True</is_collection>
 		<is_optional>True</is_optional>
-		<help lang="en">&lt;span class=&quot;ts4nfdi-free-text-hint&quot;&gt;Controlled concept or free text&lt;/span&gt; &lt;strong&gt;You can select a controlled concept or enter your own free-text keyword.&lt;/strong&gt; Search the terminology services first. If no suitable concept exists, type the complete keyword and choose the create option. Free-text keywords do not have a concept IRI or terminology details.</help>
+		<help lang="en">&lt;span class=&quot;ts4nfdi-free-text-hint&quot;&gt;Controlled concept or free text&lt;/span&gt; &lt;strong&gt;You can select a controlled concept or enter your own free-text keyword.&lt;/strong&gt; Search the terminology services first. If no suitable concept exists, select the clearly labelled entry containing your text. Free-text keywords do not have a concept IRI or terminology details.</help>
 		<text lang="en">Which keywords will be included in the dataset metadata?</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en">Keyword</verbose_name>
-		<help lang="de">&lt;span class=&quot;ts4nfdi-free-text-hint&quot;&gt;Kontrolliertes Konzept oder Freitext&lt;/span&gt; &lt;strong&gt;Sie können ein kontrolliertes Konzept auswählen oder einen eigenen freien Suchbegriff eingeben.&lt;/strong&gt; Durchsuchen Sie zunächst die Terminologiedienste. Wenn kein passendes Konzept vorhanden ist, geben Sie den vollständigen Suchbegriff ein und wählen Sie die Option zum Erstellen. Freie Suchbegriffe besitzen keine Konzept-IRI und keine Terminologiedetails.</help>
+		<help lang="de">&lt;span class=&quot;ts4nfdi-free-text-hint&quot;&gt;Kontrolliertes Konzept oder Freitext&lt;/span&gt; &lt;strong&gt;Sie können in kontrolliertes Konzept auswählen oder einen eigenen freien Suchbegriff eingeben.&lt;/strong&gt; Durchsuchen Sie zunächst die Terminologiedienste. Wenn kein passendes Konzept vorhanden ist, wählen Sie den deutlich gekennzeichneten Eintrag mit Ihrem Suchbegriff. Freie Suchbegriffe besitzen keine Konzept-IRI und keine Terminologiedetails.</help>
 		<text lang="de">Welche Suchbegriffe werden in die Metadaten des Datensatzes aufgenommen?</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de">Suchbegriff</verbose_name>
@@ -352,11 +352,11 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/dataset-keywords-agrovoc"/>
 		<is_collection>True</is_collection>
 		<is_optional>True</is_optional>
-		<help lang="en">&lt;span class=&quot;ts4nfdi-free-text-hint&quot;&gt;Controlled AGROVOC concept or free text&lt;/span&gt; &lt;strong&gt;You can select a controlled AGROVOC concept or enter your own free-text keyword.&lt;/strong&gt; Search AGROVOC for agricultural topics, crops, practices, materials, or processes. If no suitable concept exists, type the complete keyword and choose the create option. Free-text keywords do not have a concept IRI or terminology details.</help>
+		<help lang="en">&lt;span class=&quot;ts4nfdi-free-text-hint&quot;&gt;Controlled AGROVOC concept or free text&lt;/span&gt; &lt;strong&gt;You can select a controlled AGROVOC concept or enter your own free-text keyword.&lt;/strong&gt; Search AGROVOC for agricultural topics, crops, practices, materials, or processes. If no suitable concept exists, select the clearly labelled entry containing your text. Free-text keywords do not have a concept IRI or terminology details.</help>
 		<text lang="en">Which keywords will be included in the dataset metadata?</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en">Keyword</verbose_name>
-		<help lang="de">&lt;span class=&quot;ts4nfdi-free-text-hint&quot;&gt;Kontrolliertes AGROVOC-Konzept oder Freitext&lt;/span&gt; &lt;strong&gt;Sie können ein kontrolliertes AGROVOC-Konzept auswählen oder einen eigenen freien Suchbegriff eingeben.&lt;/strong&gt; Durchsuchen Sie AGROVOC nach landwirtschaftlichen Themen, Kulturpflanzen, Praktiken, Materialien oder Prozessen. Wenn kein passendes Konzept vorhanden ist, geben Sie den vollständigen Suchbegriff ein und wählen Sie die Option zum Erstellen. Freie Suchbegriffe besitzen keine Konzept-IRI und keine Terminologiedetails.</help>
+		<help lang="de">&lt;span class=&quot;ts4nfdi-free-text-hint&quot;&gt;Kontrolliertes AGROVOC-Konzept oder Freitext&lt;/span&gt; &lt;strong&gt;Sie können in kontrolliertes AGROVOC-Konzept auswählen oder einen eigenen freien Suchbegriff eingeben.&lt;/strong&gt; Durchsuchen Sie AGROVOC nach landwirtschaftlichen Themen, Kulturpflanzen, Praktiken, Materialien oder Prozessen. Wenn kein passendes Konzept vorhanden ist, wählen Sie den deutlich gekennzeichneten Eintrag mit Ihrem Suchbegriff. Freie Suchbegriffe besitzen keine Konzept-IRI und keine Terminologiedetails.</help>
 		<text lang="de">Welche Suchbegriffe werden in die Metadaten des Datensatzes aufgenommen?</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de">Suchbegriff</verbose_name>
@@ -435,11 +435,11 @@ https://rdmo.fairagro.net/terms/options/ts4nfdi/metadata_agro</dc:comment>
 		<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods"/>
 		<is_collection>True</is_collection>
 		<is_optional>False</is_optional>
-		<help lang="en">Select all methods that apply. Each stored answer keeps the selected terminology concept IRI from the FAIRagro entity set. Select its annotation below the question to see available terminology details and its IRI.</help>
+		<help lang="en">Select all methods that apply. Choose a curated FAIRagro entity-set concept where possible; its saved answer retains the terminology IRI and can show terminology details below the question. If no concept fits, select the clearly labelled free-text entry. Free-text answers do not have a concept IRI or terminology details.</help>
 		<text lang="en">Which methods, technologies, or processes are used to generate or collect new data?</text>
 		<default_text lang="en"/>
 		<verbose_name lang="en">Data generation method</verbose_name>
-		<help lang="de">Wählen Sie alle zutreffenden Methods aus. Jede gespeicherte Antwort behält die IRI des ausgewählten Terminologiekonzepts aus der FAIRagro Entity Set. Sie können dessen Annotation unterhalb der Frage auswählen, um verfügbare Terminologieinformationen und die IRI anzuzeigen.</help>
+		<help lang="de">Wählen Sie alle zutreffenden Methods aus. Wählen Sie nach Möglichkeit in kuratiertes Konzept aus dem FAIRagro Entity Set; die gespeicherte Antwort behält dessen Terminologie-IRI und kann unterhalb der Frage Terminologiedetails anzeigen. Wenn kein Konzept passt, wählen Sie den deutlich gekennzeichneten Freitext-Eintrag. Freitext-Antworten besitzen keine Konzept-IRI und keine Terminologiedetails.</help>
 		<text lang="de">Welche Methods, Technologien oder Verfahren werden zur Erzeugung oder Erfassung neuer Daten eingesetzt?</text>
 		<default_text lang="de"/>
 		<verbose_name lang="de">Method der Datenerzeugung</verbose_name>

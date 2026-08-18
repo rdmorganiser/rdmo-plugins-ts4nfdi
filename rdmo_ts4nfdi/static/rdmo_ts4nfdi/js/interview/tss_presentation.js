@@ -1,7 +1,6 @@
 import {removeNullValues, translate} from "./core.js";
 
 const FACTORIES = {
-    "metadata": "createMetadata",
     "entity-info": "createEntityInfo",
     "ontology-info": "createOntologyInfo"
 };
@@ -21,33 +20,7 @@ export class TssPresentationAdapter {
         if (!this.supports(descriptor)) {
             return;
         }
-        if (context.primary) {
-            return this.renderPrimary(host, descriptor, context);
-        }
         return this.renderDisclosure(host, descriptor, context);
-    }
-
-    async renderPrimary(host, descriptor, context) {
-        const container = document.createElement("div");
-        container.className = "ts4nfdi-annotation-widget-root ts4nfdi-annotation-loading";
-        container.textContent = translate("Loading terminology details …");
-        host.appendChild(container);
-
-        await this.loadAssets();
-        if (context.signal?.aborted) {
-            container.replaceChildren();
-            return;
-        }
-
-        const factory = this.factory(descriptor);
-        const props = this.props(descriptor);
-        container.className = "ts4nfdi-annotation-widget-root";
-        container.replaceChildren();
-        const widgetCleanup = this.normalizeCleanup(factory(props, container));
-        return () => {
-            widgetCleanup?.();
-            container.replaceChildren();
-        };
     }
 
     renderDisclosure(host, descriptor, context) {

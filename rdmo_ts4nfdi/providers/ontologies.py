@@ -25,7 +25,11 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
         provider_config = self.get_provider_config()
         payload = self.make_request(search, provider_config=provider_config)
         if payload is None:
-            return self.get_request_error_options(provider_config)
+            return self.with_free_text_candidate(
+                search,
+                self.get_request_error_options(provider_config),
+                provider_config,
+            )
 
         results = self.filter_results(extract_results(payload), provider_config)
         options = []
@@ -46,7 +50,12 @@ class TS4NFDIOntologiesProvider(TS4NFDIBaseProvider):
                 seen_identifiers.add(identifier)
 
         options = self.exclude_selected_options(project, options, provider_config)
-        return options[: provider_config.get('limit', 20)]
+        return self.with_free_text_candidate(
+            search,
+            options[: provider_config.get('limit', 20)],
+            provider_config,
+            all_options=options,
+        )
 
     def build_query_params(self, provider_config, search):
         query_params = {

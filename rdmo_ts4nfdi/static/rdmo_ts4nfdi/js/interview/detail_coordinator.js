@@ -1,4 +1,4 @@
-const TSS_COMPONENTS = new Set(["metadata", "entity-info", "ontology-info"]);
+const TSS_COMPONENTS = new Set(["entity-info", "ontology-info"]);
 const TSS_ENTITY_BACKEND_TYPES = new Set(["ols2", "ols4"]);
 const PUBLIC_GATEWAY_PARAM_KEYS = new Set(["database", "collectionId", "lang"]);
 
@@ -60,15 +60,21 @@ export class AnnotationDetailCoordinator {
 
     async resolve(projectId, annotation, signal) {
         if (requiresEntitysetProvenance(annotation)) {
-            return this.entitysetDetail(projectId, annotation, signal);
+            return this.withTssDisclosure(
+                projectId,
+                await this.entitysetDetail(projectId, annotation, signal)
+            );
         }
         if (requiresProviderResourceDetail(annotation)) {
-            return this.providerResourceDetail(projectId, annotation, signal);
+            return this.withTssDisclosure(
+                projectId,
+                await this.providerResourceDetail(projectId, annotation, signal)
+            );
         }
-        if (!canUseTssDescriptor(annotation)) {
-            return this.api.detail(projectId, annotation, signal);
-        }
-        return this.tssDetail(projectId, annotation);
+        return this.withTssDisclosure(
+            projectId,
+            await this.api.detail(projectId, annotation, signal)
+        );
     }
 
     async entitysetDetail(projectId, annotation, signal) {
@@ -78,9 +84,7 @@ export class AnnotationDetailCoordinator {
             detail = await this.api.entitysetProvenance(projectId, annotation, signal);
             this.entitysetDetails.set(cacheKey, detail);
         }
-        return canUseTssDescriptor(detail)
-            ? this.tssDetail(projectId, detail)
-            : detail;
+        return detail;
     }
 
     async providerResourceDetail(projectId, annotation, signal) {
@@ -90,38 +94,29 @@ export class AnnotationDetailCoordinator {
             detail = await this.api.providerResourceDetail(projectId, annotation, signal);
             this.providerResourceDetails.set(cacheKey, detail);
         }
-        return canUseTssDescriptor(detail)
-            ? this.tssDetail(projectId, detail)
-            : detail;
+        return detail;
     }
 
-    tssDetail(projectId, annotation) {
-        const context = annotation.gateway_context;
-        const presentation = annotation.presentation;
+    withTssDisclosure(projectId, detail) {
+        if (!canUseTssDescriptor(detail)) {
+            return detail;
+        }
+        const context = detail.gateway_context;
+        const presentation = detail.presentation;
         const props = {
             api: this.ols4ApiBase(projectId),
-            parameter: serializeTssParameters(context)
+            parameter: serializeTssParameters(context),
+            useLegacy: false
         };
 
-        if (annotation.kind === "entity") {
-            props.iri = annotation.iri;
+        if (detail.kind === "entity") {
+            props.iri = detail.iri;
             props.ontologyId = context.ontology_id;
-            props.entityType = presentation.options?.entity_type;
+            props.entityType = presentation.options?.entity_type || presentation.props?.entityType;
         }
         if (presentation.component === "entity-info") {
             props.hasTitle = false;
             props.showBadges = true;
-        } else if (presentation.component === "metadata") {
-            const tabs = new Set(presentation.options?.tabs || []);
-            props.altNamesTab = tabs.has("synonyms");
-            props.hierarchyTab = tabs.has("hierarchy");
-            props.crossRefTab = tabs.has("crossref");
-            props.terminologyInfoTab = tabs.has("ontology");
-            props.graphViewTab = tabs.has("graphview");
-            props.termDepictionTab = tabs.has("depiction");
-            props.entityInfoTab = tabs.has("entityinfo");
-            props.entityRelationTab = tabs.has("entityrelations");
-            props.copyButton = "right";
         } else if (presentation.component === "ontology-info") {
             props.ontologyId = context.ontology_id;
         }
@@ -130,22 +125,7 @@ export class AnnotationDetailCoordinator {
             Object.entries(props).filter(([, value]) => value != null && value !== "")
         );
         return {
-            ...annotation,
-            metadata_status: "presentation",
-            ontology_id: context.ontology_id,
-            definitions: [],
-            synonyms: [],
-            entity_types: [],
-            source: annotation.source || {
-                id: context.database,
-                label: context.database,
-                database: context.database,
-                backend_type: context.backend_type
-            },
-            terminology: annotation.terminology || {
-                id: context.ontology_id,
-                label: annotation.badge_label || context.ontology_id
-            },
+            ...detail,
             presentation: {
                 adapter: "tss",
                 component: presentation.component,

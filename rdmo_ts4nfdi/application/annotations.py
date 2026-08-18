@@ -231,6 +231,7 @@ class AnnotationService:
             metadata_status=status,
             metadata=metadata,
             presentation=presentation,
+            gateway_context=self._gateway_context(matcher),
         )
 
     def value_annotation(

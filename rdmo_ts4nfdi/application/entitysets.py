@@ -1,8 +1,8 @@
 """Small Gateway entity-set provenance adapter.
 
 This module deliberately reads only the configured entity-set entry selected by
-an RDMO value. It does not fetch or normalize terminology metadata; TSS keeps
-that responsibility for compatible OLS2 sources.
+an RDMO value. It does not fetch additional terminology metadata; compatible
+OLS2/OLS4 entries can add an optional TSS disclosure to the native detail.
 """
 
 from collections.abc import Iterable
@@ -63,7 +63,7 @@ class GatewayEntitySetProvenanceResolver:
             terminology=terminology,
             gateway_context=gateway_context,
             definitions=tuple(self.localized_values(entity.get('definition'), language)),
-            presentation=self.presentation(source, terminology),
+            presentation=self.presentation(source, terminology, matcher),
         )
 
     @staticmethod
@@ -122,15 +122,23 @@ class GatewayEntitySetProvenanceResolver:
         return ResourceReference(id=terminology_id, label=terminology_id)
 
     @staticmethod
-    def presentation(source, terminology):
+    def presentation(source, terminology, matcher):
         if (
             source
             and source.database
-            and source.backend_type == 'ols2'
+            and source.backend_type in {'ols2', 'ols4'}
             and terminology
             and terminology.id
         ):
-            return PresentationPolicy(adapter='tss', component='entity-info')
+            return PresentationPolicy(
+                adapter='tss',
+                component='entity-info',
+                options=tuple(
+                    (key, value)
+                    for key, value in matcher.presentation.options
+                    if key == 'entity_type'
+                ),
+            )
         return PresentationPolicy(adapter='native')
 
     @classmethod

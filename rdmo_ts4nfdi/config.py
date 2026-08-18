@@ -19,17 +19,13 @@ logger = logging.getLogger(__name__)
 ANNOTATION_RESOURCE_TYPES = frozenset({'entity', 'ontology', 'collection'})
 CONTEXT_RESOLUTION_ADAPTERS = frozenset({'gateway-search'})
 ANNOTATION_PRESENTATIONS = {
-    'entity': frozenset({'metadata', 'entity-info'}),
+    'entity': frozenset({'entity-info'}),
     'ontology': frozenset({'ontology-info'}),
     'collection': frozenset(),
 }
 DEFAULT_ANNOTATION_PRESENTATIONS = {
-    'entity': PresentationPolicy(
-        adapter='tss',
-        component='metadata',
-        options=(('tabs', ('synonyms', 'hierarchy', 'ontology')),),
-    ),
-    'ontology': PresentationPolicy(adapter='tss', component='ontology-info'),
+    'entity': PresentationPolicy(adapter='native'),
+    'ontology': PresentationPolicy(adapter='native'),
     'collection': PresentationPolicy(adapter='native'),
 }
 ANNOTATION_ENTITY_TYPES = frozenset(
@@ -41,18 +37,6 @@ ANNOTATION_ENTITY_TYPES = frozenset(
         'dataProperty',
         'objectProperty',
         'individual',
-    }
-)
-ANNOTATION_TABS = frozenset(
-    {
-        'synonyms',
-        'hierarchy',
-        'crossref',
-        'ontology',
-        'graphview',
-        'depiction',
-        'entityinfo',
-        'entityrelations',
     }
 )
 GATEWAY_PARAM_NAMES = frozenset(
@@ -394,14 +378,17 @@ def normalize_presentation(raw_presentation: Any, resource_type: str) -> Present
         )
 
     options = {key: value for key, value in raw_presentation.items() if key not in {'adapter', 'component'}}
+    allowed_options = {'entity_type'} if component == 'entity-info' else set()
+    unsupported_options = sorted(set(options) - allowed_options)
+    if unsupported_options:
+        raise RuntimeError(
+            f"TSS component '{component}' does not support presentation options {unsupported_options}"
+        )
     entity_type = normalize_optional_string(options.get('entity_type'))
     if entity_type and entity_type not in ANNOTATION_ENTITY_TYPES:
         raise RuntimeError(f'presentation entity_type must be one of {sorted(ANNOTATION_ENTITY_TYPES)}')
-
-    tabs = options.get('tabs', ['synonyms', 'hierarchy', 'ontology'])
-    if not isinstance(tabs, list) or any(tab not in ANNOTATION_TABS for tab in tabs):
-        raise RuntimeError(f'presentation tabs must contain only {sorted(ANNOTATION_TABS)}')
-    options['tabs'] = tuple(dict.fromkeys(tabs))
+    if entity_type:
+        options['entity_type'] = entity_type
 
     return PresentationPolicy(
         adapter='tss',

@@ -62,7 +62,11 @@ class GatewayProviderResourceDetailResolver:
             and context
             and context.ontology_id
             and context.database
-            and context.backend_type == 'ols2'
+            and context.backend_type in {'ols2', 'ols4'}
         ):
-            return PresentationDescriptor(adapter='tss', component='ontology-info')
+            return PresentationDescriptor(
+                adapter='tss',
+                component='ontology-info',
+                props={'useLegacy': False},
+            )
         return PresentationDescriptor(adapter='native')

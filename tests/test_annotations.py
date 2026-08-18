@@ -299,7 +299,11 @@ def test_entityset_provenance_uses_upstream_entry_without_metadata_normalization
         source=None,
         ontology_id=None,
         gateway_params=(),
-        presentation=PresentationPolicy(adapter='native'),
+        presentation=PresentationPolicy(
+            adapter='tss',
+            component='entity-info',
+            options=(('entity_type', 'class'),),
+        ),
     )
     answer = replace(
         make_answer(),
@@ -345,7 +349,7 @@ def test_entityset_provenance_uses_upstream_entry_without_metadata_normalization
     assert payload['presentation'] == {
         'adapter': 'tss',
         'component': 'entity-info',
-        'options': {},
+        'options': {'entity_type': 'class'},
     }
 
 
@@ -408,7 +412,7 @@ def test_entityset_provenance_retains_a_native_detail_for_non_ols_sources():
     }
 
 
-def test_tss_presentation_descriptor_keeps_gateway_source_parameters():
+def test_tss_presentation_descriptor_keeps_gateway_source_parameters_and_request_mode():
     matcher = replace(
         make_matcher(),
         source=ResourceReference(
@@ -439,7 +443,7 @@ def test_tss_presentation_descriptor_keeps_gateway_source_parameters():
     assert descriptor['component'] == 'entity-info'
     assert descriptor['props']['parameter'] == 'database=ebi'
     assert descriptor['props']['entityType'] == 'class'
-    assert 'useLegacy' not in descriptor['props']
+    assert descriptor['props']['useLegacy'] is False
 
 
 def test_tss_entity_presentation_falls_back_to_native_for_non_ols_sources():

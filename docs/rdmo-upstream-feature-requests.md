@@ -477,6 +477,149 @@ stored by RDMO.
 - an opt-in PDF/rendered template can show the label and identifier accessibly;
 - no provider-specific model or terminology dependency is introduced in RDMO.
 
+## Feature request 7: improve free-text entry in asynchronous creatable selects
+
+Suggested issue title:
+
+> Make free-text entry clear and immediately available in asynchronous creatable selects
+
+### Problem
+
+Some questions use both a searchable option provider and `select_creatable` so
+that users can choose a controlled term or enter their own text. When the user
+types a term that is not present, the menu shows an empty row. Clicking that
+row saves the entered text, but there is no visible explanation of what the row
+does.
+
+The current interaction therefore makes the free-text path difficult to
+discover:
+
+- the user starts typing while the provider search is still loading;
+- the action for keeping the typed text is not available until the search
+  finishes;
+- the action is rendered as an empty option row, so users have to guess that it
+  is clickable.
+
+### Source of the empty row
+
+This was checked against RDMO commit
+`9f48c2fc93e021ff8eef3e087c1368235bef2e56`, which uses React Select 5.10.2.
+Provider options have RDMO's `{id, text, help}` shape. React Select creates a
+new free-text candidate with a different shape:
+
+```javascript
+{label: inputValue, value: inputValue, __isNew__: true}
+```
+
+RDMO's `getOptionLabel` and custom `OptionText` renderer both read only
+`option.text`. The new candidate has no `text`, so its row is empty. The click
+still works because `handleChange` recognizes `__isNew__` and stores
+`option.value` as ordinary text.
+
+### Desired behavior
+
+- Users can type immediately; they do not have to wait for provider results
+  before choosing the free-text path.
+- While search is running, show a clear action such as **Use “my text” as free
+  text**. React Select provides `allowCreateWhileLoading` for this behavior.
+- Render the new candidate from its `label` or `value`, not only from `text`.
+- Clearly distinguish a provider result from the free-text action.
+- If there are no provider results, optionally show **No matching term found**
+  as a separate status message rather than using a blank option.
+- Keyboard use is predictable: arrow keys navigate results and Enter chooses
+  the currently highlighted provider result or free-text action.
+- A provider error does not block users from saving their own text.
+- The behavior is accessible and works at narrow screen widths.
+
+### Compatibility and acceptance
+
+- Apply this behavior only to creatable selects; ordinary controlled selects
+  must still require an option.
+- Keep the current storage semantics: provider results save their
+  `external_id`, while created values save ordinary text.
+- Existing saved answers continue to load and edit normally.
+- Cover loading, no-result, exact-result, error, mouse, and keyboard cases.
+- The free-text row has a meaningful accessible name, not only visible text.
+
+This request is independent of the proposed interview extension API. It is a
+general usability improvement for any RDMO catalog that combines asynchronous
+provider search with optional free-text answers.
+
+## Feature request 8: browse bounded asynchronous provider options before typing
+
+Suggested issue title:
+
+> Let opted-in asynchronous option providers return browse options for an empty search
+
+### Problem
+
+Some dynamic providers have a small, bounded set of controlled values that
+users should be able to inspect before they know what to type. For example, the
+TS4NFDI RDMO plugin exposes one curated Gateway entity set. It caches the
+bounded list and can filter it locally, but its provider is marked as
+search-backed so that RDMO uses the asynchronous select widget.
+
+The current interview `SelectInput` does not call the options endpoint when
+the input is empty: it immediately calls `callback([])`. Returning the complete
+entity set from the provider for an empty `search` value would therefore have
+no visible effect. Users must guess a search term before they can discover the
+available controlled values.
+
+This is separate from feature request 7. That request makes a newly typed
+free-text value clear and usable; this request lets a user browse known
+provider values before typing.
+
+### Established component pattern
+
+This is a standard asynchronous-combobox pattern rather than a
+terminology-specific behaviour. React Select supports initial asynchronous
+options through `defaultOptions`: an option array supplies an initial list, and
+`defaultOptions={true}` invokes `loadOptions` for the empty input. Material UI
+documents the same two distinct modes: **load on open** for a bounded initial
+list and **search as you type** for remote filtering.
+
+RDMO already renders its asynchronous selects with React Select's
+`defaultOptions`; the empty-input guard prevents providers from opting into
+this supported mode.
+
+- [React Select: Async and `defaultOptions`](https://react-select.com/async)
+- [Material UI: asynchronous Autocomplete](https://mui.com/material-ui/react-autocomplete/)
+
+### Proposed capability and implementation outline
+
+- Add `browse_on_empty_search = False` to RDMO's dynamic-provider contract.
+  It is meaningful only when `search = True`.
+- Expose the equivalent capability on the serialized option set sent to the
+  interview front end.
+- In `SelectInput.handleLoadOptions()`, retain the current empty-result
+  behaviour unless at least one asynchronous option set opts in. For an empty
+  input, call `ProjectApi.fetchOptions(projectId, optionset.id, '')` only for
+  opted-in option sets.
+- For non-empty input, keep the existing behaviour: query every asynchronous
+  option set with the typed search value.
+- Document that an opted-in provider must return a bounded result set. Large or
+  unbounded remote indexes remain search-only and retain the current behaviour.
+
+The existing options endpoint already accepts an empty `search` parameter, and
+the normal option response shape and value persistence do not need to change.
+Choosing a returned provider value must continue to store its `external_id` and
+text exactly as it does today.
+
+### Compatibility and acceptance
+
+- Existing providers receive no empty search request unless they explicitly
+  opt in.
+- An opted-in provider displays its initial bounded options when the async
+  select loads with an empty input.
+- A question with several option sets queries only opted-in sets for an empty
+  input, while a non-empty input continues to query all search-backed sets.
+- Provider errors are contained by the existing error handling and do not
+  change answer persistence.
+- Controlled selections and free-text answers retain their existing storage,
+  editing, and export semantics.
+- Cover mouse and keyboard selection, an empty initial list, normal typed
+  search, and a provider error in front-end and endpoint tests.
+
 ## Suggested upstream sequence
 
 The proposals can be discussed and delivered independently:
@@ -489,7 +632,9 @@ The proposals can be discussed and delivered independently:
 5. Add further slots or read-only events only after additional generic use
    cases are demonstrated.
 6. Expose stored external identifiers through generic export contracts.
-7. Discuss host-mediated mutations separately if a real use case appears.
+7. Improve the existing asynchronous creatable-select interaction independently.
+8. Add opt-in browsing for bounded asynchronous provider option sets.
+9. Discuss host-mediated mutations separately if a real use case appears.
 
 The first community discussion could combine steps 2–4 as one design issue but
 split the implementation into reviewable changes.

@@ -1,8 +1,11 @@
 import logging
+from hashlib import sha256
 
+from django.core.cache import cache
 from django.utils.translation import get_language
 
 from rdmo_ts4nfdi.config import load_source_configs
+from rdmo_ts4nfdi.integrations.ts4nfdi.provider import GatewayProviderClient
 
 from .base import TS4NFDIBaseProvider
 from .utils import option_badge, option_breadcrumb, option_description, option_separator
@@ -13,10 +16,16 @@ logger = logging.getLogger(__name__)
 class TS4NFDIEntitySetProvider(TS4NFDIBaseProvider):
     """Expose the entities from one configured TS4NFDI entity set as RDMO options."""
 
-    search = False
+    # This is intentionally search-backed although the temporary Gateway
+    # endpoint returns a list.  The bounded list is cached and filtered here,
+    # avoiding a full remote request for every debounced keystroke.
+    search = True
     refresh = False
 
     def get_options(self, project, search=None, user=None, site=None):
+        if not search:
+            return []
+
         provider_config = self.get_provider_config()
         entityset_id = str(provider_config.get('entityset_id') or '').strip()
         if not entityset_id:
@@ -24,9 +33,13 @@ class TS4NFDIEntitySetProvider(TS4NFDIBaseProvider):
                 f"TS4NFDI provider '{self.key}' requires an entityset_id."
             )
 
-        payload = self.make_request(provider_config=provider_config)
+        payload = self.get_cached_payload(provider_config)
         if payload is None:
-            return self.get_request_error_options(provider_config)
+            return self.with_free_text_candidate(
+                search,
+                self.get_request_error_options(provider_config),
+                provider_config,
+            )
 
         entityset = self.find_entityset(payload, entityset_id)
         if entityset is None:
@@ -45,10 +58,52 @@ class TS4NFDIEntitySetProvider(TS4NFDIBaseProvider):
             if option:
                 options.append(option)
 
-        return options
+        filtered_options = [
+            option for option in options if self.option_matches_search(option, search)
+        ]
+        return self.with_free_text_candidate(
+            search,
+            filtered_options,
+            provider_config,
+            all_options=options,
+        )
+
+    def get_cached_payload(self, provider_config):
+        request_url = GatewayProviderClient.prepare_request_url(provider_config, {})
+        cache_key = 'rdmo-ts4nfdi:provider-entityset:' + sha256(
+            request_url.encode('utf-8')
+        ).hexdigest()
+        timeout = provider_config.get('entityset_cache_timeout', 300)
+
+        try:
+            timeout = int(timeout)
+        except (TypeError, ValueError):
+            timeout = 300
+
+        if timeout > 0:
+            cached_payload = cache.get(cache_key)
+            if cached_payload is not None:
+                return cached_payload
+
+        payload = self.make_request(provider_config=provider_config)
+        if payload is not None and timeout > 0:
+            cache.set(cache_key, payload, timeout)
+        return payload
+
+    @staticmethod
+    def option_matches_search(option, search):
+        query = str(search).strip().casefold()
+        if not query:
+            return False
+        return any(
+            query in str(option.get(field) or '').casefold()
+            for field in ('id', 'text')
+        )
 
     @staticmethod
     def find_entityset(payload, entityset_id):
+        # Temporary compatibility path.  Replace this list lookup with the
+        # Gateway's dedicated GET /entitysets/{uuid} response once deployed.
         if isinstance(payload, dict):
             if str(payload.get('id') or '').strip() == entityset_id:
                 return payload

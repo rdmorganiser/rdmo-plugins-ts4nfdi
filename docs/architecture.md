@@ -74,12 +74,12 @@ The public dynamic option-provider class paths remain unchanged because RDMO
 deployments persist them in settings. Their external HTTP operation is
 delegated to `GatewayProviderClient`.
 
-`TS4NFDIEntitySetProvider` exposes a configured Gateway `/entitysets` resource
-as RDMO options. It uses every entity's URI as the provider option ID, so the
-normal RDMO provider flow persists the terminology IRI without a plugin signal
-or value projection. [`semantic-option-workflow.md`](semantic-option-workflow.md)
-records the active upstream-curation workflow and the status of the archived
-FAIRagro CSV; no semantic manifest is shipped or read at runtime.
+`TS4NFDIEntitySetProvider` temporarily reads the bounded Gateway `/entitysets/`
+list and selects its configured UUID locally. It uses every entity's URI as the
+provider option ID, so the normal RDMO provider flow persists a curated
+terminology IRI without a plugin signal or value projection.
+[`entityset-workflow.md`](entityset-workflow.md) records the active curation
+workflow and the planned switch to `GET /entitysets/{uuid}`.
 
 ### Browser-side inline context resolution
 

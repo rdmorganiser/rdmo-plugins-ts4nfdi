@@ -3,9 +3,9 @@
 The annotation drawer always renders the plugin's normalized, accessible
 terminology details first. A presentation adapter may add an optional widget
 below that information. This makes the choice reversible: a deployment can
-use the native prototype, an official Terminology Service Suite (TSS) widget,
-or its own JavaScript module without changing the annotation API or the RDMO
-host integration.
+use the native presentation, an official Terminology Service Suite (TSS)
+widget, or its own JavaScript module without changing the annotation API or
+the RDMO host integration.
 
 The selection is made per annotation matcher in `TS4NFDI_PROVIDER`. If the
 deployment loads that setting from `ts4nfdi_provider.toml`, changing the
@@ -48,19 +48,13 @@ The supported combinations are:
 | Annotation resource | TSS component | Optional settings |
 | --- | --- | --- |
 | `entity` | `entity-info` | `entity_type` |
-| `entity` | `metadata` | `entity_type`, `tabs` |
 | `ontology` | `ontology-info` | none |
 
-For example, the metadata tabs can be selected explicitly:
-
-```toml
-presentation = {
-    adapter = "tss",
-    component = "metadata",
-    entity_type = "class",
-    tabs = ["synonyms", "hierarchy", "ontology", "crossref"],
-}
-```
+The plugin passes `useLegacy: false` internally, selecting TSS's OLS4 v2 route.
+It deliberately does not expose TSS `metadata`: TSS 7.1.0 mounts a nested
+`TabWidget` that can issue an unscoped entity request. The native drawer owns
+the complete primary detail view, while `entity-info` and `ontology-info` are
+available only as optional source-scoped disclosures.
 
 The TSS JavaScript and CSS remain lazy: the browser loads the vendored release
 only when the user expands “Additional interactive terminology view”. The

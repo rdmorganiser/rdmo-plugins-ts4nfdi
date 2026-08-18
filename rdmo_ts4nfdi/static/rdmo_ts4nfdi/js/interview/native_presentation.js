@@ -564,7 +564,7 @@ export class NativeAnnotationDrawer {
         this.presentations.render(
             this.widget(),
             detail.presentation,
-            {detail, primary: detail.metadata_status === "presentation"}
+            {detail}
         );
     }
 

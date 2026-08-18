@@ -1,4 +1,8 @@
+import hashlib
 import logging
+from html import escape, unescape
+
+from django.utils.translation import get_language
 
 from rdmo.options.providers import Provider
 
@@ -97,6 +101,55 @@ class TS4NFDIBaseProvider(Provider):
                 'ts4nfdi_error': True,
             }
         ]
+
+    def with_free_text_candidate(self, search, options, provider_config, *, all_options=None):
+        """Add RDMO's native-create marker as an explicit, safe provider option.
+
+        RDMO renders option text as HTML.  User input must therefore be escaped
+        for display while ``value`` keeps the original text that RDMO persists
+        through its existing ``__isNew__`` flow.
+        """
+
+        if provider_config.get('free_text_candidate') is not True:
+            return options
+
+        value = str(search or '').strip()
+        if not value:
+            return options
+
+        comparison_options = all_options if all_options is not None else options
+        if any(self.option_text_matches_search(option, value) for option in comparison_options):
+            return options
+
+        language = (get_language() or 'en').split('-', 1)[0].casefold()
+        if language == 'de':
+            message = 'Kein passender Begriff gefunden. Wählen Sie diesen Eintrag, um ihn also Freitext zu übernehmen.'
+        else:
+            message = 'No matching term found. Select this entry to use it as free text.'
+
+        digest = hashlib.sha256(value.encode('utf-8')).hexdigest()
+        return [
+            *options,
+            {
+                'id': f'__ts4nfdi_free_text__:{self.key}:{digest}',
+                'text': escape(value),
+                'help': option_description([message]),
+                'value': value,
+                '__isNew__': True,
+                'ts4nfdi_free_text': True,
+            },
+        ]
+
+    @staticmethod
+    def option_text_matches_search(option, search):
+        if not isinstance(option, dict):
+            return False
+
+        option_text = option.get('text')
+        if option_text is None:
+            return False
+
+        return unescape(str(option_text)).strip().casefold() == str(search).strip().casefold()
 
     def format_request_error(self, error):
         reason = getattr(error, 'reason', None)

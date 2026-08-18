@@ -34,10 +34,15 @@ function entityAnnotation(overrides = {}) {
     };
 }
 
-test("deterministic TSS descriptors bypass the legacy annotation detail API", async () => {
+test("compatible TSS descriptors retain native detail and attach an OLS4 disclosure", async () => {
     let detailCalls = 0;
+    const nativeDetail = entityAnnotation({
+        metadata_status: "available",
+        definitions: ["A structured data format."],
+        synonyms: ["XML"]
+    });
     const coordinator = new AnnotationDetailCoordinator({
-        api: {detail: async () => { detailCalls++; }},
+        api: {detail: async () => { detailCalls++; return nativeDetail; }},
         baseUrl: "/rdmo",
         gateway: {
             mode: "direct",
@@ -47,8 +52,9 @@ test("deterministic TSS descriptors bypass the legacy annotation detail API", as
 
     const detail = await coordinator.resolve("24", entityAnnotation());
 
-    assert.equal(detailCalls, 0);
-    assert.equal(detail.metadata_status, "presentation");
+    assert.equal(detailCalls, 1);
+    assert.equal(detail.metadata_status, "available");
+    assert.deepEqual(detail.definitions, ["A structured data format."]);
     assert.deepEqual(detail.presentation, {
         adapter: "tss",
         component: "entity-info",
@@ -58,15 +64,17 @@ test("deterministic TSS descriptors bypass the legacy annotation detail API", as
             iri: "http://edamontology.org/format_2332",
             ontologyId: "edam",
             entityType: "class",
+            useLegacy: false,
             hasTitle: false,
             showBadges: true
         }
     });
 });
 
-test("proxy mode uses the existing RDMO Gateway proxy without annotation detail resolution", async () => {
+test("proxy mode builds disclosure props after native detail resolution", async () => {
+    let detailCalls = 0;
     const coordinator = new AnnotationDetailCoordinator({
-        api: {detail: async () => { throw new Error("legacy detail must not be called"); }},
+        api: {detail: async () => { detailCalls++; return entityAnnotation(); }},
         baseUrl: "/rdmo",
         gateway: {mode: "proxy"}
     });
@@ -76,6 +84,17 @@ test("proxy mode uses the existing RDMO Gateway proxy without annotation detail 
     assert.equal(
         detail.presentation.props.api,
         "/rdmo/api/v1/ts4nfdi/projects/24/gateway/ols4/api/"
+    );
+    assert.equal(detailCalls, 1);
+    assert.equal(detail.presentation.props.useLegacy, false);
+});
+
+test("unsupported TSS components cannot replace the native detail", () => {
+    assert.equal(
+        canUseTssDescriptor(entityAnnotation({
+            presentation: {adapter: "tss", component: "metadata", options: {}}
+        })),
+        false
     );
 });
 
@@ -153,7 +172,11 @@ test("provider-resource terminology detail promotes deterministic OLS2 records t
                     backend_type: "ols2",
                     params: {}
                 },
-                presentation: {adapter: "tss", component: "ontology-info", props: {}}
+                presentation: {
+                    adapter: "tss",
+                    component: "ontology-info",
+                    props: {useLegacy: false}
+                }
             })
         },
         baseUrl: "/rdmo",
@@ -172,6 +195,7 @@ test("provider-resource terminology detail promotes deterministic OLS2 records t
     assert.equal(detail.presentation.component, "ontology-info");
     assert.equal(detail.presentation.props.ontologyId, "envo");
     assert.equal(detail.presentation.props.parameter, "database=ebi");
+    assert.equal(detail.presentation.props.useLegacy, false);
 });
 
 test("entity-set provenance promotes compatible OLS2 entries to the TSS path and caches the result", async () => {
@@ -200,7 +224,7 @@ test("entity-set provenance promotes compatible OLS2 entries to the TSS path and
                     presentation: {
                         adapter: "tss",
                         component: "entity-info",
-                        options: {}
+                        options: {entity_type: "class"}
                     }
                 });
             }
@@ -221,6 +245,7 @@ test("entity-set provenance promotes compatible OLS2 entries to the TSS path and
     assert.equal(provenanceCalls, 1);
     assert.equal(first.presentation.adapter, "tss");
     assert.equal(first.presentation.props.ontologyId, "ncit");
+    assert.equal(first.presentation.props.useLegacy, false);
     assert.equal(second.presentation.props.parameter, "database=tib");
 });
 

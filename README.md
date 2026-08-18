@@ -74,34 +74,35 @@ It returns each entity URI directly as the dynamic RDMO option ID, so RDMO's
 normal provider persistence stores that concept IRI in `Value.external_id`.
 The standard RDMO XML export therefore retains the selected terminology IRI;
 no plugin-specific signal, manifest, or external-ID projection is involved.
-This provider change does not rewrite values created by the old manifest-based
-provider; review those historic answers before switching an existing deployment.
+This provider does not rewrite historic answers. Review existing project data
+before changing an OptionSet provider in a deployment.
 
 The gateway base URL is configured through `TS4NFDI_PROVIDER`. See
 `ts4nfdi_provider.toml` for example provider keys using
 `https://terminology.services.base4nfdi.de/api-gateway`.
 
 The supplied configuration uses browser-direct Gateway transport for public
-TSS-backed annotations such as EDAM. This lets the TSS widget fetch the
-OLS4-compatible entity response directly, without a Django annotation-detail
-request or the RDMO Gateway proxy:
+TSS-backed annotations such as EDAM. The public OLS4 GET route allows
+cross-origin browser requests, so the widget can fetch its data without an
+extra request through RDMO:
 
 ```toml
 [frontend.gateway]
 mode = "direct"
 ```
 
-Only the public Gateway base URL is exposed to the browser in this mode—never
-an API token. Set `mode = "proxy"` instead for private sources, server-held
-credentials, or deployments where browser access to the Gateway is blocked.
+Only the public Gateway base URL is exposed to the browser in direct mode—never
+an API token. Use `mode = "proxy"` for private sources, server-held
+credentials, or deployments whose browser/network policy blocks direct access.
 
 The FAIRagro data-generation OptionSet uses the generic
 `ts4nfdi_entitysets` provider key with a configured public entity set:
 
 ```toml
 [providers.ts4nfdi_entitysets]
-endpoint = "entitysets"
+endpoint = "entitysets/"
 entityset_id = "fc45621d-7e40-47ce-9616-4133f0b54edf"
+entityset_cache_timeout = 300
 ```
 
 Terminology sources are declared once and referenced by providers and
@@ -234,11 +235,11 @@ collection request is cached; an incomplete, failed, or non-OLS result
 continues to use the native description view.
 
 The `presentation` table selects a replaceable browser presentation adapter.
-The bundled `tss` adapter supports `entity-info` and `metadata` for entity
-annotations and `ontology-info` for ontology annotations. Use
-`presentation = { adapter = "native" }` to keep only the plugin's native
-prototype view. The configured source consistently supplies parameters such as
-`database=ebi`.
+The bundled `tss` adapter supports `entity-info` for entity annotations and
+`ontology-info` for ontology annotations. The native drawer always remains the
+primary view; compatible TSS widgets are lazy disclosures below it. The plugin
+always uses TSS's OLS4 request mode and consistently supplies source parameters
+such as `database=ebi`.
 
 A deployment-owned ES module can also be registered under
 `frontend.presentation_adapters` and selected by its adapter name. This makes
@@ -255,12 +256,12 @@ shown above. Invalid matchers are logged and excluded, so deployments should
 update their TOML before enabling the refactored plugin.
 
 The annotation list endpoint returns only values belonging to a project the
-authenticated user may access. A deterministic TSS descriptor (for example an
-EDAM entity with an ontology ID and source database) is rendered directly by
-TSS in the browser. Native or incomplete descriptors retain on-demand Django
-detail resolution. The optional browser-facing Gateway proxy is restricted to
-OLS endpoints and an allowlist of query parameters; it never accepts an
-arbitrary upstream URL.
+authenticated user may access. Opening any annotation first resolves its
+native Django detail. A compatible OLS2/OLS4 entity or ontology adds a lazy
+TSS disclosure to that result; incomplete or non-OLS sources simply keep the
+native detail. The optional browser-facing Gateway proxy is restricted to OLS
+endpoints and an allowlist of query parameters; it never accepts an arbitrary
+upstream URL.
 
 Each saved annotation is displayed as a clickable
 `source › terminology › term` row. Its drawer renders normalized Gateway

@@ -12,15 +12,16 @@ function element(tagName) {
         className: "",
         textContent: "",
         dataset: {},
+        listeners: {},
         classList: {add() {}},
         appendChild(child) { this.children.push(child); },
         replaceChildren(...children) { this.children = children; },
-        addEventListener() {},
-        removeEventListener() {}
+        addEventListener(name, callback) { this.listeners[name] = callback; },
+        removeEventListener(name) { delete this.listeners[name]; }
     };
 }
 
-test("primary TSS presentations mount immediately and return widget cleanup", async () => {
+test("TSS presentations mount only when their optional disclosure is opened", async () => {
     const originalDocument = globalThis.document;
     const originalWindow = globalThis.window;
     const calls = [];
@@ -43,23 +44,30 @@ test("primary TSS presentations mount immediately and return widget cleanup", as
     try {
         const host = element("host");
         const adapter = new TssPresentationAdapter({baseUrl: "/rdmo"});
-        const cleanup = await adapter.render(
+        const cleanup = adapter.render(
             host,
             {
                 adapter: "tss",
                 component: "entity-info",
                 props: {
                     api: "https://gateway.example/ols4/api/",
-                    iri: "https://example.test/entity"
+                    iri: "https://example.test/entity",
+                    useLegacy: false
                 }
             },
-            {primary: true, signal: new AbortController().signal}
+            {signal: new AbortController().signal}
         );
 
         assert.equal(host.children.length, 1);
-        assert.equal(host.children[0].tagName, "div");
+        assert.equal(host.children[0].tagName, "details");
+        assert.equal(calls.length, 0);
+
+        host.children[0].open = true;
+        await host.children[0].listeners.toggle();
+
         assert.equal(calls.length, 1);
         assert.equal(calls[0][0].api, "https://gateway.example/ols4/api/");
+        assert.equal(calls[0][0].useLegacy, false);
         cleanup();
         assert.equal(destroyed, 1);
     } finally {

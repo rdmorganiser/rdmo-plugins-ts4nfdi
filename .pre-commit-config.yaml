@@ -23,11 +23,6 @@ repos:
     - id: typos
       exclude: |
         (?x)^(
-            rdmo/locale/.*|
-            rdmo/.*_de.html$|
-            rdmo/.*_es.html$|
-            rdmo/.*_fr.html$|
-            rdmo/.*_it.html$|
-            testing/.*.json|
-            testing/.*.xml
+            rdmo_ts4nfdi/providers/base.py|
+            xml/.*.xml
         )$
