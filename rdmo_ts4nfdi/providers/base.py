@@ -123,7 +123,7 @@ class TS4NFDIBaseProvider(Provider):
 
         language = (get_language() or 'en').split('-', 1)[0].casefold()
         if language == 'de':
-            message = 'Kein passender Begriff gefunden. Wählen Sie diesen Eintrag, um ihn also Freitext zu übernehmen.'
+            message = 'Kein passender Begriff gefunden. Wählen Sie diesen Eintrag, um ihn als Freitext zu übernehmen.'
         else:
             message = 'No matching term found. Select this entry to use it as free text.'
 
