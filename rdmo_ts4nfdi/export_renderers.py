@@ -2,78 +2,145 @@ import json
 from xml.etree import ElementTree
 
 
-def render_semantic_json(payload: dict) -> str:
-    """Render the stable semantic sidecar without altering RDMO's exports."""
+def render_annotated_json(payload: dict) -> str:
     return json.dumps(payload, ensure_ascii=False, indent=2)
 
 
-def render_semantic_xml(payload: dict) -> bytes:
+def render_annotated_xml(payload: dict) -> bytes:
     root = ElementTree.Element(
-        'ts4nfdi-semantic-project',
-        {'api_version': str(payload.get('api_version', '1'))},
+        'annotated-answers',
+        {
+            'format': str(payload['format']),
+            'schema-version': str(payload['schema_version']),
+        },
     )
-    _append_text(root, 'project_id', payload.get('project_id'))
-    _append_text(root, 'title', payload.get('title'))
-    _append_text(root, 'catalog_uri', payload.get('catalog_uri'))
+    _append_project(root, payload['project'])
+    if payload.get('snapshot'):
+        _append_snapshot(root, payload['snapshot'])
 
-    pages = ElementTree.SubElement(root, 'pages')
-    for page_payload in payload.get('pages', []):
-        page = ElementTree.SubElement(
-            pages,
-            'page',
-            {'id': str(page_payload.get('page_id', ''))},
+    sections = ElementTree.SubElement(root, 'sections')
+    for section_payload in payload.get('sections', []):
+        section = ElementTree.SubElement(
+            sections,
+            'section',
+            _attributes(section_payload, ('id', 'uri')),
         )
-        for occurrence_payload in page_payload.get('occurrences', []):
-            occurrence = ElementTree.SubElement(
-                page,
-                'occurrence',
-                {
-                    'key': str(occurrence_payload.get('key', '')),
-                    'question_id': str(occurrence_payload.get('question_id', '')),
-                    'set_prefix': str(occurrence_payload.get('set_prefix', '')),
-                    'set_index': str(occurrence_payload.get('set_index', '')),
-                },
+        _append_text(section, 'title', section_payload.get('title'))
+        pages = ElementTree.SubElement(section, 'pages')
+        for page_payload in section_payload.get('pages', []):
+            page = ElementTree.SubElement(
+                pages,
+                'page',
+                _attributes(page_payload, ('id', 'uri')),
             )
-            _append_text(occurrence, 'question_uri', occurrence_payload.get('question_uri'))
-            _append_text(occurrence, 'attribute_id', occurrence_payload.get('attribute_id'))
-            for annotation_payload in occurrence_payload.get('annotations', []):
-                _append_annotation(occurrence, annotation_payload)
+            _append_text(page, 'title', page_payload.get('title'))
+            answers = ElementTree.SubElement(page, 'answers')
+            for answer_payload in page_payload.get('answers', []):
+                _append_answer(answers, answer_payload)
 
     ElementTree.indent(root, space='  ')
     return ElementTree.tostring(root, encoding='utf-8', xml_declaration=True)
 
 
-def _append_annotation(parent, payload: dict) -> None:
+def _append_project(parent, payload):
+    project = ElementTree.SubElement(parent, 'project', _attributes(payload, ('id',)))
+    for key in ('title', 'description', 'catalog_uri', 'created', 'updated'):
+        _append_text(project, key.replace('_', '-'), payload.get(key))
+
+
+def _append_snapshot(parent, payload):
+    snapshot = ElementTree.SubElement(parent, 'snapshot', _attributes(payload, ('id',)))
+    for key in ('title', 'description', 'created', 'updated'):
+        _append_text(snapshot, key, payload.get(key))
+
+
+def _append_answer(parent, payload):
+    answer = ElementTree.SubElement(
+        parent,
+        'answer',
+        _attributes(payload, ('set_prefix', 'set_index'), hyphenate=True),
+    )
+    question_payload = payload['question']
+    question = ElementTree.SubElement(
+        answer,
+        'question',
+        _attributes(question_payload, ('id', 'uri')),
+    )
+    _append_text(question, 'text', question_payload.get('text'))
+    _append_text(answer, 'attribute-uri', payload.get('attribute_uri'))
+    set_labels = ElementTree.SubElement(answer, 'set-labels')
+    for label in payload.get('set_labels', []):
+        _append_text(set_labels, 'label', label)
+    values = ElementTree.SubElement(answer, 'values')
+    for value_payload in payload.get('values', []):
+        _append_value(values, value_payload)
+
+
+def _append_value(parent, payload):
+    value = ElementTree.SubElement(
+        parent,
+        'value',
+        _attributes(
+            payload,
+            ('id', 'collection_index', 'value_type'),
+            hyphenate=True,
+        ),
+    )
+    for key in ('text', 'label', 'unit'):
+        _append_text(value, key, payload.get(key))
+
+    option_payload = payload.get('option')
+    if option_payload:
+        option = ElementTree.SubElement(
+            value,
+            'option',
+            _attributes(option_payload, ('uri',)),
+        )
+        _append_text(option, 'label', option_payload.get('label'))
+
+    _append_text(value, 'external-id', payload.get('external_id'))
+    if payload.get('annotation'):
+        _append_annotation(value, payload['annotation'])
+    if payload.get('file'):
+        file = ElementTree.SubElement(
+            value,
+            'file',
+            _attributes(payload['file'], ('url',)),
+        )
+        _append_text(file, 'name', payload['file'].get('name'))
+
+
+def _append_annotation(parent, payload):
     annotation = ElementTree.SubElement(
         parent,
         'annotation',
-        {
-            'value_id': str(payload.get('value_id', '')),
-            'collection_index': str(payload.get('collection_index', '')),
-            'matcher_id': str(payload.get('matcher_id', '')),
-            'kind': str(payload.get('kind', '')),
-        },
+        _attributes(payload, ('matcher_id', 'kind'), hyphenate=True),
     )
-    for key in (
-        'label',
-        'short_form',
-        'answer_id',
-        'iri',
-    ):
-        _append_text(annotation, key, payload.get(key))
+    for key in ('label', 'iri', 'badge_label', 'short_form', 'answer_id'):
+        _append_text(annotation, key.replace('_', '-'), payload.get(key))
     _append_resource(annotation, 'source', payload.get('source'))
     _append_resource(annotation, 'terminology', payload.get('terminology'))
 
 
-def _append_resource(parent, name: str, payload: dict | None) -> None:
+def _append_resource(parent, name, payload):
     if not payload:
         return
     resource = ElementTree.SubElement(parent, name)
     for key in ('id', 'label', 'iri', 'url', 'database', 'backend_type'):
-        _append_text(resource, key, payload.get(key))
+        _append_text(resource, key.replace('_', '-'), payload.get(key))
 
 
-def _append_text(parent, name: str, value) -> None:
+def _attributes(payload, keys, *, hyphenate=False):
+    attributes = {}
+    for key in keys:
+        value = payload.get(key)
+        if value is not None and value != '':
+            name = key.replace('_', '-') if hyphenate else key
+            attributes[name] = str(value)
+    return attributes
+
+
+def _append_text(parent, name, value):
     if value is None or value == '':
         return
     element = ElementTree.SubElement(parent, name)

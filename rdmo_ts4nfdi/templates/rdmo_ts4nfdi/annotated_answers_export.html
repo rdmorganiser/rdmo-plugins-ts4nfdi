@@ -1,0 +1,80 @@
+{% extends 'core/export.html' %}
+{% load core_tags %}
+{% load i18n %}
+
+{% block body %}
+<h1>
+    {% if snapshot %}
+        {% blocktrans with title=snapshot.title %}Annotated answers for snapshot <em>{{ title }}</em>{% endblocktrans %}
+    {% else %}
+        {% blocktrans with title=project.title %}Annotated answers for <em>{{ title }}</em>{% endblocktrans %}
+    {% endif %}
+</h1>
+
+{% for section in export.sections %}
+    <h2>{{ section.title|markdown }}</h2>
+    {% for page in section.pages %}
+        <h3>{{ page.title|markdown }}</h3>
+        {% for answer in page.answers %}
+            <p><strong class="question-label">{{ answer.question.text|markdown }}</strong></p>
+            {% if answer.set_labels %}
+                <p><em>{{ answer.set_labels|join:', ' }}:</em></p>
+            {% endif %}
+            <ul>
+            {% for value in answer.values %}
+                <li>
+                    {% if value.file and value.file.url %}
+                        <a href="{{ value.file.url }}">{{ value.label }}</a>
+                    {% else %}
+                        <span>{{ value.label }}</span>
+                    {% endif %}
+
+                    {% if value.annotation %}
+                        <div class="semantic-annotation">
+                            <strong>{% trans 'Semantic annotation' %} ({{ value.annotation.kind }}):</strong>
+                            {% if value.annotation.iri|slice:':4' == 'http' %}
+                                <a href="{{ value.annotation.iri }}">{{ value.annotation.iri }}</a>
+                            {% else %}
+                                {{ value.annotation.iri }}
+                            {% endif %}
+                            {% if value.annotation.terminology %}
+                                <br><small>
+                                    <strong>{% trans 'Terminology' %}:</strong>
+                                    {{ value.annotation.terminology.label|default:value.annotation.terminology.id }}
+                                </small>
+                            {% endif %}
+                            {% if value.annotation.source %}
+                                <br><small>
+                                    <strong>{% trans 'Source' %}:</strong>
+                                    {{ value.annotation.source.label|default:value.annotation.source.id }}
+                                </small>
+                            {% endif %}
+                        </div>
+                    {% elif value.external_id %}
+                        <div class="external-identifier">
+                            <strong>{% trans 'External identifier' %}:</strong>
+                            {% if value.external_id|slice:':4' == 'http' %}
+                                <a href="{{ value.external_id }}">{{ value.external_id }}</a>
+                            {% else %}
+                                {{ value.external_id }}
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    {% if value.option %}
+                        <div class="rdmo-option-identifier">
+                            <strong>{% trans 'RDMO option identifier' %}:</strong>
+                            {% if value.option.uri|slice:':4' == 'http' %}
+                                <a href="{{ value.option.uri }}">{{ value.option.uri }}</a>
+                            {% else %}
+                                {{ value.option.uri }}
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </li>
+            {% endfor %}
+            </ul>
+        {% endfor %}
+    {% endfor %}
+{% endfor %}
+{% endblock %}

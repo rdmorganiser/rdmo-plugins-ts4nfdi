@@ -297,24 +297,6 @@ class PageAnnotationDescriptors:
 
 
 @dataclass(frozen=True, slots=True)
-class ProjectAnnotations:
-    project_id: int
-    title: str
-    catalog_uri: str | None
-    pages: tuple[PageAnnotations, ...]
-    api_version: str = '1'
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            'api_version': self.api_version,
-            'project_id': self.project_id,
-            'title': self.title,
-            'catalog_uri': self.catalog_uri,
-            'pages': [page.to_dict() for page in self.pages],
-        }
-
-
-@dataclass(frozen=True, slots=True)
 class ResolvedMetadata:
     label: str | None = None
     description: str | None = None

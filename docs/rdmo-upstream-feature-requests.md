@@ -464,10 +464,10 @@ answers have the same requirement.
   existing value semantics.
 
 The RDMO core does not need to resolve or validate the external identifier.
-Plugins and deployments remain responsible for its meaning. This plugin's
-`ts-for-nfdi-json` export can remain a semantic sidecar, but should not have to
-define a second full project-export format merely to expose identifiers already
-stored by RDMO.
+Plugins and deployments remain responsible for its meaning. As a prototype
+workaround, this plugin now defines separate annotated JSON, XML, and PDF answer
+formats. That duplication demonstrates the desired output, but it should not be
+necessary merely to expose identifiers already stored by RDMO.
 
 ### Compatibility and acceptance
 

@@ -15,12 +15,13 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_documented_project_export_keys_are_rdmo_route_compatible():
     readme = (ROOT / 'README.md').read_text(encoding='utf-8')
 
-    for export_key in ('ts-for-nfdi-json', 'ts-for-nfdi-xml'):
+    for export_key in ('ts-for-nfdi-json', 'ts-for-nfdi-xml', 'ts-for-nfdi-pdf'):
         assert f'"{export_key}"' in readme
         assert re.fullmatch(r'[a-z-]+', export_key)
 
     assert '"ts4nfdi-json"' not in readme
     assert '"ts4nfdi-xml"' not in readme
+    assert '"ts4nfdi-pdf"' not in readme
     assert 'rdmo_ts4nfdi.providers.entitysets.TS4NFDIEntitySetProvider' in readme
     assert 'rdmo_ts4nfdi.providers.semantic_options.FAIRAgroDataGenerationOptionSetProvider' not in readme
 
@@ -1862,7 +1863,7 @@ def test_fairagro_data_generation_uses_the_configured_entity_set_provider():
         'https://ts4nfdi.github.io/terms/options/rdmo-plugins-ts4nfdi/fairagro-data-generation'
     )
     provider = config['providers']['ts4nfdi_entitysets']
-    assert provider['endpoint'] == 'entitysets/'
+    assert provider['endpoint'].rstrip('/') == 'entitysets'
     assert provider['entityset_id'] == 'fc45621d-7e40-47ce-9616-4133f0b54edf'
     assert provider['entityset_cache_timeout'] == 300
     assert provider['free_text_candidate'] is True

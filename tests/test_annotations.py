@@ -1,4 +1,3 @@
-import json
 from dataclasses import replace
 from types import SimpleNamespace
 
@@ -13,7 +12,6 @@ from rdmo_ts4nfdi.domain import (
     ResolvedMetadata,
     ResourceReference,
 )
-from rdmo_ts4nfdi.export_renderers import render_semantic_json, render_semantic_xml
 from rdmo_ts4nfdi.presentation import AnnotationPresentationRegistry
 
 
@@ -63,15 +61,6 @@ class Host:
 
     def page_id(self, page):
         return page.id
-
-    def project_title(self, project):
-        return project.title
-
-    def project_catalog_uri(self, project):
-        return project.catalog_uri
-
-    def project_pages(self, project):
-        return iter(project.pages)
 
     def page_answers(self, project, page):
         return iter(self.answers)
@@ -196,37 +185,6 @@ def test_provider_backed_ontology_accepts_an_opaque_provider_identifier():
 def test_unconfigured_opaque_identifier_is_not_annotated():
     answer = replace(make_answer(), identifier='not-an-iri')
     assert list(AnnotationTargetResolver().resolve(answer, make_matcher())) == []
-
-
-def test_project_annotation_export_keeps_selected_entity_iri():
-    answer = replace(
-        make_answer(),
-        label='field experiment',
-        identifier='http://opendata.inrae.fr/thesaurusINRAE/c_17625',
-    )
-    project = SimpleNamespace(
-        id=24,
-        title='Semantic project',
-        catalog_uri='https://example.test/catalog',
-        pages=(SimpleNamespace(id=341),),
-    )
-
-    payload = make_service((answer,)).export_project(project).to_dict()
-    annotation = payload['pages'][0]['occurrences'][0]['annotations'][0]
-
-    assert payload['title'] == 'Semantic project'
-    assert payload['catalog_uri'] == 'https://example.test/catalog'
-    assert annotation['answer_id'] == answer.identifier
-    assert annotation['iri'] == answer.identifier
-
-    json_payload = json.loads(render_semantic_json(payload))
-    json_annotation = json_payload['pages'][0]['occurrences'][0]['annotations'][0]
-    assert json_annotation['answer_id'] == answer.identifier
-    assert json_annotation['iri'] == answer.identifier
-
-    xml = render_semantic_xml(payload).decode()
-    assert f'<answer_id>{answer.identifier}</answer_id>' in xml
-    assert f'<iri>{answer.identifier}</iri>' in xml
 
 
 def test_annotation_detail_is_composed_from_independent_adapters():

@@ -17,7 +17,6 @@ from rdmo_ts4nfdi.domain import (
     PageAnnotationDescriptors,
     PageAnnotations,
     PresentationDescriptor,
-    ProjectAnnotations,
     QuestionContext,
     ResolvedMetadata,
     ResourceReference,
@@ -33,13 +32,12 @@ class InterviewHost(Protocol):
 
     def page_id(self, page: Any) -> int: ...
 
-    def project_title(self, project: Any) -> str: ...
-
-    def project_catalog_uri(self, project: Any) -> str | None: ...
-
-    def project_pages(self, project: Any) -> Iterable[Any]: ...
-
-    def page_answers(self, project: Any, page: Any) -> Iterable[InterviewAnswer]: ...
+    def page_answers(
+        self,
+        project: Any,
+        page: Any,
+        snapshot: Any | None = None,
+    ) -> Iterable[InterviewAnswer]: ...
 
     def value_answers(self, project: Any, value: Any) -> Iterable[InterviewAnswer]: ...
 
@@ -103,13 +101,18 @@ class AnnotationService:
         self.presentation = presentation
         self.matchers = MatcherRegistry(matchers)
 
-    def list_page(self, project: Any, page: Any) -> PageAnnotations:
+    def list_page(
+        self,
+        project: Any,
+        page: Any,
+        snapshot: Any | None = None,
+    ) -> PageAnnotations:
         grouped: OrderedDict[
             tuple[int, str, int],
             tuple[QuestionContext, list[AnnotationSummary]],
         ] = OrderedDict()
 
-        for answer in self.host.page_answers(project, page):
+        for answer in self._page_answers(project, page, snapshot):
             matcher = self.matchers.match(answer.question)
             if matcher is None:
                 continue
@@ -140,13 +143,18 @@ class AnnotationService:
             occurrences=occurrences,
         )
 
-    def list_page_v2(self, project: Any, page: Any) -> PageAnnotationDescriptors:
+    def list_page_v2(
+        self,
+        project: Any,
+        page: Any,
+        snapshot: Any | None = None,
+    ) -> PageAnnotationDescriptors:
         grouped: OrderedDict[
             tuple[int, str, int],
             tuple[QuestionContext, list[AnnotationDescriptor]],
         ] = OrderedDict()
 
-        for answer in self.host.page_answers(project, page):
+        for answer in self._page_answers(project, page, snapshot):
             matcher = self.matchers.match(answer.question)
             if matcher is None:
                 continue
@@ -184,19 +192,6 @@ class AnnotationService:
             project_id=self.host.project_id(project),
             page_id=self.host.page_id(page),
             occurrences=occurrences,
-        )
-
-    def export_project(self, project: Any) -> ProjectAnnotations:
-        pages = tuple(
-            page_annotations
-            for page in self.host.project_pages(project)
-            if (page_annotations := self.list_page(project, page)).occurrences
-        )
-        return ProjectAnnotations(
-            project_id=self.host.project_id(project),
-            title=self.host.project_title(project),
-            catalog_uri=self.host.project_catalog_uri(project),
-            pages=pages,
         )
 
     def detail(
@@ -284,6 +279,18 @@ class AnnotationService:
                 exc,
             )
             return None
+
+    def _page_answers(
+        self,
+        project: Any,
+        page: Any,
+        snapshot: Any | None,
+    ) -> Iterable[InterviewAnswer]:
+        if snapshot is None:
+            # Preserve compatibility with host adapters implementing the original
+            # two-argument protocol.
+            return self.host.page_answers(project, page)
+        return self.host.page_answers(project, page, snapshot)
 
     @staticmethod
     def _summarize(

@@ -4,7 +4,6 @@ from rdmo.projects.utils import check_conditions
 from rdmo.questions.models import Question, QuestionSet
 
 from rdmo_ts4nfdi.domain import InterviewAnswer, QuestionContext
-from rdmo_ts4nfdi.utils import is_http_iri
 
 
 class RDMOInterviewHost:
@@ -18,23 +17,8 @@ class RDMOInterviewHost:
     def page_id(page) -> int:
         return page.id
 
-    @staticmethod
-    def project_title(project) -> str:
-        return project.title
-
-    @staticmethod
-    def project_catalog_uri(project) -> str | None:
-        return project.catalog.uri if project.catalog else None
-
-    @staticmethod
-    def project_pages(project):
-        if project.catalog is None:
-            return ()
-        project.catalog.prefetch_elements()
-        return tuple(project.catalog.pages)
-
-    def page_answers(self, project, page) -> Iterable[InterviewAnswer]:
-        values = self._project_values(project)
+    def page_answers(self, project, page, snapshot=None) -> Iterable[InterviewAnswer]:
+        values = self._project_values(project, snapshot)
 
         for question in self._flatten_questions(page.elements):
             if not question.attribute:
@@ -59,7 +43,7 @@ class RDMOInterviewHost:
     def value_answers(self, project, value) -> Iterable[InterviewAnswer]:
         identifier = self._value_identifier(value)
         if not identifier:
-            raise LookupError('The selected value does not contain an option or HTTP IRI.')
+            raise LookupError('The selected value does not contain an external identifier.')
 
         project.catalog.prefetch_elements()
         values = self._project_values(project)
@@ -76,9 +60,9 @@ class RDMOInterviewHost:
             yield self._answer(self._question_context(question), value, identifier)
 
     @staticmethod
-    def _project_values(project):
+    def _project_values(project, snapshot=None):
         return list(
-            project.values.filter(snapshot=None)
+            project.values.filter(snapshot=snapshot)
             .select_related('attribute', 'option')
             .order_by('attribute', 'set_prefix', 'set_index', 'collection_index')
         )
@@ -107,8 +91,6 @@ class RDMOInterviewHost:
 
     @staticmethod
     def _value_identifier(value) -> str | None:
-        if value.option and is_http_iri(value.option.uri):
-            return value.option.uri
         # Dynamic providers may use a stable opaque identifier (for example
         # an ontology id such as ``agrovoc``) when no canonical HTTP IRI is
         # present in the provider response. Whether that identifier is a safe
