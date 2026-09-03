@@ -14,9 +14,11 @@ Install the plugin in your RDMO virtual environment using pip (directly from Git
 pip install git+https://github.com/rdmorganiser/rdmo-plugins-ts4nfdi
 ```
 
-Add `rdmo_ts4nfdi` before RDMO and other apps which override the interview
-template. This ordering lets Django compose the TS4NFDI interview template
-with another plugin such as `rdmo_chatbot`:
+Add `rdmo_ts4nfdi` before RDMO and other apps which override the interview or
+project-answer templates. This ordering lets Django use the TS4NFDI annotation
+templates, including linked terminology answers in the normal answer view and
+answer PDF, and compose the interview with another plugin such as
+`rdmo_chatbot`:
 
 ```python
 INSTALLED_APPS = [

@@ -1,0 +1,8 @@
+{% load ts4nfdi_answer_tags %}
+
+{% ts4nfdi_answer_iri ts4nfdi_answer_link_map value.id as ts4nfdi_iri %}
+{% if ts4nfdi_iri and not value.file_url %}
+    <a href="{{ ts4nfdi_iri }}" target="_blank" rel="noopener noreferrer">{{ value.value_and_unit }}</a>
+{% else %}
+    {% include 'views/tags/value.html' %}
+{% endif %}

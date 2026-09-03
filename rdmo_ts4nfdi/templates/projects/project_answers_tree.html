@@ -1,0 +1,22 @@
+{% load core_tags %}
+{% load ts4nfdi_answer_tags %}
+
+{% ts4nfdi_answer_links project current_snapshot as ts4nfdi_answer_link_map %}
+
+{% for section in project_wrapper.catalog.sections %}
+
+    <h2>{{ section.title|markdown }}</h2>
+
+    {% for page in section.pages %}
+
+        <h3>{{ page.title|markdown }}</h3>
+
+        {% for element in page.elements %}
+
+            {% include 'projects/project_answers_element.html' %}
+
+        {% endfor %}
+
+    {% endfor %}
+
+{% endfor %}

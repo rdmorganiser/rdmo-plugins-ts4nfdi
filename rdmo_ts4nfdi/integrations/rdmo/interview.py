@@ -9,6 +9,9 @@ from rdmo_ts4nfdi.domain import InterviewAnswer, QuestionContext
 class RDMOInterviewHost:
     """Translate public RDMO project models into plugin-owned domain models."""
 
+    def __init__(self):
+        self._values_cache = {}
+
     @staticmethod
     def project_id(project) -> int:
         return project.id
@@ -59,13 +62,15 @@ class RDMOInterviewHost:
                 continue
             yield self._answer(self._question_context(question), value, identifier)
 
-    @staticmethod
-    def _project_values(project, snapshot=None):
-        return list(
-            project.values.filter(snapshot=snapshot)
-            .select_related('attribute', 'option')
-            .order_by('attribute', 'set_prefix', 'set_index', 'collection_index')
-        )
+    def _project_values(self, project, snapshot=None):
+        cache_key = (id(project), id(snapshot))
+        if cache_key not in self._values_cache:
+            self._values_cache[cache_key] = list(
+                project.values.filter(snapshot=snapshot)
+                .select_related('attribute', 'option')
+                .order_by('attribute', 'set_prefix', 'set_index', 'collection_index')
+            )
+        return self._values_cache[cache_key]
 
     @staticmethod
     def _question_context(question) -> QuestionContext:
