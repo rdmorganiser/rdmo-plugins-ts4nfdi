@@ -19,6 +19,7 @@ from rdmo_ts4nfdi.domain import AnnotationSummary, ResourceReference
 from rdmo_ts4nfdi.export_renderers import (
     render_annotated_json,
     render_annotated_xml,
+    render_simple_annotated_json,
 )
 from rdmo_ts4nfdi.integrations.rdmo.exports import (
     EXPORT_FORMAT,
@@ -28,6 +29,8 @@ from rdmo_ts4nfdi.integrations.rdmo.interview import RDMOInterviewHost
 
 ENTITY_IRI = 'http://purl.obolibrary.org/obo/FOODON_03400740'
 OPTION_IRI = 'https://rdmo.fairagro.net/terms/options/data_creation/experiment_data'
+ONTOLOGY_IRI = 'http://purl.obolibrary.org/obo/envo.owl'
+COLLECTION_IRI = 'https://w3id.org/ts4nfdi/collection/fairagro'
 
 
 class Values(list):
@@ -257,6 +260,64 @@ def test_json_and_xml_render_the_same_annotation_contract(monkeypatch):
     assert root.findtext('.//annotation/iri') == ENTITY_IRI
     assert root.find('.//value[@id="2"]/annotation') is None
     assert root.find('.//value[@id="2"]/option').attrib['uri'] == OPTION_IRI
+
+
+def test_simple_annotated_json_renders_flat_label_and_http_iri_pairs():
+    payload = {
+        'sections': [
+            {
+                'pages': [
+                    {
+                        'answers': [
+                            {
+                                'question': {'text': 'Which resources apply?'},
+                                'set_labels': ['Set', 's1'],
+                                'values': [
+                                    {
+                                        'label': 'Milk',
+                                        'annotation': {'kind': 'entity', 'iri': ENTITY_IRI},
+                                    },
+                                    {
+                                        'label': 'Environment Ontology',
+                                        'annotation': {'kind': 'ontology', 'iri': ONTOLOGY_IRI},
+                                    },
+                                    {
+                                        'label': 'FAIRagro collection',
+                                        'annotation': {'kind': 'collection', 'iri': COLLECTION_IRI},
+                                    },
+                                    {
+                                        'label': 'AGROVOC',
+                                        'annotation': {'kind': 'ontology', 'iri': 'agrovoc'},
+                                    },
+                                    {
+                                        'label': 'Field trials',
+                                        'annotation': None,
+                                        'option': {'uri': OPTION_IRI},
+                                    },
+                                    {'label': 'Own term', 'annotation': None},
+                                ],
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+
+    assert json.loads(render_simple_annotated_json(payload)) == [
+        {
+            'question': 'Which resources apply?',
+            'set': 'Set s1',
+            'values': [
+                {'label': 'Milk', 'iri': ENTITY_IRI},
+                {'label': 'Environment Ontology', 'iri': ONTOLOGY_IRI},
+                {'label': 'FAIRagro collection', 'iri': COLLECTION_IRI},
+                {'label': 'AGROVOC', 'iri': None},
+                {'label': 'Field trials', 'iri': None},
+                {'label': 'Own term', 'iri': None},
+            ],
+        }
+    ]
 
 
 def test_local_rdmo_option_is_not_an_annotation_identifier():

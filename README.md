@@ -59,6 +59,11 @@ PROJECT_EXPORTS += [
         "rdmo_ts4nfdi.exports.AnnotatedJSONExport",
     ),
     (
+        "ts-for-nfdi-simple-json",
+        _("TS4NFDI simple annotated JSON"),
+        "rdmo_ts4nfdi.exports.SimpleAnnotatedJSONExport",
+    ),
+    (
         "ts-for-nfdi-xml",
         _("TS4NFDI annotated XML"),
         "rdmo_ts4nfdi.exports.AnnotatedXMLExport",
@@ -77,6 +82,11 @@ PROJECT_SNAPSHOT_EXPORTS += [
         "rdmo_ts4nfdi.exports.AnnotatedJSONExport",
     ),
     (
+        "ts-for-nfdi-simple-json",
+        _("TS4NFDI simple annotated JSON"),
+        "rdmo_ts4nfdi.exports.SimpleAnnotatedJSONExport",
+    ),
+    (
         "ts-for-nfdi-xml",
         _("TS4NFDI annotated XML"),
         "rdmo_ts4nfdi.exports.AnnotatedXMLExport",
@@ -89,13 +99,15 @@ PROJECT_SNAPSHOT_EXPORTS += [
 ]
 ```
 
-All three formats use the same answer model; JSON and XML expose it as the
-versioned `rdmo-ts4nfdi-annotated-answers` contract. A provider-backed
+The detailed JSON, XML, and PDF formats use the same answer model; JSON and XML
+expose it as the versioned `rdmo-ts4nfdi-annotated-answers` contract. The simple
+JSON export projects that model into RDMO's flat question layout with structured
+`label` and `iri` value pairs. A provider-backed
 `Value.external_id` is marked as an annotation only when the configured
-question matcher accepts it. Static option URIs are exported separately as RDMO
-option identifiers, and unmatched external identifiers remain visible without
-being described as semantic annotations. Export generation never performs
-Gateway requests.
+question matcher accepts it. In the detailed formats, static option URIs are
+exported separately as RDMO option identifiers, and unmatched external
+identifiers remain visible without being described as semantic annotations.
+Export generation never performs Gateway requests.
 
 See [Annotated answer exports](docs/annotated-answer-exports.md) for the
 persistence boundary, annotation fields, export data flow, and the distinction
@@ -106,8 +118,9 @@ Deployments using the old `SemanticJSONExport` or `SemanticXMLExport` class
 paths must update their settings to the classes above.
 
 RDMO 2.5.x restricts the export key used in its URL to lowercase ASCII letters
-and hyphens (`[a-z-]+`). Keep `ts-for-nfdi-json`, `ts-for-nfdi-xml`, and
-`ts-for-nfdi-pdf` as the internal keys; in particular, a key such as
+and hyphens (`[a-z-]+`). Keep `ts-for-nfdi-json`,
+`ts-for-nfdi-simple-json`, `ts-for-nfdi-xml`, and `ts-for-nfdi-pdf` as the
+internal keys; in particular, a key such as
 `ts4nfdi-json` is invalid because it contains a digit. The translated labels
 shown to users can still contain `TS4NFDI`.
 

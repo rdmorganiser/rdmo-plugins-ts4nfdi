@@ -9,6 +9,7 @@ from rdmo_ts4nfdi.composition import build_annotation_service
 from rdmo_ts4nfdi.export_renderers import (
     render_annotated_json,
     render_annotated_xml,
+    render_simple_annotated_json,
 )
 from rdmo_ts4nfdi.integrations.rdmo.exports import RDMOAnnotatedAnswersBuilder
 
@@ -49,6 +50,19 @@ class AnnotatedJSONExport(AnnotatedExport):
     def render(self):
         return self.response(
             render_annotated_json(self.get_payload()),
+            'application/json',
+        )
+
+
+class SimpleAnnotatedJSONExport(AnnotatedExport):
+    extension = 'json'
+
+    def get_filename(self):
+        return f'{self.get_title()}-ts4nfdi-simple-annotated.json'
+
+    def render(self):
+        return self.response(
+            render_simple_annotated_json(self.get_payload()),
             'application/json',
         )
 

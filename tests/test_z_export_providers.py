@@ -6,7 +6,11 @@ from rdmo_ts4nfdi.integrations.rdmo.exports import EXPORT_FORMAT
 
 
 def test_json_and_xml_project_providers_return_downloads(monkeypatch):
-    from rdmo_ts4nfdi.exports import AnnotatedJSONExport, AnnotatedXMLExport
+    from rdmo_ts4nfdi.exports import (
+        AnnotatedJSONExport,
+        AnnotatedXMLExport,
+        SimpleAnnotatedJSONExport,
+    )
 
     payload = {
         'format': EXPORT_FORMAT,
@@ -26,6 +30,15 @@ def test_json_and_xml_project_providers_return_downloads(monkeypatch):
     assert json_response['Content-Type'].startswith('application/json')
     assert 'Project-ts4nfdi-annotated.json' in json_response['Content-Disposition']
 
+    simple_json_export = SimpleAnnotatedJSONExport('key', 'label', 'class')
+    simple_json_export.project = project
+    monkeypatch.setattr(simple_json_export, 'get_payload', lambda: payload)
+    simple_json_response = simple_json_export.render()
+
+    assert json.loads(simple_json_response.content) == []
+    assert simple_json_response['Content-Type'].startswith('application/json')
+    assert 'Project-ts4nfdi-simple-annotated.json' in simple_json_response['Content-Disposition']
+
     xml_export = AnnotatedXMLExport('key', 'label', 'class')
     xml_export.project = project
     monkeypatch.setattr(xml_export, 'get_payload', lambda: payload)
@@ -37,7 +50,7 @@ def test_json_and_xml_project_providers_return_downloads(monkeypatch):
 
 
 def test_snapshot_provider_derives_project_and_pdf_uses_shared_payload(monkeypatch):
-    from rdmo_ts4nfdi.exports import AnnotatedPDFExport
+    from rdmo_ts4nfdi.exports import AnnotatedPDFExport, SimpleAnnotatedJSONExport
 
     project = SimpleNamespace(title='Current project')
     snapshot = SimpleNamespace(title='Release 1', project=project)
@@ -68,3 +81,12 @@ def test_snapshot_provider_derives_project_and_pdf_uses_shared_payload(monkeypat
     assert captured['context']['project'] is project
     assert captured['context']['snapshot'] is snapshot
     assert captured['context']['export'] is payload
+
+    simple_json_export = SimpleAnnotatedJSONExport('key', 'label', 'class')
+    simple_json_export.snapshot = snapshot
+    monkeypatch.setattr(simple_json_export, 'get_payload', lambda: payload)
+
+    response = simple_json_export.render()
+
+    assert json.loads(response.content) == []
+    assert 'Release 1-ts4nfdi-simple-annotated.json' in response['Content-Disposition']

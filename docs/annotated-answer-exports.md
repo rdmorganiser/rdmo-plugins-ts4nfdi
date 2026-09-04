@@ -53,8 +53,8 @@ with the RDMO answer and are not part of the semantic export annotation.
 
 ## Export data flow
 
-`AnnotatedJSONExport`, `AnnotatedXMLExport`, and `AnnotatedPDFExport` all use
-`RDMOAnnotatedAnswersBuilder`:
+`AnnotatedJSONExport`, `SimpleAnnotatedJSONExport`, `AnnotatedXMLExport`, and
+`AnnotatedPDFExport` all use `RDMOAnnotatedAnswersBuilder`:
 
 ```text
 RDMO project or snapshot
@@ -70,6 +70,7 @@ RDMO project or snapshot
 versioned annotated-answer payload
         |
         +--> JSON
+        +--> simple flat JSON
         +--> XML
         `--> PDF
 ```
@@ -103,11 +104,43 @@ claimed as a semantic annotation. A static option URI, for example a local
 RDMO vocabulary term, remains an option identifier. Values without either kind
 of identifier are exported normally with no annotation block.
 
-All three annotated formats originate from the same versioned payload. JSON
-exposes the complete payload directly. XML represents the same hierarchy and
-places repeated IDs on their containing value and question elements. PDF
+The three detailed annotated formats originate from the same versioned payload.
+JSON exposes the complete payload directly. XML represents the same hierarchy
+and places repeated IDs on their containing value and question elements. PDF
 presents the answer label followed by a visible semantic annotation containing
 its kind, IRI, terminology, and source.
+
+### Simple annotated JSON
+
+`SimpleAnnotatedJSONExport` is a compact projection for users who want the
+familiar flat RDMO JSON answer list without its semicolon-separated value
+string. It keeps `question` and `set`, but represents every answer value as a
+stable label/IRI object:
+
+```json
+[
+  {
+    "question": "Which data formats arise in your project?",
+    "set": "s1",
+    "values": [
+      {
+        "label": "xlsx",
+        "iri": "http://edamontology.org/format_3620"
+      },
+      {
+        "label": "bioyam",
+        "iri": null
+      }
+    ]
+  }
+]
+```
+
+Only a matcher-qualified annotation with an HTTP(S) IRI populates `iri`.
+Free-text answers, static RDMO options, unmatched external identifiers, and
+opaque provider identifiers retain their human-readable labels and use
+`"iri": null`. The homogeneous value shape makes the file straightforward to
+read and parse.
 
 These exports are human- and machine-readable answer reports. They are not a
 replacement for RDMO's archival project export and cannot be imported to

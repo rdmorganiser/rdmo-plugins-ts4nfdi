@@ -1,9 +1,37 @@
 import json
 from xml.etree import ElementTree
 
+from rdmo_ts4nfdi.utils import is_http_iri
+
 
 def render_annotated_json(payload: dict) -> str:
     return json.dumps(payload, ensure_ascii=False, indent=2)
+
+
+def render_simple_annotated_json(payload: dict) -> str:
+    answers = []
+    for section in payload.get('sections', []):
+        for page in section.get('pages', []):
+            for answer in page.get('answers', []):
+                answers.append(
+                    {
+                        'question': answer['question']['text'],
+                        'set': ' '.join(answer.get('set_labels', [])),
+                        'values': [
+                            {
+                                'label': value['label'],
+                                'iri': _annotation_http_iri(value.get('annotation')),
+                            }
+                            for value in answer.get('values', [])
+                        ],
+                    }
+                )
+    return json.dumps(answers, ensure_ascii=False, indent=2)
+
+
+def _annotation_http_iri(annotation):
+    iri = annotation.get('iri') if annotation else None
+    return iri if is_http_iri(iri) else None
 
 
 def render_annotated_xml(payload: dict) -> bytes:
