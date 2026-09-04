@@ -21,14 +21,15 @@ from rdmo_ts4nfdi.templatetags import ts4nfdi_answer_tags
 
 ROOT = Path(__file__).resolve().parents[1]
 ENTITY_IRI = 'http://purl.obolibrary.org/obo/FOODON_03400740'
-ONTOLOGY_IRI = 'https://example.test/ontology'
+ONTOLOGY_IRI = 'http://purl.obolibrary.org/obo/envo.owl'
+COLLECTION_IRI = 'https://w3id.org/ts4nfdi/collection/fairagro'
 
 
 def annotation(value_id, kind, iri):
     return SimpleNamespace(value_id=value_id, kind=kind, iri=iri)
 
 
-def test_answer_link_map_keeps_only_matched_http_entity_iris(monkeypatch):
+def test_answer_link_map_keeps_all_matched_http_resource_iris(monkeypatch):
     snapshot = SimpleNamespace(id=9)
     pages = (SimpleNamespace(id=1), SimpleNamespace(id=2))
     project = SimpleNamespace(catalog=SimpleNamespace(pages=pages))
@@ -43,8 +44,9 @@ def test_answer_link_map_keeps_only_matched_http_entity_iris(monkeypatch):
                     annotation(11, 'ontology', ONTOLOGY_IRI),
                 ),
                 2: (
-                    annotation(12, 'entity', 'opaque-provider-id'),
-                    annotation(13, 'entity', 'javascript:alert(1)'),
+                    annotation(12, 'collection', COLLECTION_IRI),
+                    annotation(13, 'ontology', 'opaque-provider-id'),
+                    annotation(14, 'entity', 'javascript:alert(1)'),
                 ),
             }[page.id]
             descriptors = tuple(SimpleNamespace(annotation=item) for item in annotations)
@@ -58,7 +60,11 @@ def test_answer_link_map_keeps_only_matched_http_entity_iris(monkeypatch):
 
     links = ts4nfdi_answer_tags.build_answer_link_map(project, snapshot)
 
-    assert links == {10: ENTITY_IRI}
+    assert links == {
+        10: ENTITY_IRI,
+        11: ONTOLOGY_IRI,
+        12: COLLECTION_IRI,
+    }
     assert calls == [
         (project, pages[0], snapshot),
         (project, pages[1], snapshot),
@@ -104,14 +110,15 @@ def test_rdmo_host_reuses_loaded_values_for_multiple_pages():
     assert values.filter_calls == [snapshot]
 
 
-def test_answer_tree_renders_label_and_visible_link(monkeypatch):
+def test_answer_tree_renders_option_label_as_ontology_link(monkeypatch):
     value = {
         'id': 10,
         'set_prefix': '',
         'set_index': 0,
         'is_empty': False,
         'file_url': None,
-        'value_and_unit': 'Milk',
+        'value_type': 'option',
+        'value_and_unit': 'Environment Ontology',
     }
 
     class ProjectWrapper:
@@ -145,7 +152,7 @@ def test_answer_tree_renders_label_and_visible_link(monkeypatch):
     monkeypatch.setattr(
         ts4nfdi_answer_tags,
         'build_answer_link_map',
-        lambda project, snapshot=None: {10: ENTITY_IRI},
+        lambda project, snapshot=None: {10: ONTOLOGY_IRI},
     )
     engine = Engine(
         dirs=[
@@ -169,9 +176,9 @@ def test_answer_tree_renders_label_and_visible_link(monkeypatch):
         )
     )
 
-    assert f'href="{ENTITY_IRI}"' in rendered
-    assert '>Milk</a>' in rendered
-    assert f'>{ENTITY_IRI}</a>' not in rendered
+    assert f'href="{ONTOLOGY_IRI}"' in rendered
+    assert '>Environment Ontology</a>' in rendered
+    assert f'>{ONTOLOGY_IRI}</a>' not in rendered
     assert 'Terminology IRI:' not in rendered
 
 

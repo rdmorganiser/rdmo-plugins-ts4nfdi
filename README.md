@@ -97,6 +97,10 @@ option identifiers, and unmatched external identifiers remain visible without
 being described as semantic annotations. Export generation never performs
 Gateway requests.
 
+See [Annotated answer exports](docs/annotated-answer-exports.md) for the
+persistence boundary, annotation fields, export data flow, and the distinction
+between semantic annotations, external identifiers, and RDMO option URIs.
+
 This is a clean replacement for the former semantic-only JSON/XML sidecars.
 Deployments using the old `SemanticJSONExport` or `SemanticXMLExport` class
 paths must update their settings to the classes above.

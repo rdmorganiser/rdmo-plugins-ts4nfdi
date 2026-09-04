@@ -9,7 +9,7 @@ register = template.Library()
 
 
 def build_answer_link_map(project, snapshot=None):
-    """Return stored, matched entity IRIs keyed by RDMO value id."""
+    """Return stored, matched resource IRIs keyed by RDMO value id."""
     # Keep composition lazy so importing the template library does not require
     # a configured RDMO settings object (useful for plugin and template tests).
     from rdmo_ts4nfdi.composition import build_annotation_service
@@ -21,7 +21,7 @@ def build_answer_link_map(project, snapshot=None):
         for occurrence in payload.occurrences:
             for descriptor in occurrence.annotations:
                 annotation = descriptor.annotation
-                if annotation.kind == 'entity' and is_http_iri(annotation.iri):
+                if is_http_iri(annotation.iri):
                     links[annotation.value_id] = annotation.iri
     return links
 

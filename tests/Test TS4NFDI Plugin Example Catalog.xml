@@ -1,0 +1,664 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:dc="http://purl.org/dc/elements/1.1/" created="2026-09-04T14:01:12.208793+02:00" required="2.1.0" version="2.5.1">
+	<title>Test TS4NFDI Plugin Example Catalog</title>
+	<description/>
+	<catalog dc:uri="https://ts4nfdi.github.io/terms/questions/rdmo-plugins-ts4nfdi-example-catalog"/>
+	<tasks>
+		<task dc:uri="http://example.com/terms/tasks/contact_IT_or_data_management_expert"/>
+		<task dc:uri="https://rdmorganiser.github.io/terms/tasks/clarify_consequences_international_law"/>
+		<task dc:uri="https://rdmorganiser.github.io/terms/tasks/contact_data_security_officer"/>
+		<task dc:uri="https://rdmorganiser.github.io/terms/tasks/contact_IT_department"/>
+		<task dc:uri="https://rdmorganiser.github.io/terms/tasks/determine_versioning_tool"/>
+		<task dc:uri="https://rdmorganiser.github.io/terms/tasks/finish-first-dmp"/>
+		<task dc:uri="https://rdmorganiser.github.io/terms/tasks/identify_rights_owner"/>
+	</tasks>
+	<values>
+		<value>
+			<attribute dc:uri="https://rdmo.fairagro.net/terms/domain/rdmo-plugins-ts4nfdi/dataset-keywords"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>8</collection_index>
+			<text>Chocolate</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://kmi.open.ac.uk/projects/smartproducts/ontologies/food.owl#Chocolate</external_id>
+			<created>2026-08-11T09:52:21.376935+02:00</created>
+			<updated>2026-08-11T09:52:21.376940+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmo.fairagro.net/terms/domain/rdmo-plugins-ts4nfdi/dataset-keywords"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>9</collection_index>
+			<text>Milk</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://data.food.gov.uk/codes/foodtype/id/A02LT</external_id>
+			<created>2026-08-11T09:53:01.983481+02:00</created>
+			<updated>2026-08-11T09:53:01.983486+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmo.fairagro.net/terms/domain/rdmo-plugins-ts4nfdi/dataset-keywords"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>10</collection_index>
+			<text>terms123</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id/>
+			<created>2026-08-13T13:04:31.145822+02:00</created>
+			<updated>2026-08-13T13:04:31.145827+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmo.fairagro.net/terms/domain/rdmo-plugins-ts4nfdi/dataset-keywords"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>11</collection_index>
+			<text>abcd</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://purl.obolibrary.org/obo/MI_2439</external_id>
+			<created>2026-08-13T13:05:02.559741+02:00</created>
+			<updated>2026-08-13T13:05:02.559746+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmo.fairagro.net/terms/domain/rdmo-plugins-ts4nfdi/dataset-keywords"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>12</collection_index>
+			<text>xyzxy</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id/>
+			<created>2026-08-13T13:05:15.095587+02:00</created>
+			<updated>2026-08-13T13:05:15.095592+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmo.fairagro.net/terms/domain/rdmo-plugins-ts4nfdi/dataset-keywords"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>13</collection_index>
+			<text>testestest</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id/>
+			<created>2026-08-18T09:36:47.726911+02:00</created>
+			<updated>2026-08-18T09:36:47.726917+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods"/>
+			<set_prefix>0</set_prefix>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>0</collection_index>
+			<text>field experiment</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://opendata.inrae.fr/thesaurusINRAE/c_17625</external_id>
+			<created>2026-08-11T09:51:07.660760+02:00</created>
+			<updated>2026-08-11T09:51:07.660765+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods"/>
+			<set_prefix>0</set_prefix>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>1</collection_index>
+			<text>In situ measurements</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://opendata.inrae.fr/thesaurusINRAE/c_17114</external_id>
+			<created>2026-08-11T09:51:14.616846+02:00</created>
+			<updated>2026-08-11T09:51:14.616851+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods"/>
+			<set_prefix>0</set_prefix>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>2</collection_index>
+			<text>Workshop</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://purl.obolibrary.org/obo/NCIT_C180602</external_id>
+			<created>2026-08-11T09:51:21.074718+02:00</created>
+			<updated>2026-08-11T09:51:21.074722+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods"/>
+			<set_prefix>0</set_prefix>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>3</collection_index>
+			<text>surveys</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://aims.fao.org/aos/agrovoc/c_7537</external_id>
+			<created>2026-08-13T13:04:12.498892+02:00</created>
+			<updated>2026-08-13T13:04:12.498896+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods"/>
+			<set_prefix>0</set_prefix>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>4</collection_index>
+			<text>trial</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id/>
+			<created>2026-08-18T09:36:00.828899+02:00</created>
+			<updated>2026-08-18T09:36:00.828904+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods"/>
+			<set_prefix>0</set_prefix>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>5</collection_index>
+			<text>field experiment</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://opendata.inrae.fr/thesaurusINRAE/c_17625</external_id>
+			<created>2026-08-18T09:36:14.444136+02:00</created>
+			<updated>2026-08-18T09:36:14.444140+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods"/>
+			<set_prefix>0</set_prefix>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>6</collection_index>
+			<text>laboratory experimentation</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://opendata.inrae.fr/thesaurusINRAE/c_17520</external_id>
+			<created>2026-08-18T17:57:15.474074+02:00</created>
+			<updated>2026-08-18T17:57:15.474086+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/creation_methods"/>
+			<set_prefix>0</set_prefix>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>7</collection_index>
+			<text>manual experimentation</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id/>
+			<created>2026-09-04T13:25:24.543632+02:00</created>
+			<updated>2026-09-04T13:25:24.543637+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/format"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>True</set_collection>
+			<collection_index>1</collection_index>
+			<text>BioXSD (XML)</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://edamontology.org/format_2352</external_id>
+			<created>2026-07-31T16:33:56.796998+02:00</created>
+			<updated>2026-07-31T16:33:56.797003+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/format"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>True</set_collection>
+			<collection_index>4</collection_index>
+			<text>PNG</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://edamontology.org/format_3603</external_id>
+			<created>2026-08-03T14:43:31.665583+02:00</created>
+			<updated>2026-08-03T14:43:31.665588+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/format"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>True</set_collection>
+			<collection_index>5</collection_index>
+			<text>YAML</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://edamontology.org/format_3750</external_id>
+			<created>2026-08-07T10:49:00.280985+02:00</created>
+			<updated>2026-08-07T10:49:00.280992+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/format"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>True</set_collection>
+			<collection_index>6</collection_index>
+			<text>jpg</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id/>
+			<created>2026-09-04T13:25:01.453416+02:00</created>
+			<updated>2026-09-04T13:25:01.453421+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/format"/>
+			<set_prefix/>
+			<set_index>1</set_index>
+			<set_collection>True</set_collection>
+			<collection_index>0</collection_index>
+			<text>BioJSON (BioXSD)</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://edamontology.org/format_3772</external_id>
+			<created>2026-08-07T10:48:14.888982+02:00</created>
+			<updated>2026-08-07T10:48:14.888987+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/format"/>
+			<set_prefix/>
+			<set_index>2</set_index>
+			<set_collection>True</set_collection>
+			<collection_index>0</collection_index>
+			<text>YAML</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://edamontology.org/format_3750</external_id>
+			<created>2026-08-07T10:48:44.396371+02:00</created>
+			<updated>2026-08-10T16:46:53.127112+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/format"/>
+			<set_prefix/>
+			<set_index>2</set_index>
+			<set_collection>True</set_collection>
+			<collection_index>1</collection_index>
+			<text>PDF</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://edamontology.org/format_3508</external_id>
+			<created>2026-08-11T09:07:17.082494+02:00</created>
+			<updated>2026-08-11T09:07:17.082500+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/format"/>
+			<set_prefix/>
+			<set_index>2</set_index>
+			<set_collection>True</set_collection>
+			<collection_index>2</collection_index>
+			<text>JSON-LD</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://edamontology.org/format_3749</external_id>
+			<created>2026-08-11T13:42:03.444527+02:00</created>
+			<updated>2026-08-11T13:42:13.387590+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/format"/>
+			<set_prefix/>
+			<set_index>3</set_index>
+			<set_collection>True</set_collection>
+			<collection_index>0</collection_index>
+			<text>JSON</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://edamontology.org/format_3464</external_id>
+			<created>2026-08-10T16:46:44.002132+02:00</created>
+			<updated>2026-08-10T16:46:44.002138+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/format"/>
+			<set_prefix/>
+			<set_index>3</set_index>
+			<set_collection>True</set_collection>
+			<collection_index>1</collection_index>
+			<text>PDF</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://edamontology.org/format_3508</external_id>
+			<created>2026-08-10T16:47:31.481242+02:00</created>
+			<updated>2026-08-10T16:47:31.481247+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/format"/>
+			<set_prefix/>
+			<set_index>3</set_index>
+			<set_collection>True</set_collection>
+			<collection_index>2</collection_index>
+			<text>freetext</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id/>
+			<created>2026-08-18T17:56:56.840828+02:00</created>
+			<updated>2026-08-18T17:56:56.840833+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/format"/>
+			<set_prefix/>
+			<set_index>4</set_index>
+			<set_collection>True</set_collection>
+			<collection_index>0</collection_index>
+			<text>JPG</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://edamontology.org/format_3579</external_id>
+			<created>2026-08-13T13:15:35.317787+02:00</created>
+			<updated>2026-08-13T13:15:35.317791+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/id"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>True</set_collection>
+			<collection_index>0</collection_index>
+			<text>set1</text>
+			<option/>
+			<file/>
+			<value_type>text</value_type>
+			<unit/>
+			<external_id/>
+			<created>2026-07-31T16:33:45.480375+02:00</created>
+			<updated>2026-07-31T16:33:45.480381+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/id"/>
+			<set_prefix/>
+			<set_index>1</set_index>
+			<set_collection>True</set_collection>
+			<collection_index>0</collection_index>
+			<text>set2</text>
+			<option/>
+			<file/>
+			<value_type>text</value_type>
+			<unit/>
+			<external_id/>
+			<created>2026-08-03T08:56:06.989577+02:00</created>
+			<updated>2026-08-03T08:56:06.989583+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/id"/>
+			<set_prefix/>
+			<set_index>2</set_index>
+			<set_collection>True</set_collection>
+			<collection_index>0</collection_index>
+			<text>s3</text>
+			<option/>
+			<file/>
+			<value_type>text</value_type>
+			<unit/>
+			<external_id/>
+			<created>2026-08-07T10:48:23.740723+02:00</created>
+			<updated>2026-08-07T10:48:23.740728+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/id"/>
+			<set_prefix/>
+			<set_index>3</set_index>
+			<set_collection>True</set_collection>
+			<collection_index>0</collection_index>
+			<text>s4</text>
+			<option/>
+			<file/>
+			<value_type>text</value_type>
+			<unit/>
+			<external_id/>
+			<created>2026-08-10T16:46:33.430911+02:00</created>
+			<updated>2026-08-10T16:46:33.430915+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://rdmorganiser.github.io/terms/domain/project/dataset/id"/>
+			<set_prefix/>
+			<set_index>4</set_index>
+			<set_collection>True</set_collection>
+			<collection_index>0</collection_index>
+			<text>s5</text>
+			<option/>
+			<file/>
+			<value_type>text</value_type>
+			<unit/>
+			<external_id/>
+			<created>2026-08-13T13:06:10.039099+02:00</created>
+			<updated>2026-08-13T13:06:10.039103+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/collection-terminologies"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>0</collection_index>
+			<text>Environment Ontology</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://purl.obolibrary.org/obo/envo.owl</external_id>
+			<created>2026-07-31T16:33:04.223530+02:00</created>
+			<updated>2026-07-31T16:33:04.223535+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/collection-terminologies"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>1</collection_index>
+			<text>Minimum Information about any (x) Sequence (MIxS) standard</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>https://w3id.org/mixs</external_id>
+			<created>2026-07-31T16:33:11.861348+02:00</created>
+			<updated>2026-08-07T10:46:23.862918+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/collection-terminologies"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>2</collection_index>
+			<text>Plant Trait Ontology</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://purl.obolibrary.org/obo/to.owl</external_id>
+			<created>2026-08-07T10:45:30.839866+02:00</created>
+			<updated>2026-08-07T10:46:42.813681+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/collection-terminologies"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>3</collection_index>
+			<text>agrovoc</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>agrovoc</external_id>
+			<created>2026-08-10T16:41:14.189867+02:00</created>
+			<updated>2026-08-10T16:41:14.189872+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/collection-terminologies"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>4</collection_index>
+			<text>Environment Ontology</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://purl.obolibrary.org/obo/envo.owl</external_id>
+			<created>2026-08-13T13:07:34.160811+02:00</created>
+			<updated>2026-08-13T13:07:34.160816+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/collection-terminologies"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>5</collection_index>
+			<text>agrovoc</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>agrovoc</external_id>
+			<created>2026-08-18T09:35:00.561557+02:00</created>
+			<updated>2026-08-18T09:35:00.561562+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/collection-terminologies"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>6</collection_index>
+			<text>Plant Trait Ontology</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://purl.obolibrary.org/obo/to.owl</external_id>
+			<created>2026-08-18T17:57:38.451935+02:00</created>
+			<updated>2026-08-18T17:57:38.451940+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/collections"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>1</collection_index>
+			<text>FAIRagro TS collection</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>https://w3id.org/ts4nfdi/collection/ff5491d1-d0a9-481e-ac90-0fad065fa097</external_id>
+			<created>2026-08-03T08:06:27.439692+02:00</created>
+			<updated>2026-08-03T08:06:27.439697+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/collections"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>2</collection_index>
+			<text>DataPLANT Project</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>https://w3id.org/ts4nfdi/collection/ca19cfb6-c15e-48d9-bde8-c631031f0035</external_id>
+			<created>2026-08-03T10:26:04.964778+02:00</created>
+			<updated>2026-08-03T10:26:04.964784+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/collections"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>3</collection_index>
+			<text>NFDI4Health</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>https://w3id.org/ts4nfdi/collection/b9503ef6-c201-4418-8e30-37a4f7ef0677</external_id>
+			<created>2026-08-07T10:45:47.668894+02:00</created>
+			<updated>2026-08-07T10:45:47.668899+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/dataset-keywords-agrovoc"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>0</collection_index>
+			<text>milk</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id/>
+			<created>2026-08-18T09:35:48.434625+02:00</created>
+			<updated>2026-08-18T09:35:48.434630+02:00</updated>
+		</value>
+		<value>
+			<attribute dc:uri="https://ts4nfdi.github.io/domain/rdmo-plugins-ts4nfdi/ontologies"/>
+			<set_prefix/>
+			<set_index>0</set_index>
+			<set_collection>False</set_collection>
+			<collection_index>0</collection_index>
+			<text>BioXSD (XML)</text>
+			<option/>
+			<file/>
+			<value_type>option</value_type>
+			<unit/>
+			<external_id>http://edamontology.org/format_2352</external_id>
+			<created>2026-07-31T16:33:34.031634+02:00</created>
+			<updated>2026-08-03T10:03:13.474142+02:00</updated>
+		</value>
+	</values>
+	<created>2026-07-31T16:32:22.978697+02:00</created>
+	<updated>2026-08-18T09:35:48.813601+02:00</updated>
+</project>
